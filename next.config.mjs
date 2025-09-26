@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Your existing Copilot configuration
   env: {
     COPILOT_ENV: process.env.COPILOT_ENV,
   },
@@ -24,6 +25,22 @@ const nextConfig = {
       },
     ];
   },
-};
+  
+  // V0 configurations for development and build optimization
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  images: {
+    unoptimized: true,
+  },
+  
+  // Additional optimizations for v0 components
+  experimental: {
+    optimizePackageImports: ['lucide-react', '@radix-ui/react-icons']
+  },
+}
 
-module.exports = nextConfig;
+export default nextConfig

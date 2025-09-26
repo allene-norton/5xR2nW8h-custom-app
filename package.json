@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@tailwindcss/typography": "^0.5.19",
     "copilot-design-system": "^0.6.23",
     "copilot-node-sdk": "^3.5.1",
     "copy-container-react": "^1.0.11",

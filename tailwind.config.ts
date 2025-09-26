@@ -1,4 +1,6 @@
-import type { Config } from 'tailwindcss'
+import type { Config } from 'tailwindcss';
+import plugin from 'tailwindcss/plugin';
+import typography from '@tailwindcss/typography'; 
 
 const config: Config = {
   content: [
@@ -7,6 +9,9 @@ const config: Config = {
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
   theme: {
+    screens: {
+      xs: '475px',
+    },
     extend: {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
@@ -15,6 +20,11 @@ const config: Config = {
       },
     },
   },
-  plugins: [],
-}
-export default config
+  plugins: [
+    require('@tailwindcss/typography'),
+    plugin(function ({ addVariant }) {
+      addVariant('dark', '&:is(.dark *)');
+    }),
+  ],
+};
+export default config;
