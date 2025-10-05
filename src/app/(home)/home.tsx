@@ -20,9 +20,9 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   const session = await copilot.getTokenPayload?.();
   console.log({ workspace, session });
   return (
-    <Container>
+    // <Container>
       <Welcome portalUrl={workspace.portalUrl} />
-    </Container>
+    // </Container>
   );
 }
 

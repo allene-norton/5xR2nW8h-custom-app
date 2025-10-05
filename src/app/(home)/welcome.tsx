@@ -21,81 +21,22 @@ export function Welcome({ portalUrl }: { portalUrl?: string }) {
 
   return (
     <>
-      <header className="max-w-prose">
-        <div className="w-8 mb-4">
-          <Icon icon="Code" />
-        </div>
-        <div className="mb-2">
-          <Heading variant="3xl">Welcome to the custom app base</Heading>
-        </div>
-        <Body variant="lg" tag="p">
-          This is a demo of a custom app that integrates with Copilot. Our goal
-          is to enable developers to easily make apps that look and feel like a
-          part of our software, creating a seamless experience for your clients.
-        </Body>
-      </header>
-
-      <div className="grid grid-cols-2 gap-8 mt-12 max-w-prose">
-        <div>
-          <a
-            href="https://docs.copilot.app/reference"
-            className="group"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className="flex">
-              <Heading variant="2xl">Docs</Heading>
-              <Icon icon="ArrowNE" className="w-4 ml-1" />
-            </div>
-          </a>
-          <Body variant="base" tag="p" className="mt-1 text-gray-500">
-            Find detailed information about the Copilot API.
-          </Body>
-        </div>
-
-        <div>
-          <a
-            href="https://docs.copilot.app/docs"
-            className="group"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className="flex">
-              <Heading variant="2xl">Learn</Heading>
-              <Icon icon="ArrowNE" className="w-4 ml-1" />
-            </div>
-          </a>
-          <Body variant="base" tag="p" className="mt-1 text-gray-500">
-            Learn how to integrate a custom app into the Copilot platform.
-          </Body>
-        </div>
-
-        <div>
-          <a
-            href="https://www.copilot.app/experts"
-            className="group"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <div className="flex">
-              <Heading variant="2xl">Explore</Heading>
-              <Icon icon="ArrowNE" className="w-4 ml-1" />
-            </div>
-          </a>
-          <Body variant="base" tag="p" className="mt-1 text-gray-500">
-            See our experts directory, and join to receive work opportunities
-            building on top of Copilot.
-          </Body>
-        </div>
-
-        <div>
-          <a href="/bridge" className="group" rel="noopener noreferrer">
-            <Heading variant="2xl">App Bridge</Heading>
-          </a>
-          <p className={`m-0 mt-1 max-w-[30ch] text-sm opacity-50`}>
-            Learn how to integrate your app with Copilot with this live demo of
-            the App Bridge.
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center mx-auto mb-6">
+            <span className="text-white font-bold text-2xl">CT</span>
+          </div>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-4">
+            Access Restricted
+          </h1>
+          <p className="text-gray-600 leading-relaxed">
+            It appears you don't currently have access to this application.
+            Please contact your portal administrator to verify your permissions
+            or report any technical issues.
           </p>
+          <div className="mt-8 text-sm text-gray-500">
+            ClearTech Background Services
+          </div>
         </div>
       </div>
     </>
