@@ -10,7 +10,7 @@ import type { Status } from "../../types"
 
 interface StatusSectionProps {
   status: Status
-  memo: string
+  memo: string | undefined
   updateFormData: (updates: { status?: Status; memo?: string }) => void
 }
 
