@@ -7,9 +7,14 @@ const inter = Inter({ subsets: ['latin'] });
 import 'copilot-design-system/dist/styles/main.css';
 
 export const metadata: Metadata = {
-  title: 'Custom App',
-  description: 'Copilot Custom App Example',
-};
+  title: "ClearTech Background Services",
+  description: "Professional background check management system",
+  other: {
+    "X-Frame-Options": "SAMEORIGIN",
+    "Content-Security-Policy": "frame-ancestors 'self' *.assembly.com;",
+  },
+    generator: 'v0.app'
+}
 
 export default function RootLayout({
   children,
