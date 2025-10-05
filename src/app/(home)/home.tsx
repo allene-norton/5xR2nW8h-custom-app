@@ -1,6 +1,6 @@
 import { copilotApi } from 'copilot-node-sdk';
 
-import { Welcome } from '@/app/(home)/welcome';
+import { DefaultPage } from '@/app/(home)/defaultPage';
 import { TokenGate } from '@/components/TokenGate';
 import { Container } from '@/components/Container';
 
@@ -21,7 +21,7 @@ async function Content({ searchParams }: { searchParams: SearchParams }) {
   console.log({ workspace, session });
   return (
     // <Container>
-      <Welcome portalUrl={workspace.portalUrl} />
+      <DefaultPage portalUrl={workspace.portalUrl} />
     // </Container>
   );
 }

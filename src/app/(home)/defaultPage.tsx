@@ -9,7 +9,7 @@ import { Body, Heading, Icon } from 'copilot-design-system';
  */
 export const revalidate = 180;
 
-export function Welcome({ portalUrl }: { portalUrl?: string }) {
+export function DefaultPage({ portalUrl }: { portalUrl?: string }) {
   useBreadcrumbs(
     [
       {
