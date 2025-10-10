@@ -4,6 +4,7 @@ import type { FormData } from "../../types"
 import { ConfigurationSection } from "./ConfigurationSection"
 import { ApplicantInfoSection } from "./ApplicantInfoSection"
 import { BackgroundChecksSection } from "./BackgroundChecksSection"
+import { CustomChecksSection } from "@/components/admin/CustomChecksSection"
 import { StatusSection } from "./StatusSection"
 import { FileUploadSection } from "./FileUploadSection"
 import { SubmittedDocumentsSection } from "./SubmittedDocumentsSection"
@@ -26,6 +27,13 @@ export function AdminInterface({ formData, updateFormData, updateIdentification,
 
       {/* Background Checks */}
       <BackgroundChecksSection
+        formType={formData.formType}
+        selectedChecks={formData.backgroundChecks}
+        updateFormData={updateFormData}
+      />
+
+      {/* Custom Checks */}
+      <CustomChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
         updateFormData={updateFormData}
