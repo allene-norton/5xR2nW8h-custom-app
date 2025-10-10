@@ -1,9 +1,9 @@
 "use client"
 
-import { AdminInterface } from "../../components/admin/AdminInterface"
-import { useFormData } from "../../hooks/useFormData"
-import { Button } from "../../components/ui/button"
-import { Badge } from "../../components/ui/badge"
+import { AdminInterface } from "@/components/admin/AdminInterface"
+import { useFormData } from "@/hooks/useFormData"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import { Save, Clock, CheckCircle } from "lucide-react"
 
 export default function InternalPage() {
