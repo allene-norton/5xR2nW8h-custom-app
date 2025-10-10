@@ -25,11 +25,13 @@ export async function listClients(token: string) {
   try {
     const sdk = createSDK(token)
     const clients = await sdk.listClients({limit: 2000})
-    // revalidatePath('/internal')
+    revalidatePath('/internal')
     return { success: true, data: clients }
   } catch (error) {
     console.error('Error fetching clients:', error)
     return { success: false, error: 'Failed to fetch clients' }
   }
 }
+export type ListClientsResponse = Awaited<ReturnType<typeof listClients>>
+
 

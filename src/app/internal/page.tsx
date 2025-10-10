@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock, CheckCircle } from 'lucide-react';
 
-import { ListClientsResponse } from '@/types';
+import { ListClientsResponse } from '@/lib/actions/sdk-requests';
+import { Client } from '@/types';
 
 interface InternalPageProps {
   searchParams: { token?: string };
@@ -18,12 +19,17 @@ interface InternalPageProps {
 export default function InternalPage({ searchParams }: InternalPageProps) {
   // STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
-    data: [],
-    nextToken: '',
+    success: false,
+    data: {
+      data: undefined,
+      nextToken: '',
+    },
   });
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
+
+  // FORM DATA
   const {
     formData,
     isLoading,
@@ -34,6 +40,34 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     resetFormData,
     saveFormData,
   } = useFormData();
+
+  // FETCH CLIENTS
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        setClientsLoading(true);
+        setClientsError(null);
+        console.log(`SearchParams:`, searchParams)
+        
+        const response = await listClients(
+          searchParams.token || ''
+        );
+
+        if (!response.data) {
+        throw new Error('No client data returned from server');
+      }
+        
+        setClientsResponse(response);
+      } catch (error) {
+        console.error('Failed to fetch clients:', error);
+        setClientsError(error instanceof Error ? error.message : 'Failed to fetch clients');
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    fetchClients();
+  }, [searchParams.token]);
 
   // Auto-save indicator
   const formatLastSaved = (date: Date | null) => {

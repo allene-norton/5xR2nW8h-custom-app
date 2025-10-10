@@ -1,6 +1,7 @@
 'use client';
 
-import type { FormData, ListClientsResponse } from '@/types';
+import type { FormData } from '@/types';
+import { ListClientsResponse } from '@/lib/actions/sdk-requests';
 import { ConfigurationSection } from '@/components/admin/ConfigurationSection';
 import { ApplicantInfoSection } from '@/components/admin/ApplicantInfoSection';
 import { BackgroundChecksSection } from '@/components/admin/BackgroundChecksSection';

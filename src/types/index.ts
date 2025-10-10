@@ -35,10 +35,10 @@ export interface Client {
 
 export type Clients = Client[]
 
-export interface ListClientsResponse {
-  data: Client[];
-  nextToken: string;
-}
+// export interface ListClientsResponse {
+//   data: Client[];
+//   nextToken: string;
+// }
 
 // File Information
 export interface FileInfo {

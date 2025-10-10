@@ -21,9 +21,9 @@ import {
   type FormData,
   SAMPLE_CLIENTS,
   FORM_TYPE_INFO,
-  ListClientsResponse,
   Client
 } from '../../types';
+import { ListClientsResponse } from '@/lib/actions/sdk-requests';
 
 interface ConfigurationSectionProps {
   formData: FormData;
@@ -41,9 +41,9 @@ export function ConfigurationSection({
   clientsError,
 }: ConfigurationSectionProps) {
 
-  const clients = clientsResponse.data
+  const clients = clientsResponse.data?.data
 
-  const selectedClient = clients.find(
+  const selectedClient = clients?.find(
     (client) => client.id === formData.client,
   );
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
@@ -78,8 +78,8 @@ export function ConfigurationSection({
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
+                {clients?.filter(client => client.id).map((client) => (
+                  <SelectItem key={client.id} value={client.id!}>
                     <div className="flex flex-col">
                       <span className="font-medium">{client.givenName} {client.familyName}</span>
                       {client.email && (
