@@ -12,6 +12,8 @@ export interface ClientInfo {
   phone?: string;
 }
 
+
+
 // File Information
 export interface FileInfo {
   id: string;
