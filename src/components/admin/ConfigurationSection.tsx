@@ -1,20 +1,52 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import { Label } from "../ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
-import { Badge } from "../ui/badge"
-import { Settings, User, FileText } from "lucide-react"
-import { type FormData, SAMPLE_CLIENTS, FORM_TYPE_INFO } from "../../types"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../ui/card';
+import { Label } from '../ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../ui/select';
+import { Badge } from '../ui/badge';
+import { Settings, User, FileText } from 'lucide-react';
+import {
+  type FormData,
+  SAMPLE_CLIENTS,
+  FORM_TYPE_INFO,
+  ListClientsResponse,
+  Client
+} from '../../types';
 
 interface ConfigurationSectionProps {
-  formData: FormData
-  updateFormData: (updates: Partial<FormData>) => void
+  formData: FormData;
+  updateFormData: (updates: Partial<FormData>) => void;
+  clientsResponse: ListClientsResponse;
+  clientsLoading: boolean;
+  clientsError: string | null;
 }
 
-export function ConfigurationSection({ formData, updateFormData }: ConfigurationSectionProps) {
-  const selectedClient = SAMPLE_CLIENTS.find((client) => client.id === formData.client)
-  const formTypeInfo = FORM_TYPE_INFO[formData.formType]
+export function ConfigurationSection({
+  formData,
+  updateFormData,
+  clientsResponse,
+  clientsLoading,
+  clientsError,
+}: ConfigurationSectionProps) {
+
+  const clients = clientsResponse.data
+
+  const selectedClient = clients.find(
+    (client) => client.id === formData.client,
+  );
+  const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
   return (
     <Card>
@@ -23,26 +55,38 @@ export function ConfigurationSection({ formData, updateFormData }: Configuration
           <Settings className="w-5 h-5 text-blue-600" />
           <CardTitle>Configuration</CardTitle>
         </div>
-        <CardDescription>Select the client and form type for this background check</CardDescription>
+        <CardDescription>
+          Select the client and form type for this background check
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Client Selection */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <Label htmlFor="client-select" className="flex items-center space-x-2">
+            <Label
+              htmlFor="client-select"
+              className="flex items-center space-x-2"
+            >
               <User className="w-4 h-4" />
               <span>Client</span>
             </Label>
-            <Select value={formData.client} onValueChange={(value) => updateFormData({ client: value })}>
+            <Select
+              value={formData.client}
+              onValueChange={(value) => updateFormData({ client: value })}
+            >
               <SelectTrigger id="client-select">
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {SAMPLE_CLIENTS.map((client) => (
+                {clients.map((client) => (
                   <SelectItem key={client.id} value={client.id}>
                     <div className="flex flex-col">
-                      <span className="font-medium">{client.name}</span>
-                      {client.email && <span className="text-sm text-gray-500">{client.email}</span>}
+                      <span className="font-medium">{client.givenName} {client.familyName}</span>
+                      {client.email && (
+                        <span className="text-sm text-gray-500">
+                          {client.email}
+                        </span>
+                      )}
                     </div>
                   </SelectItem>
                 ))}
@@ -53,22 +97,25 @@ export function ConfigurationSection({ formData, updateFormData }: Configuration
                 <p>
                   <strong>Email:</strong> {selectedClient.email}
                 </p>
-                <p>
+                {/* <p>
                   <strong>Phone:</strong> {selectedClient.phone}
-                </p>
+                </p> */}
               </div>
             )}
           </div>
 
           {/* Form Type Selection */}
           <div className="space-y-2">
-            <Label htmlFor="form-type-select" className="flex items-center space-x-2">
+            <Label
+              htmlFor="form-type-select"
+              className="flex items-center space-x-2"
+            >
               <FileText className="w-4 h-4" />
               <span>Form Type</span>
             </Label>
             <Select
               value={formData.formType}
-              onValueChange={(value: "tenant" | "employment" | "nonprofit") =>
+              onValueChange={(value: 'tenant' | 'employment' | 'nonprofit') =>
                 updateFormData({ formType: value, backgroundChecks: [] })
               }
             >
@@ -77,7 +124,9 @@ export function ConfigurationSection({ formData, updateFormData }: Configuration
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="tenant">Tenant Screening</SelectItem>
-                <SelectItem value="employment">Employment Verification</SelectItem>
+                <SelectItem value="employment">
+                  Employment Verification
+                </SelectItem>
                 <SelectItem value="nonprofit">Nonprofit Volunteer</SelectItem>
               </SelectContent>
             </Select>
@@ -89,13 +138,23 @@ export function ConfigurationSection({ formData, updateFormData }: Configuration
           <div className="flex items-start space-x-3">
             <FileText className="w-5 h-5 text-blue-600 mt-0.5" />
             <div className="flex-1">
-              <h4 className="font-medium text-blue-900">{formTypeInfo.title}</h4>
-              <p className="text-sm text-blue-700 mt-1">{formTypeInfo.description}</p>
+              <h4 className="font-medium text-blue-900">
+                {formTypeInfo.title}
+              </h4>
+              <p className="text-sm text-blue-700 mt-1">
+                {formTypeInfo.description}
+              </p>
               <div className="mt-3">
-                <p className="text-sm font-medium text-blue-900 mb-2">Required Checks:</p>
+                <p className="text-sm font-medium text-blue-900 mb-2">
+                  Required Checks:
+                </p>
                 <div className="flex flex-wrap gap-2">
                   {formTypeInfo.requiredChecks.map((check) => (
-                    <Badge key={check} variant="outline" className="text-xs bg-blue-100 text-blue-800 border-blue-300">
+                    <Badge
+                      key={check}
+                      variant="outline"
+                      className="text-xs bg-blue-100 text-blue-800 border-blue-300"
+                    >
                       {check}
                     </Badge>
                   ))}
@@ -106,5 +165,5 @@ export function ConfigurationSection({ formData, updateFormData }: Configuration
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
