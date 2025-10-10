@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { listClients } from '@/lib/actions/sdk-requests';
+import { listClients, type ListClientsResponse } from '@/lib/actions/client-actions';
+
+// import { listClients } from '@/lib/actions/sdk-requests'; // Prod
+// import { devListClients } from '@/lib/actions/api-requests-for-dev'; //dev
 
 import { AdminInterface } from '@/components/admin/AdminInterface';
 import { useFormData } from '@/hooks/useFormData';
@@ -9,8 +12,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock, CheckCircle } from 'lucide-react';
 
-import { ListClientsResponse } from '@/lib/actions/sdk-requests';
-import { Client } from '@/types';
+// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; // Prod
+// import { devListClientsResponse } from '@/types/dev'; //dev
 
 interface InternalPageProps {
   searchParams: { token?: string };
@@ -47,15 +50,13 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
       try {
         setClientsLoading(true);
         setClientsError(null);
-        console.log(`SearchParams:`, searchParams)
         
-        const response = await listClients(
-          searchParams.token || ''
-        );
-
+        // Works in both dev and prod!
+        const response = await listClients(searchParams.token);
+        
         if (!response.data) {
-        throw new Error('No client data returned from server');
-      }
+          throw new Error('No client data returned from server');
+        }
         
         setClientsResponse(response);
       } catch (error) {

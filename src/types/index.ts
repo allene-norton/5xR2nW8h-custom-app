@@ -12,33 +12,7 @@ export interface ClientInfo {
   phone?: string;
 }
 
-export interface Client {
-  avatarImageUrl: string;
-  companyId: string;
-  companyIds: string[];
-  createdAt: string;
-  creationMethod: string;
-  customFields: any;
-  email: string;
-  fallbackColor: string;
-  familyName: string;
-  firstLoginDate: string;
-  givenName: string;
-  id: string;
-  inviteUrl: string;
-  invitedBy: string;
-  lastLoginDate: string;
-  object: "client";
-  status: string;
-  updatedAt: string;
-}
 
-export type Clients = Client[]
-
-// export interface ListClientsResponse {
-//   data: Client[];
-//   nextToken: string;
-// }
 
 // File Information
 export interface FileInfo {

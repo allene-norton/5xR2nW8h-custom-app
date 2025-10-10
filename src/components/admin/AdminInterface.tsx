@@ -1,7 +1,11 @@
 'use client';
 
 import type { FormData } from '@/types';
-import { ListClientsResponse } from '@/lib/actions/sdk-requests';
+import type { ListClientsResponse } from '@/lib/actions/client-actions';
+
+// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; //Prod
+// import { devListClientsResponse } from '@/types/dev'; //dev
+
 import { ConfigurationSection } from '@/components/admin/ConfigurationSection';
 import { ApplicantInfoSection } from '@/components/admin/ApplicantInfoSection';
 import { BackgroundChecksSection } from '@/components/admin/BackgroundChecksSection';
@@ -15,7 +19,7 @@ interface AdminInterfaceProps {
   updateFormData: (updates: Partial<FormData>) => void;
   updateIdentification: (updates: Partial<FormData['identification']>) => void;
   resetFormData: () => void;
-  clientsResponse: ListClientsResponse;
+  clientsResponse: ListClientsResponse
   clientsLoading: boolean;
   clientsError: string | null;
 }

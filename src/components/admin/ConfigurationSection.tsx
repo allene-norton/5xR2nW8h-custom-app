@@ -17,18 +17,22 @@ import {
 } from '../ui/select';
 import { Badge } from '../ui/badge';
 import { Settings, User, FileText } from 'lucide-react';
+
 import {
   type FormData,
   SAMPLE_CLIENTS,
   FORM_TYPE_INFO,
-  Client
 } from '../../types';
-import { ListClientsResponse } from '@/lib/actions/sdk-requests';
+
+// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; //Prod
+// import { devListClientsResponse } from '@/types/dev'; //dev
+import type { ListClientsResponse } from '@/lib/actions/client-actions';
+
 
 interface ConfigurationSectionProps {
   formData: FormData;
   updateFormData: (updates: Partial<FormData>) => void;
-  clientsResponse: ListClientsResponse;
+  clientsResponse: ListClientsResponse 
   clientsLoading: boolean;
   clientsError: string | null;
 }
@@ -41,7 +45,7 @@ export function ConfigurationSection({
   clientsError,
 }: ConfigurationSectionProps) {
 
-  const clients = clientsResponse.data?.data
+  const clients = clientsResponse.data?.data // Prod
 
   const selectedClient = clients?.find(
     (client) => client.id === formData.client,
