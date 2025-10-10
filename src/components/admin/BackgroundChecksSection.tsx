@@ -16,7 +16,7 @@ interface BackgroundChecksSectionProps {
 
 export function BackgroundChecksSection({ formType, selectedChecks, updateFormData }: BackgroundChecksSectionProps) {
   const availableChecks = BACKGROUND_CHECK_OPTIONS[formType]
-  const requiredChecks = FORM_TYPE_INFO[formType].requiredChecks
+  const requiredChecks: readonly string[] = FORM_TYPE_INFO[formType].requiredChecks
 
   const handleCheckChange = (checkName: string, checked: boolean) => {
     const newChecks = checked ? [...selectedChecks, checkName] : selectedChecks.filter((check) => check !== checkName)
