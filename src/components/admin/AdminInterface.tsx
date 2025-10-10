@@ -39,6 +39,7 @@ export function AdminInterface({
       <ConfigurationSection
         formData={formData}
         updateFormData={updateFormData}
+        updateIdentification={updateIdentification}
         clientsResponse={clientsResponse}
         clientsLoading={clientsLoading}
         clientsError={clientsError}

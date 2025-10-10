@@ -20,18 +20,18 @@ import { Settings, User, FileText } from 'lucide-react';
 
 import {
   type FormData,
+  type Identification,
   SAMPLE_CLIENTS,
   FORM_TYPE_INFO,
 } from '../../types';
 
-// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; //Prod
-// import { devListClientsResponse } from '@/types/dev'; //dev
 import type { ListClientsResponse } from '@/lib/actions/client-actions';
 
 
 interface ConfigurationSectionProps {
   formData: FormData;
   updateFormData: (updates: Partial<FormData>) => void;
+  updateIdentification: (updates: Partial<Identification>) => void;
   clientsResponse: ListClientsResponse 
   clientsLoading: boolean;
   clientsError: string | null;
@@ -40,6 +40,7 @@ interface ConfigurationSectionProps {
 export function ConfigurationSection({
   formData,
   updateFormData,
+  updateIdentification,
   clientsResponse,
   clientsLoading,
   clientsError,
@@ -76,7 +77,25 @@ export function ConfigurationSection({
             </Label>
             <Select
               value={formData.client}
-              onValueChange={(value) => updateFormData({ client: value })}
+              onValueChange={(value) => {
+                updateFormData({ client: value });
+
+                // Pre-fill identification data when client is selected
+                const selectedClient = clients?.find(client => client.id === value);
+                if (selectedClient) {
+                  updateIdentification({
+                    firstName: selectedClient.givenName || '',
+                    lastName: selectedClient.familyName || '',
+                    // Add other fields if they exist in your client data
+                    streetAddress: selectedClient.customFields?.streetAddress|| '',
+                    streetAddress2: selectedClient.customFields?.unitapartment|| '',
+                    city: selectedClient.customFields?.city || '',
+                    state: selectedClient.customFields?.state || '',
+                    postalCode: selectedClient.customFields?.postalCode || '',
+                    birthdate: selectedClient.customFields?.birthdate || '',
+                  });
+                }
+              }}
             >
               <SelectTrigger id="client-select">
                 <SelectValue placeholder="Select a client" />
@@ -171,3 +190,4 @@ export function ConfigurationSection({
     </Card>
   );
 }
+

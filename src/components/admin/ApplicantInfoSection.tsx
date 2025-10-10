@@ -92,7 +92,7 @@ export function ApplicantInfoSection({ identification, updateIdentification }: A
             </Label>
             <Input
               id="birthdate"
-              type="date"
+              type="string"
               value={identification.birthdate}
               onChange={(e) => handleInputChange("birthdate", e.target.value)}
               onBlur={(e) => handleBlur("birthdate", e.target.value)}
