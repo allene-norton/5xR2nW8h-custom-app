@@ -1,13 +1,13 @@
 "use client"
 
-import type { FormData } from "../../types"
-import { ConfigurationSection } from "./ConfigurationSection"
-import { ApplicantInfoSection } from "./ApplicantInfoSection"
-import { BackgroundChecksSection } from "./BackgroundChecksSection"
+import type { FormData } from "@/types"
+import { ConfigurationSection } from "@/components/admin/ConfigurationSection"
+import { ApplicantInfoSection } from "@/components/admin/ApplicantInfoSection"
+import { BackgroundChecksSection } from "@/components/admin/BackgroundChecksSection"
 import { CustomChecksSection } from "@/components/admin/CustomChecksSection"
-import { StatusSection } from "./StatusSection"
-import { FileUploadSection } from "./FileUploadSection"
-import { SubmittedDocumentsSection } from "./SubmittedDocumentsSection"
+import { StatusSection } from "@/components/admin/StatusSection"
+import { FileUploadSection } from "@/components/admin/FileUploadSection"
+import { SubmittedDocumentsSection } from "@/components/admin/SubmittedDocumentsSection"
 
 interface AdminInterfaceProps {
   formData: FormData
