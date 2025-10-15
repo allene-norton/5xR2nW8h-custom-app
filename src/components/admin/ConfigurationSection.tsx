@@ -105,11 +105,6 @@ export function ConfigurationSection({
                   <SelectItem key={client.id} value={client.id!}>
                     <div className="flex flex-col">
                       <span className="font-medium">{client.givenName} {client.familyName}</span>
-                      {client.email && (
-                        <span className="text-sm text-gray-500">
-                          {client.email}
-                        </span>
-                      )}
                     </div>
                   </SelectItem>
                 ))}
