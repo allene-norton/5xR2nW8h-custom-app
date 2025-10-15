@@ -7,13 +7,8 @@ const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
 const isDev = process.env.NODE_ENV === 'development';
 
-const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1/';
-const getOptions = {
-  method: 'GET',
-  headers: {
-    'X-API-KEY': assemblyApiKey,
-  },
-};
+const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
+
 
 // ---------- Unified types (single source of truth)
 // clients
@@ -80,7 +75,7 @@ export interface FormsResponse {
 }
 
 // form responses
-export interface FormField {
+export interface FormResponseField {
   title?: string;
   description?: string;
   type?: 'multiSelect' | 'singleSelect' | 'title' | 'shortAnswer' | 'longAnswer' | 'fileUpload'; // ts error here from sdk, possibly incorrect
@@ -97,7 +92,7 @@ export interface FormResponse {
   createdAt?: string;
   formDescription?: string;
   formFieldIds?: string[];
-  formFields?: Record<string, FormField>;
+  formFields?: Record<string, FormResponseField>;
   formId?: string;
   formName?: string;
   id?: string;
@@ -109,7 +104,7 @@ export interface FormResponse {
     formName?: string;
     formDescription?: string;
     formFieldIds?: string[];
-    formFields?: Record<string, FormField>;
+    formFields?: Record<string, FormResponseField>;
     status?: string;
     allowMultipleSubmissions?: boolean;
     visibility?: string;
