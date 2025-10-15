@@ -5,20 +5,32 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Button } from "../ui/button"
 import { DocumentCard } from "../shared/DocumentCard"
 import { RefreshCw, FolderOpen } from "lucide-react"
-import { fetchClientDocuments, type SDKDocument } from "../../utils/sdk-integration"
+import { useSearchParams } from 'next/navigation';
+import { listForms, listFormResponses, Form, FormField, FormResponse, FormsResponse, FormResponsesApiResponse } from "@/lib/actions/client-actions"
 
 interface SubmittedDocumentsSectionProps {
   clientId: string
 }
 
 export function SubmittedDocumentsSection({ clientId }: SubmittedDocumentsSectionProps) {
-  const [documents, setDocuments] = useState<SDKDocument[]>([])
+
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') ?? undefined;
+  
+  //STATES
+  const [forms, setForms] = useState<SDKDocument[]>([]) // change tyoe
+  const [contracts, setContracts] = useState<SDKDocument[]>([]) // change tyoe
+  const [allFormResponses, setAllFormResponses] = useState([])
+
+  // loading / error states
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const loadDocuments = async () => {
+
+  // Document Loading
+  const loadForms = async () => {
     if (!clientId) {
-      setDocuments([])
+      setForms([])
       return
     }
 
@@ -26,18 +38,25 @@ export function SubmittedDocumentsSection({ clientId }: SubmittedDocumentsSectio
     setError(null)
 
     try {
-      const clientDocuments = await fetchClientDocuments(clientId)
-      setDocuments(clientDocuments)
-    } catch (err) {
-      setError("Failed to load client documents")
-      console.error("Error loading documents:", err)
-    } finally {
-      setIsLoading(false)
+      // get all workspace forms
+      const forms = await listForms(token)
+
+      // get responses for all forms
+      const allFormResponsesPromises = forms.map(async (form) => {
+      try {
+        // In dev mode, only formId is needed. In production, you might need to pass a token
+        const responses = await listFormResponses(form.id)
+        return responses || []
+      } catch (err) {
+        console.error(`Error loading responses for form ${form.id}:`, err)
+        return []
+      }
+    })
     }
   }
 
   useEffect(() => {
-    loadDocuments()
+    loadForms()
   }, [clientId])
 
   const handleViewDocument = (document: SDKDocument) => {
@@ -63,12 +82,12 @@ export function SubmittedDocumentsSection({ clientId }: SubmittedDocumentsSectio
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
             <FolderOpen className="w-5 h-5 text-blue-600" />
-            <CardTitle>Submitted Documents</CardTitle>
+            <CardTitle>Submitted forms</CardTitle>
           </div>
           <Button
             variant="outline"
             size="sm"
-            onClick={loadDocuments}
+            onClick={loadForms}
             disabled={isLoading || !clientId}
             className="flex items-center space-x-2 bg-transparent"
           >
@@ -76,34 +95,34 @@ export function SubmittedDocumentsSection({ clientId }: SubmittedDocumentsSectio
             <span>Refresh</span>
           </Button>
         </div>
-        <CardDescription>Documents submitted by the client through the portal</CardDescription>
+        <CardDescription>forms submitted by the client through the portal</CardDescription>
       </CardHeader>
       <CardContent>
         {!clientId ? (
           <div className="text-center py-8">
             <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">Select a client to view their submitted documents</p>
+            <p className="text-gray-600">Select a client to view their submitted forms</p>
           </div>
         ) : isLoading ? (
           <div className="text-center py-8">
             <RefreshCw className="w-8 h-8 text-blue-600 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading documents...</p>
+            <p className="text-gray-600">Loading forms...</p>
           </div>
         ) : error ? (
           <div className="text-center py-8">
             <div className="text-red-600 mb-4">{error}</div>
-            <Button variant="outline" onClick={loadDocuments}>
+            <Button variant="outline" onClick={loadForms}>
               Try Again
             </Button>
           </div>
-        ) : documents.length === 0 ? (
+        ) : forms.length === 0 ? (
           <div className="text-center py-8">
             <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No documents have been submitted yet</p>
+            <p className="text-gray-600">No forms have been submitted yet</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {documents.map((document) => (
+            {forms.map((document) => (
               <DocumentCard
                 key={document.id}
                 title={document.title}
