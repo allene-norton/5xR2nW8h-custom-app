@@ -56,39 +56,55 @@ export function SubmittedDocumentsSection({
     try {
       // get all workspace forms
       const formsData = await listForms(token);
+      console.log(`FormsData:`, formsData);
+
+      // Check if it's an error response
+      if ('error' in formsData) {
+        console.error('Error fetching forms:', formsData.error);
+        // Handle error case
+        return;
+      }
 
       const forms = formsData.data;
 
       // get responses for all forms
-      const allFormResponsesPromises = forms.map(async (form: Form) => {
-        try {
-          // In dev mode, only formId is needed. In production, you might need to pass a token
-          const responses = await listFormResponses(form.id!, token);
-          return responses || [];
-        } catch (err) {
-          console.error(`Error loading responses for form ${form.id}:`, err);
-          return [];
-        }
-      });
+      const allFormResponsesPromises =
+        forms?.map(async (form) => {
+          try {
+            // In dev mode, only formId is needed. In production, you might need to pass a token
+            const responses = await listFormResponses(form.id!, token);
+            return responses || [];
+          } catch (err) {
+            console.error(`Error loading responses for form ${form.id}:`, err);
+            return [];
+          }
+        }) || [];
 
       const allResponsesArrays = await Promise.all(allFormResponsesPromises);
       // console.log(`All ResponsesArrays:`, allResponsesArrays)
 
       // Flatten all responses into a single array
       // const allResponses = allResponsesArrays.flat();
-      const allResponses = allResponsesArrays.flatMap(responseArray => responseArray.data).filter(response => response !== null);
+      // const allResponses = allResponsesArrays
+      //   .flatMap((responseArray) => responseArray.data)
+      //   .filter((response) => response !== null);
+      const allResponses = allResponsesArrays
+        .flatMap(
+          (responseArray) =>
+            ('data' in responseArray ? responseArray.data : []) || [],
+        )
+        .filter((response) => response !== null);
       // console.log(`All Responses:`, allResponses)
       // console.log(`form1`, allResponses[0])
 
       // Filter responses where the recipient matches the clientId
       const clientForms = allResponses.filter(
-        (response) =>
-          response.clientId === clientId,
+        (response) => response.clientId === clientId,
       );
-      console.log(`ClientId`, clientId)
-      console.log(`Client Responses:`, clientForms)
+      console.log(`ClientId`, clientId);
+      console.log(`Client Responses:`, clientForms);
 
-      setForms(clientForms);
+      setForms(clientForms as FormResponseArray);
     } catch (err) {
       setError('Failed to load client forms');
       console.error('Error loading client forms:', err);
@@ -102,7 +118,6 @@ export function SubmittedDocumentsSection({
   useEffect(() => {
     loadForms();
   }, [clientId]);
-
 
   // handlers -- unsure
   // const handleViewDocument = (document: SDKDocument) => {
@@ -170,7 +185,9 @@ export function SubmittedDocumentsSection({
         ) : forms.length === 0 ? (
           <div className="text-center py-8">
             <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600">No documents have been submitted yet</p>
+            <p className="text-gray-600">
+              No documents have been submitted yet
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
