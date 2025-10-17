@@ -9,7 +9,8 @@ import {
   CardTitle,
 } from '../ui/card';
 import { Button } from '../ui/button';
-import { DocumentCard } from '../shared/DocumentCard';
+import { DocumentCard } from '@/components/shared/DocumentCard';
+import { FormCard } from '@/components/shared/FormCard';
 import { RefreshCw, FolderOpen } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -21,6 +22,7 @@ import {
   FormsResponse,
   FormResponsesApiResponse,
   FormResponseField,
+  FormResponseArray,
 } from '@/lib/actions/client-actions';
 
 interface SubmittedDocumentsSectionProps {
@@ -34,7 +36,7 @@ export function SubmittedDocumentsSection({
   const token = searchParams.get('token') ?? undefined;
 
   //STATES
-  const [forms, setForms] = useState<FormResponsesApiResponse[]>([]); // change tyoe
+  const [forms, setForms] = useState<FormResponseArray>([]);
   const [allFormResponses, setAllFormResponses] = useState([]);
 
   // loading / error states
@@ -70,15 +72,21 @@ export function SubmittedDocumentsSection({
       });
 
       const allResponsesArrays = await Promise.all(allFormResponsesPromises);
+      // console.log(`All ResponsesArrays:`, allResponsesArrays)
 
       // Flatten all responses into a single array
-      const allResponses = allResponsesArrays.flat();
+      // const allResponses = allResponsesArrays.flat();
+      const allResponses = allResponsesArrays.flatMap(responseArray => responseArray.data).filter(response => response !== null);
+      // console.log(`All Responses:`, allResponses)
+      // console.log(`form1`, allResponses[0])
 
       // Filter responses where the recipient matches the clientId
       const clientForms = allResponses.filter(
         (response) =>
-          response.recipient === clientId || response.recipientId === clientId,
+          response.clientId === clientId,
       );
+      console.log(`ClientId`, clientId)
+      console.log(`Client Responses:`, clientForms)
 
       setForms(clientForms);
     } catch (err) {
@@ -166,16 +174,15 @@ export function SubmittedDocumentsSection({
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {/* {forms.map((document) => (
-              <DocumentCard
-                key={document.id}
-                title={document.title}
-                type={document.type}
+            {forms.map((form: FormResponse) => (
+              <FormCard
+                key={form.id}
+                formResponse={form}
                 variant="admin"
-                onView={() => handleViewDocument(document)}
-                onDownload={() => handleDownloadDocument(document)}
+                // onView={() => handleViewDocument(document)}
+                // onDownload={() => handleDownloadDocument(document)}
               />
-            ))} */}
+            ))}
           </div>
         )}
       </CardContent>

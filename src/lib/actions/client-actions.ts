@@ -116,6 +116,8 @@ export interface FormResponsesApiResponse {
   data?: FormResponse[];
 }
 
+export type FormResponseArray = FormResponse[]
+
 
 
 
