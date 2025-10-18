@@ -71,6 +71,16 @@ export const BACKGROUND_CHECK_OPTIONS = {
 } as const;
 
 // Zod Schemas
+
+export const BackgroundCheckFilesSchema = z.array(
+    z.object({
+      checkName: z.string(),
+      fileUploaded: z.boolean(),
+      fileName: z.string().optional(),
+      fileId: z.string().optional(),
+    }),
+  )
+
 export const IdentificationSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
@@ -92,14 +102,7 @@ export const FormDataSchema = z.object({
   backgroundChecks: z
     .array(z.string())
     .min(1, 'At least one background check must be selected'),
-  backgroundCheckFiles: z.array(
-    z.object({
-      checkName: z.string(),
-      fileUploaded: z.boolean(),
-      fileName: z.string().optional(),
-      fileId: z.string().optional(),
-    }),
-  ),
+  backgroundCheckFiles: BackgroundCheckFilesSchema,
   status: z.enum(['cleared', 'pending', 'denied']),
   memo: z.string().optional(),
   uploadedFile: z
@@ -117,6 +120,7 @@ export const FormDataSchema = z.object({
 
 export type FormData = z.infer<typeof FormDataSchema>;
 export type Identification = z.infer<typeof IdentificationSchema>;
+export type BackgroundCheckFiles = z.infer<typeof BackgroundCheckFilesSchema>;
 
 // Default Form Data
 export const DEFAULT_FORM_DATA: FormData = {

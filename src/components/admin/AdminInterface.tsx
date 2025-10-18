@@ -21,6 +21,12 @@ interface AdminInterfaceProps {
   formData: FormData;
   updateFormData: (updates: Partial<FormData>) => void;
   updateIdentification: (updates: Partial<FormData['identification']>) => void;
+  updateCheckFileStatus: (
+    checkName: string, 
+    fileUploaded: boolean,
+    fileName?: string,
+    fileId?: string
+  ) => void;
   resetFormData: () => void;
   clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
@@ -34,6 +40,7 @@ export function AdminInterface({
   formData,
   updateFormData,
   updateIdentification,
+  updateCheckFileStatus,
   resetFormData,
   clientsResponse,
   clientsLoading,
@@ -67,6 +74,8 @@ export function AdminInterface({
       <BackgroundChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
+        backgroundCheckFiles={formData.backgroundCheckFiles}
+        updateCheckFileStatus={updateCheckFileStatus}
         updateFormData={updateFormData}
       />
 
@@ -74,6 +83,8 @@ export function AdminInterface({
       <CustomChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
+        backgroundCheckFiles={formData.backgroundCheckFiles}
+        updateCheckFileStatus={updateCheckFileStatus}
         updateFormData={updateFormData}
       />
 

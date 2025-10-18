@@ -45,6 +45,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     hasUnsavedChanges,
     updateFormData,
     updateIdentification,
+    updateCheckFileStatus,
     resetFormData,
     saveFormData,
   } = useFormData();
@@ -208,6 +209,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           formData={formData}
           updateFormData={updateFormData}
           updateIdentification={updateIdentification}
+          updateCheckFileStatus={updateCheckFileStatus}
           resetFormData={resetFormData}
           clientsResponse={clientsResponse}
           clientsLoading={clientsLoading}
