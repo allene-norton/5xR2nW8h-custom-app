@@ -12,8 +12,6 @@ export interface ClientInfo {
   phone?: string;
 }
 
-
-
 // File Information
 export interface FileInfo {
   id: string;
@@ -94,6 +92,14 @@ export const FormDataSchema = z.object({
   backgroundChecks: z
     .array(z.string())
     .min(1, 'At least one background check must be selected'),
+  backgroundCheckFiles: z.array(
+    z.object({
+      checkName: z.string(),
+      fileUploaded: z.boolean(),
+      fileName: z.string().optional(),
+      fileId: z.string().optional(),
+    }),
+  ),
   status: z.enum(['cleared', 'pending', 'denied']),
   memo: z.string().optional(),
   uploadedFile: z
@@ -106,7 +112,7 @@ export const FormDataSchema = z.object({
       uploadedAt: z.date(),
     })
     .optional(),
-    fileChannelId: z.string().optional()
+  fileChannelId: z.string().optional(),
 });
 
 export type FormData = z.infer<typeof FormDataSchema>;
@@ -127,9 +133,10 @@ export const DEFAULT_FORM_DATA: FormData = {
     birthdate: '',
   },
   backgroundChecks: [],
+  backgroundCheckFiles: [],
   status: 'pending',
   memo: '',
-  fileChannelId:'',
+  fileChannelId: '',
 };
 
 // Sample Clients
