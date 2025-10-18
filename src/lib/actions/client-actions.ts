@@ -350,3 +350,45 @@ export async function listContracts(clientId: string, token?: string) {
     };
   }
 }
+
+// findFileChannel action
+export async function findFileChannel(clientId: string, token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/channels/files?clientId=${clientId}`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.listFileChannels({clientId: clientId})
+      revalidatePath('/internal');
+      return data
+    }
+  } catch (error) {
+    console.error('Error fetching forms:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch forms',
+    };
+  }
+}
