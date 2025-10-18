@@ -168,8 +168,6 @@ export function SubmittedFormsSection({
                 key={form.id}
                 formResponse={form}
                 variant="admin"
-                // onView={() => handleViewDocument(document)}
-                // onDownload={() => handleDownloadDocument(document)}
               />
             ))}
           </div>
