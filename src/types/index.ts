@@ -106,6 +106,7 @@ export const FormDataSchema = z.object({
       uploadedAt: z.date(),
     })
     .optional(),
+    fileChannelId: z.string().optional()
 });
 
 export type FormData = z.infer<typeof FormDataSchema>;
@@ -128,6 +129,7 @@ export const DEFAULT_FORM_DATA: FormData = {
   backgroundChecks: [],
   status: 'pending',
   memo: '',
+  fileChannelId:'',
 };
 
 // Sample Clients

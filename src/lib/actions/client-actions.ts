@@ -156,7 +156,25 @@ export interface ContractsResponse {
 
 export type ContractArray = Contract[]
 
+// file channels
 
+export interface FileChannel {
+  id?: string;
+  object?: string;
+  identityId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  membershipType: "individual" | "company";
+  clientId?: string; // Optional, present when membershipType is "individual"
+  companyId?: string;
+  membershipEntityId?: string;
+  memberIds?: string[];
+}
+
+export interface ListFileChannelsResponse {
+  data?: FileChannel[];
+  nextToken?: string;
+}
 
 
 
@@ -351,8 +369,8 @@ export async function listContracts(clientId: string, token?: string) {
   }
 }
 
-// findFileChannel action
-export async function findFileChannel(clientId: string, token?: string) {
+// listFileChannels action
+export async function listFileChannels(token?: string) {
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -360,7 +378,7 @@ export async function findFileChannel(clientId: string, token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/channels/files?clientId=${clientId}`, {
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/channels/files`, {
         method: 'GET',
         headers: {
           'X-API-KEY': assemblyApiKey,
@@ -381,7 +399,7 @@ export async function findFileChannel(clientId: string, token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFileChannels({clientId: clientId})
+      const data = await sdk.listFileChannels({limit: 2000})
       revalidatePath('/internal');
       return data
     }

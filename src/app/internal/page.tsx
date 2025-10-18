@@ -1,19 +1,18 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { listClients, type ListClientsResponse } from '@/lib/actions/client-actions';
-
-// import { listClients } from '@/lib/actions/sdk-requests'; // Prod
-// import { devListClients } from '@/lib/actions/api-requests-for-dev'; //dev
+import {
+  listClients,
+  type ListClientsResponse,
+  listFileChannels,
+  type ListFileChannelsResponse,
+} from '@/lib/actions/client-actions';
 
 import { AdminInterface } from '@/components/admin/AdminInterface';
 import { useFormData } from '@/hooks/useFormData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock, CheckCircle } from 'lucide-react';
-
-// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; // Prod
-// import { devListClientsResponse } from '@/types/dev'; //dev
 
 interface InternalPageProps {
   searchParams: { token?: string };
@@ -31,6 +30,12 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
+  const [fileChannelsResponse, setFileChannelsResponse] =
+    useState<ListFileChannelsResponse>({ data: undefined, nextToken: '' });
+  const [fileChannelsLoading, setFileChannelsLoading] = useState(true);
+  const [fileChannelsError, setFileChannelsError] = useState<string | null>(
+    null,
+  );
 
   // FORM DATA
   const {
@@ -46,28 +51,56 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
 
   // FETCH CLIENTS
   useEffect(() => {
+
+    // get all workspace clients
     const fetchClients = async () => {
       try {
         setClientsLoading(true);
         setClientsError(null);
-        
-        // Works in both dev and prod!
+
         const response = await listClients(searchParams.token);
-        
+
         if (!response.data) {
           throw new Error('No client data returned from server');
         }
-        
+
         setClientsResponse(response);
       } catch (error) {
         console.error('Failed to fetch clients:', error);
-        setClientsError(error instanceof Error ? error.message : 'Failed to fetch clients');
+        setClientsError(
+          error instanceof Error ? error.message : 'Failed to fetch clients',
+        );
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    // get all workspace file channels
+
+    const fetchFileChannels = async () => {
+      try {
+        setFileChannelsLoading(true);
+        setFileChannelsError(null);
+
+        const response = await listFileChannels(searchParams.token);
+
+        if (!response.data) {
+          throw new Error('No file channel data returned from server');
+        }
+
+        setFileChannelsResponse(response);
+      } catch (error) {
+        console.error('Failed to fetch file channels:', error);
+        setClientsError(
+          error instanceof Error ? error.message : 'Failed to fetch file channels',
+        );
       } finally {
         setClientsLoading(false);
       }
     };
 
     fetchClients();
+    fetchFileChannels();
   }, [searchParams.token]);
 
   // Auto-save indicator
