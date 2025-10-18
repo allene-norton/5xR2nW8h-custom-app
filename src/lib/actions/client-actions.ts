@@ -119,6 +119,42 @@ export interface FormResponsesApiResponse {
 export type FormResponseArray = FormResponse[]
 
 
+// contracts
+
+export interface ContractField {
+  id?: string;
+  inputType?: string
+  isOptional?: boolean;
+  label?: string;
+  page?: number;
+  type?: string
+  value?: string;
+}
+
+export interface Contract {
+  clientId?: string;
+  companyId?: string;
+  contractTemplateId?: string;
+  createdAt?: string;
+  creationMode?: 'template';
+  fields?: ContractField[];
+  fileUrl?: string;
+  id?: string;
+  name?: string;
+  object?: 'contract';
+  recipientId?: string;
+  shareDate?: string;
+  signedFileUrl?: string;
+  status?: 'signed' | 'pending' | 'draft';
+  submissionDate?: string;
+  updatedAt?: string;
+}
+
+export interface ContractsResponse {
+  data?: Contract[];
+}
+
+export type ContractArray = Contract[]
 
 
 
@@ -262,6 +298,48 @@ export async function listFormResponses(formId: string, token?: string ) {
 
       const sdk = createSDK(token);
       const data = await sdk.listFormResponses({id: formId})
+      revalidatePath('/internal');
+      return data
+    }
+  } catch (error) {
+    console.error('Error fetching forms:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch forms',
+    };
+  }
+}
+
+// listContracts action
+export async function listContracts(clientId: string, token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/contracts?clientId=${clientId}`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.listContracts({clientId: clientId})
       revalidatePath('/internal');
       return data
     }

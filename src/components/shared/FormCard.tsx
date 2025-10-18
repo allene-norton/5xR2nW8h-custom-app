@@ -54,6 +54,8 @@ export function FormCard({
     return allAttachmentUrls;
   }, [formResponse.formFields]);
 
+  console.log(attachmentUrls[0])
+
 
   const getFileType = (filename: string) => {
     const extension = filename.split('.').pop()?.toLowerCase();

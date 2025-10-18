@@ -10,6 +10,7 @@ import {
 } from '../ui/card';
 import { Button } from '../ui/button';
 import { FormCard } from '@/components/shared/FormCard';
+import { ContractCard } from '@/components/shared/ContractCard';
 import { RefreshCw, FolderOpen } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import {
@@ -17,7 +18,12 @@ import {
   listFormResponses,
   FormResponse,
   FormResponseArray,
+  ContractArray,
+  ContractsResponse,
+  Contract,
+  listContracts
 } from '@/lib/actions/client-actions';
+// import { Contract } from 'copilot-design-system/dist/icons';
 
 interface SubmittedFormsSectionProps {
   clientId: string;
@@ -31,11 +37,15 @@ export function SubmittedFormsSection({
 
   //STATES
   const [forms, setForms] = useState<FormResponseArray>([]);
-  const [allFormResponses, setAllFormResponses] = useState([]);
+  const [contracts, setContracts] = useState<ContractArray>([]);
 
   // loading / error states
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingForms, setIsLoadingForms] = useState(false);
+  const [isLoadingContracts, setIsLoadingContracts] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isLoading = isLoadingForms || isLoadingContracts;
+
 
   // Form Loading
   const loadForms = async () => {
@@ -44,13 +54,12 @@ export function SubmittedFormsSection({
       return;
     }
 
-    setIsLoading(true);
+    setIsLoadingForms(true);
     setError(null);
 
     try {
       // get all workspace forms
       const formsData = await listForms(token);
-      console.log(`FormsData:`, formsData);
 
       if ('error' in formsData) {
         console.error('Error fetching forms:', formsData.error);
@@ -85,22 +94,58 @@ export function SubmittedFormsSection({
       const clientForms = allResponses.filter(
         (response) => response.clientId === clientId,
       );
-      console.log(`ClientId`, clientId);
-      console.log(`Client Responses:`, clientForms);
 
       setForms(clientForms as FormResponseArray);
     } catch (err) {
       setError('Failed to load client forms');
       console.error('Error loading client forms:', err);
     } finally {
-      setIsLoading(false);
+      setIsLoadingForms(false);
     }
   };
 
   // Contract Loading - add function to retrieve contracts for client
+  const loadContracts = async () => {
+    if (!clientId) {
+      setContracts([]);
+      return;
+    }
+
+    setIsLoadingContracts(true);
+    setError(null);
+
+    try {
+      // get all contracts for client
+      const contractsData = await listContracts(clientId, token);
+      console.log(`ContractsData:`, contractsData);
+
+      if ('error' in contractsData) {
+        console.error('Error fetching forms:', contractsData.error);
+        return;
+      }
+
+      const contracts = contractsData.data;
+      const signedContracts = contracts.filter((contract: Contract) => contract.status === 'signed');
+
+
+      console.log(`Contracts:`, signedContracts)
+
+    
+
+      setContracts(signedContracts as ContractArray);
+    } catch (err) {
+      setError('Failed to load client contracts');
+      console.error('Error loading client conracts:', err);
+    } finally {
+      setIsLoadingContracts(false);
+    }
+  };
+
+
 
   useEffect(() => {
     loadForms();
+    loadContracts();
   }, [clientId]);
 
   return (
@@ -161,6 +206,13 @@ export function SubmittedFormsSection({
               <FormCard
                 key={form.id}
                 formResponse={form}
+                variant="admin"
+              />
+            ))}
+             {contracts.map((contract: Contract) => (
+              <ContractCard
+                key={contract.id}
+                contract={contract}
                 variant="admin"
               />
             ))}
