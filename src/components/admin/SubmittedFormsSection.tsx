@@ -117,7 +117,7 @@ export function SubmittedFormsSection({
     try {
       // get all contracts for client
       const contractsData = await listContracts(clientId, token);
-      console.log(`ContractsData:`, contractsData);
+      // console.log(`ContractsData:`, contractsData);
 
       if ('error' in contractsData) {
         console.error('Error fetching forms:', contractsData.error);
@@ -128,7 +128,7 @@ export function SubmittedFormsSection({
       const signedContracts = contracts.filter((contract: Contract) => contract.status === 'signed');
 
 
-      console.log(`Contracts:`, signedContracts)
+      // console.log(`Contracts:`, signedContracts)
 
     
 

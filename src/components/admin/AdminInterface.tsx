@@ -1,7 +1,10 @@
 'use client';
 
 import type { FormData } from '@/types';
-import type { ListClientsResponse } from '@/lib/actions/client-actions';
+import type {
+  ListClientsResponse,
+  ListFileChannelsResponse,
+} from '@/lib/actions/client-actions';
 
 // import { ListClientsResponse } from '@/lib/actions/sdk-requests'; //Prod
 // import { devListClientsResponse } from '@/types/dev'; //dev
@@ -19,9 +22,12 @@ interface AdminInterfaceProps {
   updateFormData: (updates: Partial<FormData>) => void;
   updateIdentification: (updates: Partial<FormData['identification']>) => void;
   resetFormData: () => void;
-  clientsResponse: ListClientsResponse
+  clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
   clientsError: string | null;
+  fileChannelsResponse: ListFileChannelsResponse;
+  fileChannelsLoading: boolean;
+  fileChannelsError: string | null;
 }
 
 export function AdminInterface({
@@ -32,6 +38,9 @@ export function AdminInterface({
   clientsResponse,
   clientsLoading,
   clientsError,
+  fileChannelsResponse,
+  fileChannelsLoading,
+  fileChannelsError,
 }: AdminInterfaceProps) {
   return (
     <div className="space-y-8">
@@ -43,6 +52,9 @@ export function AdminInterface({
         clientsResponse={clientsResponse}
         clientsLoading={clientsLoading}
         clientsError={clientsError}
+        fileChannelsResponse={fileChannelsResponse}
+        fileChannelsLoading={fileChannelsLoading}
+        fileChannelsError={fileChannelsError}
       />
 
       {/* Applicant Information */}

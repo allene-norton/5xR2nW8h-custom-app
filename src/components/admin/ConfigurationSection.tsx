@@ -25,16 +25,21 @@ import {
   FORM_TYPE_INFO,
 } from '../../types';
 
-import type { ListClientsResponse } from '@/lib/actions/client-actions';
-
+import type {
+  ListClientsResponse,
+  ListFileChannelsResponse,
+} from '@/lib/actions/client-actions';
 
 interface ConfigurationSectionProps {
   formData: FormData;
   updateFormData: (updates: Partial<FormData>) => void;
   updateIdentification: (updates: Partial<Identification>) => void;
-  clientsResponse: ListClientsResponse 
+  clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
   clientsError: string | null;
+  fileChannelsResponse: ListFileChannelsResponse;
+  fileChannelsLoading: boolean;
+  fileChannelsError: string | null;
 }
 
 export function ConfigurationSection({
@@ -44,13 +49,20 @@ export function ConfigurationSection({
   clientsResponse,
   clientsLoading,
   clientsError,
+  fileChannelsResponse,
+  fileChannelsLoading,
+  fileChannelsError,
 }: ConfigurationSectionProps) {
+  const clients = clientsResponse.data?.data; // Prod
 
-  const clients = clientsResponse.data?.data // Prod
+  const fileChannels = fileChannelsResponse;
 
   const selectedClient = clients?.find(
     (client) => client.id === formData.client,
   );
+
+  // console.log(formData)
+
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
   return (
@@ -81,18 +93,29 @@ export function ConfigurationSection({
                 updateFormData({ client: value });
 
                 // Pre-fill identification data when client is selected
-                const selectedClient = clients?.find(client => client.id === value);
+                const selectedClient = clients?.find(
+                  (client) => client.id === value,
+                );
                 if (selectedClient) {
                   updateIdentification({
                     firstName: selectedClient.givenName || '',
                     lastName: selectedClient.familyName || '',
                     // Add other fields if they exist in your client data
-                    streetAddress: selectedClient.customFields?.streetAddress|| '',
-                    streetAddress2: selectedClient.customFields?.unitapartment|| '',
+                    streetAddress:
+                      selectedClient.customFields?.streetAddress || '',
+                    streetAddress2:
+                      selectedClient.customFields?.unitapartment || '',
                     city: selectedClient.customFields?.city || '',
                     state: selectedClient.customFields?.state || '',
                     postalCode: selectedClient.customFields?.postalCode || '',
                     birthdate: selectedClient.customFields?.birthdate || '',
+                  });
+                  const selectedClientFileChannel = fileChannels?.data?.find(
+                    (channel) => channel.clientId === selectedClient.id,
+                  );
+
+                  updateFormData({
+                    fileChannelId: selectedClientFileChannel?.id || undefined,
                   });
                 }
               }}
@@ -101,13 +124,17 @@ export function ConfigurationSection({
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {clients?.filter(client => client.id).map((client) => (
-                  <SelectItem key={client.id} value={client.id!}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{client.givenName} {client.familyName}</span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {clients
+                  ?.filter((client) => client.id)
+                  .map((client) => (
+                    <SelectItem key={client.id} value={client.id!}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {client.givenName} {client.familyName}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             {selectedClient && (
@@ -185,4 +212,3 @@ export function ConfigurationSection({
     </Card>
   );
 }
-

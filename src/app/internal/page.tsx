@@ -212,6 +212,9 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           clientsResponse={clientsResponse}
           clientsLoading={clientsLoading}
           clientsError={clientsError}
+          fileChannelsResponse={fileChannelsResponse}
+          fileChannelsLoading={fileChannelsLoading}
+          fileChannelsError={fileChannelsError}
         />
       </main>
 
