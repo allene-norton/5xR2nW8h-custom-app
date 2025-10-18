@@ -69,7 +69,7 @@ export function SubmittedDocumentsSection({
 
       // get responses for all forms
       const allFormResponsesPromises =
-        forms?.map(async (form) => {
+        forms?.map(async (form) => { //error has any type when using sdk but need to keep for api development
           try {
             // In dev mode, only formId is needed. In production, you might need to pass a token
             const responses = await listFormResponses(form.id!, token);
