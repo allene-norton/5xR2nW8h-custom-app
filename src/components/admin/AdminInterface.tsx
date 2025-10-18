@@ -49,6 +49,10 @@ export function AdminInterface({
   fileChannelsLoading,
   fileChannelsError,
 }: AdminInterfaceProps) {
+
+  console.log(formData)
+
+
   return (
     <div className="space-y-8">
       {/* Configuration Section */}
