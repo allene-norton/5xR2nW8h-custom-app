@@ -12,7 +12,7 @@ import { BackgroundChecksSection } from '@/components/admin/BackgroundChecksSect
 import { CustomChecksSection } from '@/components/admin/CustomChecksSection';
 import { StatusSection } from '@/components/admin/StatusSection';
 import { FileUploadSection } from '@/components/admin/FileUploadSection';
-import { SubmittedDocumentsSection } from '@/components/admin/SubmittedDocumentsSection';
+import { SubmittedFormsSection } from '@/components/admin/SubmittedFormsSection';
 
 interface AdminInterfaceProps {
   formData: FormData;
@@ -79,7 +79,7 @@ export function AdminInterface({
       />
 
       {/* Submitted Documents */}
-      <SubmittedDocumentsSection clientId={formData.client} />
+      <SubmittedFormsSection clientId={formData.client} />
     </div>
   );
 }

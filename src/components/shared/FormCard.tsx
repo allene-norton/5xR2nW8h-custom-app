@@ -4,16 +4,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { FileText, ExternalLink, Eye } from 'lucide-react';
-import { FormResponse, FormResponseArray } from '@/lib/actions/client-actions';
+import { FormResponse } from '@/lib/actions/client-actions';
 import { useMemo, useState } from 'react';
 
-// interface FormCardProps {
-//   title: string
-//   responseUrl?: string
-//   fileUrl?: string
-//   onResponseClick?: () => void
-//   onFileClick?: () => void
-// }
 
 interface FormCardProps {
   formResponse: FormResponse;

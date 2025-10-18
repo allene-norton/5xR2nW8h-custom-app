@@ -25,13 +25,13 @@ import {
   FormResponseArray,
 } from '@/lib/actions/client-actions';
 
-interface SubmittedDocumentsSectionProps {
+interface SubmittedFormsSectionProps {
   clientId: string;
 }
 
-export function SubmittedDocumentsSection({
+export function SubmittedFormsSection({
   clientId,
-}: SubmittedDocumentsSectionProps) {
+}: SubmittedFormsSectionProps) {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
 
@@ -58,10 +58,8 @@ export function SubmittedDocumentsSection({
       const formsData = await listForms(token);
       console.log(`FormsData:`, formsData);
 
-      // Check if it's an error response
       if ('error' in formsData) {
         console.error('Error fetching forms:', formsData.error);
-        // Handle error case
         return;
       }
 
@@ -71,7 +69,7 @@ export function SubmittedDocumentsSection({
       const allFormResponsesPromises =
         forms?.map(async (form) => { //error has any type when using sdk but need to keep for api development
           try {
-            // In dev mode, only formId is needed. In production, you might need to pass a token
+            // In dev mode, only formId is needed. In production need to pass a token
             const responses = await listFormResponses(form.id!, token);
             return responses || [];
           } catch (err) {
@@ -81,21 +79,13 @@ export function SubmittedDocumentsSection({
         }) || [];
 
       const allResponsesArrays = await Promise.all(allFormResponsesPromises);
-      // console.log(`All ResponsesArrays:`, allResponsesArrays)
-
-      // Flatten all responses into a single array
-      // const allResponses = allResponsesArrays.flat();
-      // const allResponses = allResponsesArrays
-      //   .flatMap((responseArray) => responseArray.data)
-      //   .filter((response) => response !== null);
+      
       const allResponses = allResponsesArrays
         .flatMap(
           (responseArray) =>
             ('data' in responseArray ? responseArray.data : []) || [],
         )
         .filter((response) => response !== null);
-      // console.log(`All Responses:`, allResponses)
-      // console.log(`form1`, allResponses[0])
 
       // Filter responses where the recipient matches the clientId
       const clientForms = allResponses.filter(
@@ -118,24 +108,6 @@ export function SubmittedDocumentsSection({
   useEffect(() => {
     loadForms();
   }, [clientId]);
-
-  // handlers -- unsure
-  // const handleViewDocument = (document: SDKDocument) => {
-  //   if (document.url) {
-  //     window.open(document.url, '_blank');
-  //   }
-  // };
-
-  // const handleDownloadDocument = (document: SDKDocument) => {
-  //   if (document.url) {
-  //     const link = document.createElement('a');
-  //     link.href = document.url;
-  //     link.download = document.title;
-  //     document.body.appendChild(link);
-  //     link.click();
-  //     document.body.removeChild(link);
-  //   }
-  // };
 
   return (
     <Card>
