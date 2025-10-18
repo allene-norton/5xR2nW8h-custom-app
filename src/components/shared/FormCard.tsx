@@ -1,9 +1,9 @@
-"use client"
+'use client';
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { FileText, ExternalLink } from "lucide-react"
-import { FormResponse, FormResponseArray } from "@/lib/actions/client-actions"
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { FileText, ExternalLink } from 'lucide-react';
+import { FormResponse, FormResponseArray } from '@/lib/actions/client-actions';
 
 // interface FormCardProps {
 //   title: string
@@ -20,39 +20,61 @@ interface FormCardProps {
   onFileClick?: () => void;
 }
 
-export function FormCard({ formResponse, onResponseClick, onFileClick }: FormCardProps) {
-  // const handleResponseClick = () => {
-  //   if (responseUrl) {
-  //     window.open(responseUrl, "_blank")
-  //   }
-  //   onResponseClick?.()
-  // }
+export function FormCard({
+  formResponse,
+  onResponseClick,
+  onFileClick,
+}: FormCardProps) {
+  const handleResponseClick = () => {
+    if (formResponse.formId) {
+      console.log(formResponse.formId)
+      window.parent.postMessage(
+        {
+          id: formResponse.formId,
+          type: 'history.push',
+          route: `forms`,
+        },
+        'https://dashboard.assembly.com',
+      );
+    }
+    onResponseClick?.();
+  };
 
   // const handleFileClick = () => {
   //   if (fileUrl) {
-  //     window.open(fileUrl, "_blank")
+  //     window.open(fileUrl, '_blank');
   //   }
-  //   onFileClick?.()
-  // }
+  //   onFileClick?.();
+  // };
 
   return (
     <Card className="hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-lg font-semibold flex items-center gap-2">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-semibold flex items-center gap-2">
           <FileText className="h-5 w-5 text-primary" />
           {formResponse.formName}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex gap-2">
-        {/* <Button variant="outline" size="sm" onClick={handleResponseClick} className="flex-1 bg-transparent">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleResponseClick}
+          className="flex-1 bg-transparent"
+        >
           <ExternalLink className="h-4 w-4 mr-2" />
           Form Response
         </Button>
-        <Button variant="outline" size="sm" onClick={handleFileClick} className="flex-1 bg-transparent">
+        {/* <Button
+          variant="outline"
+          size="sm"
+          onClick={handleFileClick}
+          className="flex-1 bg-transparent"
+        >
           <ExternalLink className="h-4 w-4 mr-2" />
           View File
         </Button> */}
       </CardContent>
     </Card>
-  )
+  );
 }

@@ -191,27 +191,27 @@ export async function listClients(
 // listForms action
 export async function listForms(token?: string) {
   try {
-  //   if (isDev) {
-  //     // Dev mode: use Assembly API directly
-  //     if (!assemblyApiKey) {
-  //       throw new Error('ASSEMBLY_API_KEY is required for dev mode');
-  //     }
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
 
-  //     const response = await fetch(`${ASSEMBLY_BASE_URI}/forms`, {
-  //       method: 'GET',
-  //       headers: {
-  //         'X-API-KEY': assemblyApiKey,
-  //       },
-  //     });
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/forms`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
 
-  //     if (!response.ok) {
-  //       throw new Error(`API request failed: ${response.statusText}`);
-  //     }
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
 
-  //     const data = await response.json();
-  //     revalidatePath('/internal');
-  //     return data;
-  //   } else {
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
       // Prod mode: use Copilot SDK with token
       if (!token) {
         throw new Error('Token is required in production');
@@ -221,7 +221,7 @@ export async function listForms(token?: string) {
       const data = await sdk.listForms({limit: 2000})
       revalidatePath('/internal');
       return data
-    // }
+    }
   } catch (error) {
     console.error('Error fetching forms:', error);
     return {
@@ -234,28 +234,28 @@ export async function listForms(token?: string) {
 // listFormResponses action
 export async function listFormResponses(formId: string, token?: string ) {
   try {
-    // if (isDev) {
-    //   // Dev mode: use Assembly API directly
-    //   if (!assemblyApiKey) {
-    //     throw new Error('ASSEMBLY_API_KEY is required for dev mode');
-    //   }
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
 
-    //   const response = await fetch(`${ASSEMBLY_BASE_URI}/forms/${formId}/form-responses`, {
-    //     method: 'GET',
-    //     headers: {
-    //       'X-API-KEY': assemblyApiKey,
-    //     },
-    //   });
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/forms/${formId}/form-responses`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
 
-    //   if (!response.ok) {
-    //     throw new Error(`API request failed: ${response.statusText}`);
-    //   }
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
 
-    //   const data = await response.json();
-    //   revalidatePath('/internal');
-    //   return data;
-    // } else {
-      // Prod mode: use Copilot SDK with token
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use SDK with token
       if (!token) {
         throw new Error('Token is required in production');
       }
@@ -264,7 +264,7 @@ export async function listFormResponses(formId: string, token?: string ) {
       const data = await sdk.listFormResponses({id: formId})
       revalidatePath('/internal');
       return data
-    // }
+    }
   } catch (error) {
     console.error('Error fetching forms:', error);
     return {
