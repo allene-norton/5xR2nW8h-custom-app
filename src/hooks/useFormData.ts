@@ -91,7 +91,7 @@ export function useFormData() {
       setFormData((prev) => {
         const updatedFiles = prev.backgroundCheckFiles.map((file) =>
           file.checkName === checkName
-            ? { ...file, fileUploaded, fileName, fileId }
+            ? { ...file, fileUploaded, fileName }
             : file,
         );
 

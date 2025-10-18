@@ -28,7 +28,6 @@ interface BackgroundChecksSectionProps {
     checkName: string,
     fileUploaded: boolean,
     fileName?: string,
-    fileId?: string,
   ) => void;
 }
 
