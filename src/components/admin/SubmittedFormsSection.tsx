@@ -27,13 +27,17 @@ import {
 
 interface SubmittedFormsSectionProps {
   clientId: string;
+  fileChannelId: string | undefined
 }
 
 export function SubmittedFormsSection({
-  clientId,
+  clientId, fileChannelId
 }: SubmittedFormsSectionProps) {
+
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
+
+  // console.log(`Sumbission Section FileChannelId:`, fileChannelId)
 
   //STATES
   const [forms, setForms] = useState<FormResponseArray>([]);
