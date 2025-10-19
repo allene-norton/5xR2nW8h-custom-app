@@ -39,7 +39,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     null,
   );
 
-  const [currentUser, setCurrentUser] = useState<string>('admin123');
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
 
   // FORM DATA
   const {
@@ -52,21 +52,10 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     updateCheckFileStatus,
     resetFormData,
     saveFormData,
-  } = useFormData({ userId: currentUser });
+  } = useFormData({ clientId: selectedClientId });
 
   // FETCH CLIENTS
   useEffect(() => {
-    // set current user
-
-    const userAuth = async () => {
-      try {
-        const sessionData = await getSession(searchParams);
-        console.log(`token session`, sessionData);
-      } catch {
-        setCurrentUser('admin123');
-      }
-    };
-
     // get all workspace clients
     const fetchClients = async () => {
       try {
@@ -116,7 +105,6 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
       }
     };
 
-    userAuth();
     fetchClients();
     fetchFileChannels();
   }, [searchParams.token]);
@@ -143,6 +131,10 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
       </div>
     );
   }
+
+  const handleClientSelect = (clientId: string) => {
+    setSelectedClientId(clientId);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -184,31 +176,26 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                 )}
               </div>
 
-              {/* Manual Save Button */}
-              <Button
-                onClick={async () => {
-                  console.log('Save button clicked');
-                  console.log('Current user:', currentUser);
-                  console.log('Form data:', formData);
-                  console.log('Has unsaved changes:', hasUnsavedChanges);
-
-                  try {
-                    await saveFormData();
-                    console.log('Save completed successfully');
-                  } catch (error) {
-                    console.error('Save failed:', error);
-                  }
-                }}
-                variant={hasUnsavedChanges ? 'default' : 'outline'}
-                size="sm"
-                className="flex items-center space-x-2"
-                // disabled={isSaving}
-              >
-                <Save className="w-4 h-4" />
-                <span>Save</span>
-
-                {/* <span>{isSaving ? 'Saving...' : 'Save'}</span> */}
-              </Button>
+              {/* Manual Save Button - only show if client is selected */}
+              {selectedClientId && (
+                <Button
+                  onClick={async () => {
+                    console.log('Save button clicked for client:', selectedClientId);
+                    try {
+                      await saveFormData();
+                      console.log('Save completed successfully');
+                    } catch (error) {
+                      console.error('Save failed:', error);
+                    }
+                  }}
+                  variant={hasUnsavedChanges ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex items-center space-x-2"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Save</span>
+                </Button>
+              )}
 
               {/* Status Badge */}
               <Badge
@@ -249,6 +236,8 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           fileChannelsResponse={fileChannelsResponse}
           fileChannelsLoading={fileChannelsLoading}
           fileChannelsError={fileChannelsError}
+          selectedClientId={selectedClientId}
+          onClientSelect={handleClientSelect}
         />
       </main>
 

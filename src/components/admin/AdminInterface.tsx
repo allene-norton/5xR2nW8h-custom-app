@@ -34,6 +34,8 @@ interface AdminInterfaceProps {
   fileChannelsResponse: ListFileChannelsResponse;
   fileChannelsLoading: boolean;
   fileChannelsError: string | null;
+  selectedClientId: string;
+  onClientSelect: (clientId: string) => void;
 }
 
 export function AdminInterface({
@@ -48,6 +50,8 @@ export function AdminInterface({
   fileChannelsResponse,
   fileChannelsLoading,
   fileChannelsError,
+  selectedClientId,
+  onClientSelect
 }: AdminInterfaceProps) {
 
   console.log(formData)
@@ -66,6 +70,8 @@ export function AdminInterface({
         fileChannelsResponse={fileChannelsResponse}
         fileChannelsLoading={fileChannelsLoading}
         fileChannelsError={fileChannelsError}
+        selectedClientId={selectedClientId}
+        onClientSelect={onClientSelect}
       />
 
       {/* Applicant Information */}

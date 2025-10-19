@@ -40,6 +40,8 @@ interface ConfigurationSectionProps {
   fileChannelsResponse: ListFileChannelsResponse;
   fileChannelsLoading: boolean;
   fileChannelsError: string | null;
+  selectedClientId: string;
+  onClientSelect: (clientId: string) => void;
 }
 
 export function ConfigurationSection({
@@ -52,13 +54,15 @@ export function ConfigurationSection({
   fileChannelsResponse,
   fileChannelsLoading,
   fileChannelsError,
+  selectedClientId,
+  onClientSelect,
 }: ConfigurationSectionProps) {
   const clients = clientsResponse.data?.data; // Prod
 
   const fileChannels = fileChannelsResponse;
 
   const selectedClient = clients?.find(
-    (client) => client.id === formData.client,
+    (client) => client.id === selectedClientId
   );
 
   // console.log(formData)
@@ -88,9 +92,10 @@ export function ConfigurationSection({
               <span>Client</span>
             </Label>
             <Select
-              value={formData.client}
+              value={selectedClientId}
               onValueChange={(value) => {
                 updateFormData({ client: value });
+                onClientSelect(value)
 
                 // Pre-fill identification data when client is selected
                 const selectedClient = clients?.find(

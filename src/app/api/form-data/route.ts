@@ -9,13 +9,13 @@ import {
 
 export async function GET(request: NextRequest) {
   try {
-    const userId = request.nextUrl.searchParams.get('userId');
+    const clientId = request.nextUrl.searchParams.get('clientId');
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    if (!clientId) {
+      return NextResponse.json({ error: 'Missing clientId' }, { status: 400 });
     }
 
-    const data = await getFormData(userId);
+    const data = await getFormData(clientId);
     return NextResponse.json(data || null);
   } catch (error) {
     console.error('Error fetching form data:', error);
@@ -29,22 +29,25 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { userId, data } = body;
+    const { clientId, data } = body;
+    console.log(`Data for client:`,clientId)
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    if (!clientId) {
+      console.error('POST Error: Missing clientId in request body');
+      return NextResponse.json({ error: 'Missing clientId' }, { status: 400 });
     }
 
     // Validate data
     const validated = FormDataSchema.safeParse(data);
     if (!validated.success) {
+      console.error('Validation Error:', JSON.stringify(validated.error.issues, null, 2));
       return NextResponse.json(
         { error: 'Invalid data', details: validated.error },
         { status: 400 }
       );
     }
 
-    await saveFormData(userId, validated.data);
+    await saveFormData(clientId, validated.data);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error saving form data:', error);
@@ -57,13 +60,13 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const userId = request.nextUrl.searchParams.get('userId');
+    const clientId = request.nextUrl.searchParams.get('clientId');
 
-    if (!userId) {
-      return NextResponse.json({ error: 'Missing userId' }, { status: 400 });
+    if (!clientId) {
+      return NextResponse.json({ error: 'Missing clientId' }, { status: 400 });
     }
 
-    await deleteFormData(userId);
+    await deleteFormData(clientId);
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error deleting form data:', error);

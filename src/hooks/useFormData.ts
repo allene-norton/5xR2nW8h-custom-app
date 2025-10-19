@@ -11,10 +11,10 @@ import {
 const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
 interface UseFormDataOptions {
-  userId: string; 
+  clientId: string; 
 }
 
-export function useFormData({ userId }: UseFormDataOptions) {
+export function useFormData({ clientId }: UseFormDataOptions) {
   const [formData, setFormData] = useState<BackgroundCheckFormData>(DEFAULT_FORM_DATA);
   const [isLoading, setIsLoading] = useState(true);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
@@ -25,7 +25,7 @@ export function useFormData({ userId }: UseFormDataOptions) {
   useEffect(() => {
     async function loadData() {
       try {
-        const response = await fetch(`/api/form-data?userId=${userId}`);
+        const response = await fetch(`/api/form-data?clientId=${clientId}`);
         if (response.ok) {
           const data = await response.json();
           if (data) {
@@ -42,24 +42,24 @@ export function useFormData({ userId }: UseFormDataOptions) {
       }
     }
     
-    if (userId) {
+    if (clientId) {
       loadData();
     } else {
       setIsLoading(false);
     }
-  }, [userId]);
+  }, [clientId]);
 
   // Save to Upstash
   const saveToDatabase = useCallback(
     async (data: BackgroundCheckFormData) => {
-      if (!userId) return;
+      if (!clientId) return;
       
       setIsSaving(true);
       try {
         const response = await fetch('/api/form-data', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, data }),
+          body: JSON.stringify({ clientId, data }),
         });
 
         if (response.ok) {
@@ -74,7 +74,7 @@ export function useFormData({ userId }: UseFormDataOptions) {
         setIsSaving(false);
       }
     },
-    [userId]
+    [clientId]
   );
 
   // Update form data with auto-sync for backgroundCheckFiles
@@ -134,25 +134,25 @@ export function useFormData({ userId }: UseFormDataOptions) {
 
   // Reset form data
   const resetFormData = useCallback(async () => {
-    if (!userId) return;
+    if (!clientId) return;
     
     setFormData(DEFAULT_FORM_DATA);
     try {
-      await fetch(`/api/form-data?userId=${userId}`, { method: 'DELETE' });
+      await fetch(`/api/form-data?clientId=${clientId}`, { method: 'DELETE' });
       setHasUnsavedChanges(false);
       setLastSaved(null);
     } catch (error) {
       console.error('Error resetting form data:', error);
     }
-  }, [userId]);
+  }, [clientId]);
 
   // Manual save
   const saveFormData = useCallback(async () => {
-  console.log('saveFormData called with userId:', userId);
+  console.log('saveFormData called with clientId:', clientId);
   console.log('saveFormData called with formData:', formData);
   
-  if (!userId) {
-    console.error('No userId provided for save');
+  if (!clientId) {
+    console.error('No clientId provided for save');
     return;
   }
   
@@ -163,18 +163,18 @@ export function useFormData({ userId }: UseFormDataOptions) {
     console.error('Save failed in saveFormData:', error);
     throw error; // Re-throw so the component can handle it
   }
-}, [formData, saveToDatabase, userId]);
+}, [formData, saveToDatabase, clientId]);
 
   // Auto-save effect
   useEffect(() => {
-    if (!hasUnsavedChanges || !userId) return;
+    if (!hasUnsavedChanges || !clientId) return;
 
     const timer = setTimeout(() => {
       saveToDatabase(formData);
     }, AUTO_SAVE_INTERVAL);
 
     return () => clearTimeout(timer);
-  }, [formData, hasUnsavedChanges, saveToDatabase, userId]);
+  }, [formData, hasUnsavedChanges, saveToDatabase, clientId]);
 
   return {
     formData,
