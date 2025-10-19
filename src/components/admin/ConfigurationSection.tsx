@@ -61,6 +61,7 @@ export function ConfigurationSection({
   selectedClientId,
   onClientSelect,
 }: ConfigurationSectionProps) {
+  
   const clients = clientsResponse.data?.data; // Prod
 
   const fileChannels = fileChannelsResponse;
