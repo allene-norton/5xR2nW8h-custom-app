@@ -4,16 +4,16 @@ import type { BackgroundCheckFormData } from '@/types';
 
 const redis = Redis.fromEnv();
 
-export async function saveFormData(userId: string, data: BackgroundCheckFormData) {
-  await redis.set(`form:${userId}`, data);
+export async function saveFormData(clientId: string, data: BackgroundCheckFormData) {
+  await redis.set(`form:${clientId}`, data);
 }
 
-export async function getFormData(userId: string): Promise<BackgroundCheckFormData | null> {
-  return await redis.get(`form:${userId}`);
+export async function getFormData(clientId: string): Promise<BackgroundCheckFormData | null> {
+  return await redis.get(`form:${clientId}`);
 }
 
-export async function deleteFormData(userId: string) {
-  await redis.del(`form:${userId}`);
+export async function deleteFormData(clientId: string) {
+  await redis.del(`form:${clientId}`);
 }
 
 // Optional for admin/debugging
