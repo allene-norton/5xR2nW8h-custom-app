@@ -17,6 +17,7 @@ import { type FormType, BACKGROUND_CHECK_OPTIONS, BackgroundCheckFiles } from '.
 interface CustomChecksSectionProps {
   formType: FormType;
   selectedChecks: string[];
+  selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
   updateFormData: (updates: { backgroundChecks: string[] }) => void;
   updateCheckFileStatus: (
@@ -29,6 +30,7 @@ interface CustomChecksSectionProps {
 export function CustomChecksSection({
   formType,
   selectedChecks,
+  selectedClientId,
   backgroundCheckFiles,
   updateCheckFileStatus,
   updateFormData,

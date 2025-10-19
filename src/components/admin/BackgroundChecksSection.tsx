@@ -22,6 +22,7 @@ import {
 interface BackgroundChecksSectionProps {
   formType: FormType;
   selectedChecks: string[];
+  selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
   updateFormData: (updates: { backgroundChecks: string[] }) => void;
   updateCheckFileStatus: (
@@ -34,13 +35,17 @@ interface BackgroundChecksSectionProps {
 export function BackgroundChecksSection({
   formType,
   selectedChecks,
+  selectedClientId,
   backgroundCheckFiles,
   updateFormData,
   updateCheckFileStatus,
 }: BackgroundChecksSectionProps) {
   const availableChecks = BACKGROUND_CHECK_OPTIONS[formType];
+
   const requiredChecks: readonly string[] =
     FORM_TYPE_INFO[formType].requiredChecks;
+  
+    console.log(`SELECTED CHECKS`, selectedChecks)
 
   const handleCheckChange = (checkName: string, checked: boolean) => {
     const newChecks = checked

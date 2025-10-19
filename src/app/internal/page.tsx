@@ -132,6 +132,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     );
   }
 
+
   const handleClientSelect = (clientId: string) => {
     setSelectedClientId(clientId);
   };

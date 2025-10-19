@@ -84,6 +84,7 @@ export function AdminInterface({
       <BackgroundChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
+        selectedClientId={selectedClientId}
         backgroundCheckFiles={formData.backgroundCheckFiles}
         updateCheckFileStatus={updateCheckFileStatus}
         updateFormData={updateFormData}
@@ -93,6 +94,7 @@ export function AdminInterface({
       <CustomChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
+        selectedClientId={selectedClientId}
         backgroundCheckFiles={formData.backgroundCheckFiles}
         updateCheckFileStatus={updateCheckFileStatus}
         updateFormData={updateFormData}
