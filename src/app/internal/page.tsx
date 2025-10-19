@@ -1,7 +1,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getSession } from '@/utils/session';
+
+// HOOKS IMPORTS
+import { useFormData } from '@/hooks/useFormData';
+
+
+// API/SDK IMPORTS
 import {
   listClients,
   type ListClientsResponse,
@@ -9,8 +14,11 @@ import {
   type ListFileChannelsResponse,
 } from '@/lib/actions/client-actions';
 
+
+// COMPONENT IMPORTS
 import { AdminInterface } from '@/components/admin/AdminInterface';
-import { useFormData } from '@/hooks/useFormData';
+
+// UI IMPORTS
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock, CheckCircle } from 'lucide-react';
@@ -21,7 +29,8 @@ interface InternalPageProps {
 }
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
-  // STATES
+// ----------- STATES-------------------------------------------
+  // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
     success: false,
     data: {
@@ -32,6 +41,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
+  // FILE CHANNELS STATES
   const [fileChannelsResponse, setFileChannelsResponse] =
     useState<ListFileChannelsResponse>({ data: undefined, nextToken: '' });
   const [fileChannelsLoading, setFileChannelsLoading] = useState(true);
@@ -39,7 +49,10 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     null,
   );
 
+  // SELECTED CLIENT STATE
   const [selectedClientId, setSelectedClientId] = useState<string>('');
+
+// ---------------- end states-------------------------------------------
 
   // FORM DATA
   const {
@@ -54,7 +67,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     saveFormData,
   } = useFormData({ clientId: selectedClientId });
 
-  // FETCH CLIENTS
+  // FETCH CLIENTS AND FILE CHANNELS ON MOUNT
   useEffect(() => {
     // get all workspace clients
     const fetchClients = async () => {
@@ -121,6 +134,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     return `Saved ${minutes} minutes ago`;
   };
 
+  // LOADING INDICATOR
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">

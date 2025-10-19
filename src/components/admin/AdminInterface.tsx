@@ -1,14 +1,13 @@
 'use client';
 
+// TYPE IMPORTS
 import type { BackgroundCheckFormData } from '@/types';
 import type {
   ListClientsResponse,
   ListFileChannelsResponse,
 } from '@/lib/actions/client-actions';
 
-// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; //Prod
-// import { devListClientsResponse } from '@/types/dev'; //dev
-
+// COMPONENT IMPORTS 
 import { ConfigurationSection } from '@/components/admin/ConfigurationSection';
 import { ApplicantInfoSection } from '@/components/admin/ApplicantInfoSection';
 import { BackgroundChecksSection } from '@/components/admin/BackgroundChecksSection';

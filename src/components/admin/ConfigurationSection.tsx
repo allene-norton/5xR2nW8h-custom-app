@@ -1,5 +1,6 @@
 'use client';
 
+// UI IMPORTS
 import {
   Card,
   CardContent,
@@ -18,10 +19,10 @@ import {
 import { Badge } from '../ui/badge';
 import { Settings, User, FileText } from 'lucide-react';
 
+// TYPE IMPORTS 
 import {
   type BackgroundCheckFormData,
   type Identification,
-  SAMPLE_CLIENTS,
   FORM_TYPE_INFO,
 } from '../../types';
 
@@ -29,6 +30,9 @@ import type {
   ListClientsResponse,
   ListFileChannelsResponse,
 } from '@/lib/actions/client-actions';
+
+
+
 
 interface ConfigurationSectionProps {
   formData: BackgroundCheckFormData;
