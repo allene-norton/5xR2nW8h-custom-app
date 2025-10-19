@@ -5,6 +5,7 @@ import type { BackgroundCheckFormData } from '@/types';
 import type {
   ListClientsResponse,
   ListFileChannelsResponse,
+  Client
 } from '@/lib/actions/client-actions';
 
 // COMPONENT IMPORTS 
@@ -33,8 +34,8 @@ interface AdminInterfaceProps {
   fileChannelsResponse: ListFileChannelsResponse;
   fileChannelsLoading: boolean;
   fileChannelsError: string | null;
-  selectedClientId: string;
-  onClientSelect: (clientId: string) => void;
+  selectedClient: Client | null; // Changed from selectedClientId
+  onClientSelect: (client: Client) => void; // Changed signature
 }
 
 export function AdminInterface({
@@ -49,11 +50,11 @@ export function AdminInterface({
   fileChannelsResponse,
   fileChannelsLoading,
   fileChannelsError,
-  selectedClientId,
+  selectedClient,
   onClientSelect
 }: AdminInterfaceProps) {
 
-  console.log(formData)
+  // console.log(formData)
 
 
   return (
@@ -69,7 +70,7 @@ export function AdminInterface({
         fileChannelsResponse={fileChannelsResponse}
         fileChannelsLoading={fileChannelsLoading}
         fileChannelsError={fileChannelsError}
-        selectedClientId={selectedClientId}
+        selectedClient={selectedClient}
         onClientSelect={onClientSelect}
       />
 
@@ -83,7 +84,7 @@ export function AdminInterface({
       <BackgroundChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
-        selectedClientId={selectedClientId}
+        selectedClientId={selectedClient?.id || ''}
         backgroundCheckFiles={formData.backgroundCheckFiles}
         updateCheckFileStatus={updateCheckFileStatus}
         updateFormData={updateFormData}
@@ -93,7 +94,7 @@ export function AdminInterface({
       <CustomChecksSection
         formType={formData.formType}
         selectedChecks={formData.backgroundChecks}
-        selectedClientId={selectedClientId}
+        selectedClientId={selectedClient?.id || ''}
         backgroundCheckFiles={formData.backgroundCheckFiles}
         updateCheckFileStatus={updateCheckFileStatus}
         updateFormData={updateFormData}

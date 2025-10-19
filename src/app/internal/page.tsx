@@ -12,6 +12,7 @@ import {
   type ListClientsResponse,
   listFileChannels,
   type ListFileChannelsResponse,
+  type Client
 } from '@/lib/actions/client-actions';
 
 
@@ -50,7 +51,8 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   );
 
   // SELECTED CLIENT STATE
-  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
 
 // ---------------- end states-------------------------------------------
 
@@ -65,7 +67,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     updateCheckFileStatus,
     resetFormData,
     saveFormData,
-  } = useFormData({ clientId: selectedClientId });
+  } = useFormData({ clientId: selectedClient?.id || '' });
 
   // FETCH CLIENTS AND FILE CHANNELS ON MOUNT
   useEffect(() => {
@@ -147,9 +149,11 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   }
 
 
-  const handleClientSelect = (clientId: string) => {
-    setSelectedClientId(clientId);
+  const handleClientSelect = (client: Client) => {
+    setSelectedClient(client);
   };
+
+  console.log(`PARENT SELECTED CLIENT`, selectedClient)
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -192,10 +196,10 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
               </div>
 
               {/* Manual Save Button - only show if client is selected */}
-              {selectedClientId && (
+              {selectedClient && (
                 <Button
                   onClick={async () => {
-                    console.log('Save button clicked for client:', selectedClientId);
+                    console.log('Save button clicked for client:', selectedClient.id);
                     try {
                       await saveFormData();
                       console.log('Save completed successfully');
@@ -251,7 +255,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           fileChannelsResponse={fileChannelsResponse}
           fileChannelsLoading={fileChannelsLoading}
           fileChannelsError={fileChannelsError}
-          selectedClientId={selectedClientId}
+          selectedClient={selectedClient}
           onClientSelect={handleClientSelect}
         />
       </main>

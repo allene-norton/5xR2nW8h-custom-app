@@ -19,7 +19,7 @@ import {
 import { Badge } from '../ui/badge';
 import { Settings, User, FileText } from 'lucide-react';
 
-// TYPE IMPORTS 
+// TYPE IMPORTS
 import {
   type BackgroundCheckFormData,
   type Identification,
@@ -29,10 +29,8 @@ import {
 import type {
   ListClientsResponse,
   ListFileChannelsResponse,
+  Client,
 } from '@/lib/actions/client-actions';
-
-
-
 
 interface ConfigurationSectionProps {
   formData: BackgroundCheckFormData;
@@ -44,8 +42,8 @@ interface ConfigurationSectionProps {
   fileChannelsResponse: ListFileChannelsResponse;
   fileChannelsLoading: boolean;
   fileChannelsError: string | null;
-  selectedClientId: string;
-  onClientSelect: (clientId: string) => void;
+  selectedClient: Client | null; // Changed from selectedClientId
+  onClientSelect: (client: Client) => void; // Changed signature
 }
 
 export function ConfigurationSection({
@@ -58,17 +56,16 @@ export function ConfigurationSection({
   fileChannelsResponse,
   fileChannelsLoading,
   fileChannelsError,
-  selectedClientId,
+  selectedClient,
   onClientSelect,
 }: ConfigurationSectionProps) {
-  
   const clients = clientsResponse.data?.data; // Prod
 
   const fileChannels = fileChannelsResponse;
 
-  const selectedClient = clients?.find(
-    (client) => client.id === selectedClientId
-  );
+  // const selectedClient = clients?.find(
+  //   (client) => client.id === selectedClientId
+  // );
 
   // console.log(formData)
 
@@ -97,31 +94,31 @@ export function ConfigurationSection({
               <span>Client</span>
             </Label>
             <Select
-              value={selectedClientId}
+              value={selectedClient?.id || ''}
               onValueChange={(value) => {
-                updateFormData({ client: value });
-                onClientSelect(value)
+                const client = clients?.find((c) => c.id === value);
+                if (client) {
+                  // Update form data with client ID
+                  updateFormData({ client: client.id });
 
-                // Pre-fill identification data when client is selected
-                const selectedClient = clients?.find(
-                  (client) => client.id === value,
-                );
-                if (selectedClient) {
+                  // Call onClientSelect with the full client object
+                  onClientSelect(client);
+
+                  // Pre-fill identification data
                   updateIdentification({
-                    firstName: selectedClient.givenName || '',
-                    lastName: selectedClient.familyName || '',
-                    // Add other fields if they exist in your client data
-                    streetAddress:
-                      selectedClient.customFields?.streetAddress || '',
-                    streetAddress2:
-                      selectedClient.customFields?.unitapartment || '',
-                    city: selectedClient.customFields?.city || '',
-                    state: selectedClient.customFields?.state || '',
-                    postalCode: selectedClient.customFields?.postalCode || '',
-                    birthdate: selectedClient.customFields?.birthdate || '',
+                    firstName: client.givenName || '',
+                    lastName: client.familyName || '',
+                    streetAddress: client.customFields?.streetAddress || '',
+                    streetAddress2: client.customFields?.unitapartment || '',
+                    city: client.customFields?.city || '',
+                    state: client.customFields?.state || '',
+                    postalCode: client.customFields?.postalCode || '',
+                    birthdate: client.customFields?.birthdate || '',
                   });
+
+                  // Find and set file channel
                   const selectedClientFileChannel = fileChannels?.data?.find(
-                    (channel) => channel.clientId === selectedClient.id,
+                    (channel) => channel.clientId === client.id,
                   );
 
                   updateFormData({
