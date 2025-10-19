@@ -19,7 +19,7 @@ import { Badge } from '../ui/badge';
 import { Settings, User, FileText } from 'lucide-react';
 
 import {
-  type FormData,
+  type BackgroundCheckFormData,
   type Identification,
   SAMPLE_CLIENTS,
   FORM_TYPE_INFO,
@@ -31,8 +31,8 @@ import type {
 } from '@/lib/actions/client-actions';
 
 interface ConfigurationSectionProps {
-  formData: FormData;
-  updateFormData: (updates: Partial<FormData>) => void;
+  formData: BackgroundCheckFormData;
+  updateFormData: (updates: Partial<BackgroundCheckFormData>) => void;
   updateIdentification: (updates: Partial<Identification>) => void;
   clientsResponse: ListClientsResponse;
   clientsLoading: boolean;

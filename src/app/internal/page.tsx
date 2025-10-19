@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { getSession } from '@/utils/session';
 import {
   listClients,
   type ListClientsResponse,
@@ -13,6 +14,7 @@ import { useFormData } from '@/hooks/useFormData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Save, Clock, CheckCircle } from 'lucide-react';
+import { se } from 'date-fns/locale';
 
 interface InternalPageProps {
   searchParams: { token?: string };
@@ -37,6 +39,8 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     null,
   );
 
+  const [currentUser, setCurrentUser] = useState<string>('admin123');
+
   // FORM DATA
   const {
     formData,
@@ -48,10 +52,20 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     updateCheckFileStatus,
     resetFormData,
     saveFormData,
-  } = useFormData();
+  } = useFormData({ userId: currentUser });
 
   // FETCH CLIENTS
   useEffect(() => {
+    // set current user
+
+    const userAuth = async () => {
+      try {
+        const sessionData = await getSession(searchParams);
+        console.log(`token session`, sessionData);
+      } catch {
+        setCurrentUser('admin123');
+      }
+    };
 
     // get all workspace clients
     const fetchClients = async () => {
@@ -93,13 +107,16 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
       } catch (error) {
         console.error('Failed to fetch file channels:', error);
         setClientsError(
-          error instanceof Error ? error.message : 'Failed to fetch file channels',
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch file channels',
         );
       } finally {
         setClientsLoading(false);
       }
     };
 
+    userAuth();
     fetchClients();
     fetchFileChannels();
   }, [searchParams.token]);
@@ -169,13 +186,28 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
 
               {/* Manual Save Button */}
               <Button
-                onClick={saveFormData}
+                onClick={async () => {
+                  console.log('Save button clicked');
+                  console.log('Current user:', currentUser);
+                  console.log('Form data:', formData);
+                  console.log('Has unsaved changes:', hasUnsavedChanges);
+
+                  try {
+                    await saveFormData();
+                    console.log('Save completed successfully');
+                  } catch (error) {
+                    console.error('Save failed:', error);
+                  }
+                }}
                 variant={hasUnsavedChanges ? 'default' : 'outline'}
                 size="sm"
                 className="flex items-center space-x-2"
+                // disabled={isSaving}
               >
                 <Save className="w-4 h-4" />
                 <span>Save</span>
+
+                {/* <span>{isSaving ? 'Saving...' : 'Save'}</span> */}
               </Button>
 
               {/* Status Badge */}

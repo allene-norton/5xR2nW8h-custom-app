@@ -117,12 +117,12 @@ export const FormDataSchema = z.object({
   fileChannelId: z.string().optional(),
 });
 
-export type FormData = z.infer<typeof FormDataSchema>;
+export type BackgroundCheckFormData = z.infer<typeof FormDataSchema>;
 export type Identification = z.infer<typeof IdentificationSchema>;
 export type BackgroundCheckFiles = z.infer<typeof BackgroundCheckFilesSchema>;
 
 // Default Form Data
-export const DEFAULT_FORM_DATA: FormData = {
+export const DEFAULT_FORM_DATA: BackgroundCheckFormData = {
   client: '',
   formType: 'tenant',
   identification: {

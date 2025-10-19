@@ -1,11 +1,11 @@
 "use client"
 
-import type { FormData } from "../../types"
+import type { BackgroundCheckFormData } from "../../types"
 import { CoverLetterDisplay } from "./CoverLetterDisplay"
 import { ClientDocumentsDisplay } from "./ClientDocumentsDisplay"
 
 interface ClientPortalProps {
-  formData: FormData
+  formData: BackgroundCheckFormData
 }
 
 export function ClientPortal({ formData }: ClientPortalProps) {

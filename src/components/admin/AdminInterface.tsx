@@ -1,6 +1,6 @@
 'use client';
 
-import type { FormData } from '@/types';
+import type { BackgroundCheckFormData } from '@/types';
 import type {
   ListClientsResponse,
   ListFileChannelsResponse,
@@ -18,9 +18,9 @@ import { FileUploadSection } from '@/components/admin/FileUploadSection';
 import { SubmittedFormsSection } from '@/components/admin/SubmittedFormsSection';
 
 interface AdminInterfaceProps {
-  formData: FormData;
-  updateFormData: (updates: Partial<FormData>) => void;
-  updateIdentification: (updates: Partial<FormData['identification']>) => void;
+  formData: BackgroundCheckFormData;
+  updateFormData: (updates: Partial<BackgroundCheckFormData>) => void;
+  updateIdentification: (updates: Partial<BackgroundCheckFormData['identification']>) => void;
   updateCheckFileStatus: (
     checkName: string, 
     fileUploaded: boolean,
