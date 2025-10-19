@@ -29,12 +29,16 @@ export function useFormData({ clientId }: UseFormDataOptions) {
       try {
         const response = await fetch(`/api/form-data?clientId=${clientId}`);
         console.log('API response status:', response.status); // Debug log
+
         if (response.ok) {
           const data = await response.json();
           console.log('Raw API data:', data); // Debug log
+
           if (data) {
+            // Client has saved data - use it
             const validated = FormDataSchema.safeParse(data);
             console.log('Validation result:', validated); // Debug log
+
             if (validated.success) {
               console.log('Setting form data:', validated.data); // Debug log
               setFormData(validated.data);
@@ -43,23 +47,37 @@ export function useFormData({ clientId }: UseFormDataOptions) {
               // Fallback to default data
               setFormData(DEFAULT_FORM_DATA);
             }
+          } else {
+            // No saved data for this client - reset to default
+            console.log('No saved data, resetting to default');
+            setFormData(DEFAULT_FORM_DATA);
+            setHasUnsavedChanges(false); // Important: reset unsaved changes flag
+            setLastSaved(null); // Reset last saved timestamp
           }
+        } else {
+          console.error('API request failed:', response.statusText);
+          setFormData(DEFAULT_FORM_DATA);
         }
       } catch (error) {
         console.error('Error loading form data:', error);
+        setFormData(DEFAULT_FORM_DATA);
       } finally {
         setIsLoading(false);
       }
     }
 
     if (clientId) {
+      setIsLoading(true); // Set loading when switching clients
       loadData();
     } else {
+      // No client selected - reset everything
       setIsLoading(false);
       setFormData(DEFAULT_FORM_DATA);
+      setHasUnsavedChanges(false);
+      setLastSaved(null);
     }
   }, [clientId]);
-
+  
   // Save to Upstash
   const saveToDatabase = useCallback(
     async (data: BackgroundCheckFormData) => {
