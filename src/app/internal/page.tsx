@@ -5,16 +5,14 @@ import { useState, useEffect } from 'react';
 // HOOKS IMPORTS
 import { useFormData } from '@/hooks/useFormData';
 
-
 // API/SDK IMPORTS
 import {
   listClients,
   type ListClientsResponse,
   listFileChannels,
   type ListFileChannelsResponse,
-  type Client
+  type Client,
 } from '@/lib/actions/client-actions';
-
 
 // COMPONENT IMPORTS
 import { AdminInterface } from '@/components/admin/AdminInterface';
@@ -22,7 +20,7 @@ import { AdminInterface } from '@/components/admin/AdminInterface';
 // UI IMPORTS
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, Clock, CheckCircle } from 'lucide-react';
+import { Save, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
 import { se } from 'date-fns/locale';
 
 interface InternalPageProps {
@@ -30,7 +28,7 @@ interface InternalPageProps {
 }
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
-// ----------- STATES-------------------------------------------
+  // ----------- STATES-------------------------------------------
   // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
     success: false,
@@ -53,15 +51,19 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   // SELECTED CLIENT STATE
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
 
+  // ERROR STATE
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-// ---------------- end states-------------------------------------------
+  // ---------------- end states-------------------------------------------
 
   // FORM DATA
   const {
     formData,
     isLoading,
+    isSaving,
     lastSaved,
     hasUnsavedChanges,
+    validationErrors,
     updateFormData,
     updateIdentification,
     updateCheckFileStatus,
@@ -148,12 +150,11 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     );
   }
 
-
   const handleClientSelect = (client: Client) => {
     setSelectedClient(client);
   };
 
-  console.log(`PARENT SELECTED CLIENT`, selectedClient)
+  console.log(`PARENT SELECTED CLIENT`, selectedClient);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -185,6 +186,11 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                     <Clock className="w-4 h-4 text-yellow-500" />
                     <span className="text-yellow-600">Unsaved changes</span>
                   </>
+                ) : saveError ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <span className="text-red-600">Save failed</span>
+                  </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -199,20 +205,30 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
               {selectedClient && (
                 <Button
                   onClick={async () => {
-                    console.log('Save button clicked for client:', selectedClient.id);
+                    console.log(
+                      'Save button clicked for client:',
+                      selectedClient.id,
+                    );
+                    setSaveError(null); // Clear previous errors
                     try {
                       await saveFormData();
                       console.log('Save completed successfully');
                     } catch (error) {
                       console.error('Save failed:', error);
+                      setSaveError(
+                        error instanceof Error
+                          ? error.message
+                          : 'Failed to save',
+                      );
                     }
                   }}
                   variant={hasUnsavedChanges ? 'default' : 'outline'}
                   size="sm"
                   className="flex items-center space-x-2"
+                  disabled={isSaving}
                 >
                   <Save className="w-4 h-4" />
-                  <span>Save</span>
+                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
                 </Button>
               )}
 
@@ -238,6 +254,29 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
               </Badge>
             </div>
           </div>
+
+          {/* NEW: Validation Error Banner */}
+          {Object.keys(validationErrors).length > 0 && (
+            <div className="pb-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-red-900 mb-2">
+                      Validation Errors
+                    </h3>
+                    <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                      {Object.entries(validationErrors).map(([field, error]) => (
+                        <li key={field}>
+                          <strong>{field}:</strong> {error}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -257,6 +296,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           fileChannelsError={fileChannelsError}
           selectedClient={selectedClient}
           onClientSelect={handleClientSelect}
+          validationErrors={validationErrors}
         />
       </main>
 

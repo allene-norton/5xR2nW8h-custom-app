@@ -36,6 +36,7 @@ interface AdminInterfaceProps {
   fileChannelsError: string | null;
   selectedClient: Client | null; // Changed from selectedClientId
   onClientSelect: (client: Client) => void; // Changed signature
+  validationErrors?: Record<string, string>;
 }
 
 export function AdminInterface({
@@ -51,7 +52,8 @@ export function AdminInterface({
   fileChannelsLoading,
   fileChannelsError,
   selectedClient,
-  onClientSelect
+  onClientSelect,
+  validationErrors = {}
 }: AdminInterfaceProps) {
 
   // console.log(formData)
