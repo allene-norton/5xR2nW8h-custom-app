@@ -21,6 +21,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
   // Load data from Upstash on mount
   useEffect(() => {
@@ -87,6 +88,8 @@ export function useFormData({ clientId }: UseFormDataOptions) {
       if (!clientId) return;
 
       setIsSaving(true);
+      setValidationErrors({});
+
       try {
         const response = await fetch('/api/form-data', {
           method: 'POST',
@@ -94,14 +97,27 @@ export function useFormData({ clientId }: UseFormDataOptions) {
           body: JSON.stringify({ clientId, data }),
         });
 
+        const result = await response.json()
+
         if (response.ok) {
           setLastSaved(new Date());
           setHasUnsavedChanges(false);
         } else {
-          console.error('Failed to save form data');
+          if (result.details?.issues) {
+            const errors: Record<string, string> = {};
+            result.details.issues.forEach((issue: any) => {
+              const path = issue.path.join('.');
+              errors[path] = issue.message;
+            });
+            setValidationErrors(errors);
+          }
+          
+          // Throw error so saveFormData can catch it
+          throw new Error(result.error || 'Failed to save form data');
         }
       } catch (error) {
         console.error('Error saving form data:', error);
+        throw error
       } finally {
         setIsSaving(false);
       }
@@ -133,8 +149,12 @@ export function useFormData({ clientId }: UseFormDataOptions) {
         return newData;
       });
       setHasUnsavedChanges(true);
+      // Clear validation errors when user makes changes
+      if (Object.keys(validationErrors).length > 0) {
+        setValidationErrors({});
+      }
     },
-    [],
+    [validationErrors],
   );
 
   // Update nested identification data
@@ -190,7 +210,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
 
     if (!clientId) {
       console.error('No clientId provided for save');
-      return;
+      throw new Error('No client selected');
     }
 
     try {
@@ -198,7 +218,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
       console.log('Save completed successfully');
     } catch (error) {
       console.error('Save failed in saveFormData:', error);
-      throw error; // Re-throw so the component can handle it
+      throw error
     }
   }, [formData, saveToDatabase, clientId]);
 
@@ -219,6 +239,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
     isSaving,
     lastSaved,
     hasUnsavedChanges,
+    validationErrors,
     updateFormData,
     updateIdentification,
     updateCheckFileStatus,
