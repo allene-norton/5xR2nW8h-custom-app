@@ -42,17 +42,20 @@ export function useFormData({ clientId }: UseFormDataOptions) {
             if (validated.success) {
               console.log('Setting form data:', validated.data); // Debug log
               setFormData(validated.data);
+              setHasUnsavedChanges(false);
+              setLastSaved(new Date()); // Set last saved to now since we just loaded saved data
             } else {
               console.error('Schema validation failed:', validated.error);
-              // Fallback to default data
-              setFormData(DEFAULT_FORM_DATA);
             }
           } else {
             // No saved data for this client - reset to default
             console.log('No saved data, resetting to default');
-            setFormData(DEFAULT_FORM_DATA);
-            setHasUnsavedChanges(false); // Important: reset unsaved changes flag
-            setLastSaved(null); // Reset last saved timestamp
+            setFormData(prev => ({
+            ...DEFAULT_FORM_DATA,
+            client: clientId, // Preserve the selected client
+          }));
+          setHasUnsavedChanges(false);
+          setLastSaved(null);
           }
         } else {
           console.error('API request failed:', response.statusText);
@@ -77,7 +80,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
       setLastSaved(null);
     }
   }, [clientId]);
-  
+
   // Save to Upstash
   const saveToDatabase = useCallback(
     async (data: BackgroundCheckFormData) => {
