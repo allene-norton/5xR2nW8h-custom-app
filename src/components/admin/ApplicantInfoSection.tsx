@@ -1,12 +1,19 @@
 "use client"
+import { useState } from "react"
 
+
+// UI IMPORTS
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Input } from "../ui/input"
 import { Label } from "../ui/label"
 import { User, MapPin, Calendar } from "lucide-react"
+
+// TYPE IMPORTS
 import type { Identification } from "../../types"
+
+// VALIDATION IMPORTS
 import { validateRequired, validateState, validatePostalCode } from "../../utils/validation"
-import { useState } from "react"
+
 
 interface ApplicantInfoSectionProps {
   identification: Identification

@@ -53,7 +53,7 @@ export function ContractCard({
   const handleResponseClick = () => {
     // remove this, not necessary for contracts, add separate button?
     if (contract.id) {
-      console.log(contract.id);
+      // console.log(contract.id);
       window.parent.postMessage(
         {
           id: contract.id,

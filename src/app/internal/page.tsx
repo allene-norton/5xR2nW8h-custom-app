@@ -1,26 +1,35 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { listClients, type ListClientsResponse } from '@/lib/actions/client-actions';
 
-// import { listClients } from '@/lib/actions/sdk-requests'; // Prod
-// import { devListClients } from '@/lib/actions/api-requests-for-dev'; //dev
-
-import { AdminInterface } from '@/components/admin/AdminInterface';
+// HOOKS IMPORTS
 import { useFormData } from '@/hooks/useFormData';
+
+// API/SDK IMPORTS
+import {
+  listClients,
+  type ListClientsResponse,
+  listFileChannels,
+  type ListFileChannelsResponse,
+  type Client,
+} from '@/lib/actions/client-actions';
+
+// COMPONENT IMPORTS
+import { AdminInterface } from '@/components/admin/AdminInterface';
+
+// UI IMPORTS
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, Clock, CheckCircle } from 'lucide-react';
-
-// import { ListClientsResponse } from '@/lib/actions/sdk-requests'; // Prod
-// import { devListClientsResponse } from '@/types/dev'; //dev
+import { Save, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { se } from 'date-fns/locale';
 
 interface InternalPageProps {
   searchParams: { token?: string };
 }
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
-  // STATES
+  // ----------- STATES-------------------------------------------
+  // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
     success: false,
     data: {
@@ -31,43 +40,90 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   const [clientsLoading, setClientsLoading] = useState(true);
   const [clientsError, setClientsError] = useState<string | null>(null);
 
+  // FILE CHANNELS STATES
+  const [fileChannelsResponse, setFileChannelsResponse] =
+    useState<ListFileChannelsResponse>({ data: undefined, nextToken: '' });
+  const [fileChannelsLoading, setFileChannelsLoading] = useState(true);
+  const [fileChannelsError, setFileChannelsError] = useState<string | null>(
+    null,
+  );
+
+  // SELECTED CLIENT STATE
+  const [selectedClient, setSelectedClient] = useState<Client | null>(null);
+
+  // ERROR STATE
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  // ---------------- end states-------------------------------------------
 
   // FORM DATA
   const {
     formData,
     isLoading,
+    isSaving,
     lastSaved,
     hasUnsavedChanges,
+    validationErrors,
     updateFormData,
     updateIdentification,
+    updateCheckFileStatus,
     resetFormData,
     saveFormData,
-  } = useFormData();
+  } = useFormData({ clientId: selectedClient?.id || '' });
 
-  // FETCH CLIENTS
+  // FETCH CLIENTS AND FILE CHANNELS ON MOUNT
   useEffect(() => {
+    // get all workspace clients
     const fetchClients = async () => {
       try {
         setClientsLoading(true);
         setClientsError(null);
-        
-        // Works in both dev and prod!
+
         const response = await listClients(searchParams.token);
-        
+
         if (!response.data) {
           throw new Error('No client data returned from server');
         }
-        
+
         setClientsResponse(response);
       } catch (error) {
         console.error('Failed to fetch clients:', error);
-        setClientsError(error instanceof Error ? error.message : 'Failed to fetch clients');
+        setClientsError(
+          error instanceof Error ? error.message : 'Failed to fetch clients',
+        );
+      } finally {
+        setClientsLoading(false);
+      }
+    };
+
+    // get all workspace file channels
+
+    const fetchFileChannels = async () => {
+      try {
+        setFileChannelsLoading(true);
+        setFileChannelsError(null);
+
+        const response = await listFileChannels(searchParams.token);
+
+        if (!response.data) {
+          throw new Error('No file channel data returned from server');
+        }
+
+        setFileChannelsResponse(response);
+      } catch (error) {
+        console.error('Failed to fetch file channels:', error);
+        setClientsError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to fetch file channels',
+        );
       } finally {
         setClientsLoading(false);
       }
     };
 
     fetchClients();
+    fetchFileChannels();
   }, [searchParams.token]);
 
   // Auto-save indicator
@@ -82,6 +138,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     return `Saved ${minutes} minutes ago`;
   };
 
+  // LOADING INDICATOR
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
@@ -92,6 +149,12 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
       </div>
     );
   }
+
+  const handleClientSelect = (client: Client) => {
+    setSelectedClient(client);
+  };
+
+  console.log(`PARENT SELECTED CLIENT`, selectedClient);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,6 +186,11 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                     <Clock className="w-4 h-4 text-yellow-500" />
                     <span className="text-yellow-600">Unsaved changes</span>
                   </>
+                ) : saveError ? (
+                  <>
+                    <AlertTriangle className="w-4 h-4 text-red-500" />
+                    <span className="text-red-600">Save failed</span>
+                  </>
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 text-green-500" />
@@ -133,16 +201,36 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                 )}
               </div>
 
-              {/* Manual Save Button */}
-              <Button
-                onClick={saveFormData}
-                variant={hasUnsavedChanges ? 'default' : 'outline'}
-                size="sm"
-                className="flex items-center space-x-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save</span>
-              </Button>
+              {/* Manual Save Button - only show if client is selected */}
+              {selectedClient && (
+                <Button
+                  onClick={async () => {
+                    console.log(
+                      'Save button clicked for client:',
+                      selectedClient.id,
+                    );
+                    setSaveError(null); // Clear previous errors
+                    try {
+                      await saveFormData();
+                      console.log('Save completed successfully');
+                    } catch (error) {
+                      console.error('Save failed:', error);
+                      setSaveError(
+                        error instanceof Error
+                          ? error.message
+                          : 'Failed to save',
+                      );
+                    }
+                  }}
+                  variant={hasUnsavedChanges ? 'default' : 'outline'}
+                  size="sm"
+                  className="flex items-center space-x-2"
+                  disabled={isSaving}
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{isSaving ? 'Saving...' : 'Save'}</span>
+                </Button>
+              )}
 
               {/* Status Badge */}
               <Badge
@@ -166,6 +254,29 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
               </Badge>
             </div>
           </div>
+
+          {/* NEW: Validation Error Banner */}
+          {Object.keys(validationErrors).length > 0 && (
+            <div className="pb-4">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div className="flex-1">
+                    <h3 className="font-medium text-red-900 mb-2">
+                      Validation Errors
+                    </h3>
+                    <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
+                      {Object.entries(validationErrors).map(([field, error]) => (
+                        <li key={field}>
+                          <strong>{field}:</strong> {error}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -175,10 +286,17 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           formData={formData}
           updateFormData={updateFormData}
           updateIdentification={updateIdentification}
+          updateCheckFileStatus={updateCheckFileStatus}
           resetFormData={resetFormData}
           clientsResponse={clientsResponse}
           clientsLoading={clientsLoading}
           clientsError={clientsError}
+          fileChannelsResponse={fileChannelsResponse}
+          fileChannelsLoading={fileChannelsLoading}
+          fileChannelsError={fileChannelsError}
+          selectedClient={selectedClient}
+          onClientSelect={handleClientSelect}
+          validationErrors={validationErrors}
         />
       </main>
 

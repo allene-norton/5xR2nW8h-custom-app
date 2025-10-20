@@ -3,10 +3,10 @@
 import { Card, CardContent } from "../ui/card"
 import { StatusBadge } from "../shared/StatusBadge"
 import { Calendar, MapPin, User, Shield, FileText } from "lucide-react"
-import { type FormData, SAMPLE_CLIENTS, FORM_TYPE_INFO } from "../../types"
+import { type BackgroundCheckFormData, SAMPLE_CLIENTS, FORM_TYPE_INFO } from "../../types"
 
 interface CoverLetterDisplayProps {
-  formData: FormData
+  formData: BackgroundCheckFormData
 }
 
 export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {

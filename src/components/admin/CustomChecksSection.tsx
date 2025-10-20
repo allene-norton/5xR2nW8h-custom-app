@@ -12,17 +12,27 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { Plus, X } from 'lucide-react';
-import { type FormType, BACKGROUND_CHECK_OPTIONS } from '../../types';
+import { type FormType, BACKGROUND_CHECK_OPTIONS, BackgroundCheckFiles } from '../../types';
 
 interface CustomChecksSectionProps {
   formType: FormType;
   selectedChecks: string[];
+  selectedClientId: string;
+  backgroundCheckFiles: BackgroundCheckFiles;
   updateFormData: (updates: { backgroundChecks: string[] }) => void;
+  updateCheckFileStatus: (
+    checkName: string,
+    fileUploaded: boolean,
+    fileName?: string,
+  ) => void;
 }
 
 export function CustomChecksSection({
   formType,
   selectedChecks,
+  selectedClientId,
+  backgroundCheckFiles,
+  updateCheckFileStatus,
   updateFormData,
 }: CustomChecksSectionProps) {
   const [customCheckName, setCustomCheckName] = useState('');
@@ -106,13 +116,24 @@ export function CustomChecksSection({
                 Added Custom Checks:
               </h4>
               <div className="flex flex-wrap gap-2">
-                {customChecks.map((checkName) => (
+                {customChecks.map((checkName) => { 
+                  const fileInfo = backgroundCheckFiles.find(
+                  (f) => f.checkName === checkName,
+                );
+                  return(
                   <Badge
                     key={checkName}
                     variant="secondary"
                     className="flex items-center space-x-1 py-1 px-2 bg-green-50 text-green-800 border-green-200"
                   >
                     <span className="text-sm">{checkName}</span>
+                    {fileInfo?.fileUploaded && (
+                            <Badge
+                              variant="outline"
+                              className="ml-2 text-xs bg-green-100 text-green-800 border-green-300"
+                            >
+                              File Uploaded
+                            </Badge>)}
                     <button
                       onClick={() => handleRemoveCustomCheck(checkName)}
                       className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
@@ -121,7 +142,7 @@ export function CustomChecksSection({
                       <X className="w-3 h-3" />
                     </button>
                   </Badge>
-                ))}
+                )})}
               </div>
             </div>
           )}

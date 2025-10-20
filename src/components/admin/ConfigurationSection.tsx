@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
+
+// UI IMPORTS
 import {
   Card,
   CardContent,
@@ -18,23 +21,31 @@ import {
 import { Badge } from '../ui/badge';
 import { Settings, User, FileText } from 'lucide-react';
 
+// TYPE IMPORTS
 import {
-  type FormData,
+  type BackgroundCheckFormData,
   type Identification,
-  SAMPLE_CLIENTS,
   FORM_TYPE_INFO,
 } from '../../types';
 
-import type { ListClientsResponse } from '@/lib/actions/client-actions';
-
+import type {
+  ListClientsResponse,
+  ListFileChannelsResponse,
+  Client,
+} from '@/lib/actions/client-actions';
 
 interface ConfigurationSectionProps {
-  formData: FormData;
-  updateFormData: (updates: Partial<FormData>) => void;
+  formData: BackgroundCheckFormData;
+  updateFormData: (updates: Partial<BackgroundCheckFormData>) => void;
   updateIdentification: (updates: Partial<Identification>) => void;
-  clientsResponse: ListClientsResponse 
+  clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
   clientsError: string | null;
+  fileChannelsResponse: ListFileChannelsResponse;
+  fileChannelsLoading: boolean;
+  fileChannelsError: string | null;
+  selectedClient: Client | null; // Changed from selectedClientId
+  onClientSelect: (client: Client) => void; // Changed signature
 }
 
 export function ConfigurationSection({
@@ -44,14 +55,55 @@ export function ConfigurationSection({
   clientsResponse,
   clientsLoading,
   clientsError,
+  fileChannelsResponse,
+  fileChannelsLoading,
+  fileChannelsError,
+  selectedClient,
+  onClientSelect,
 }: ConfigurationSectionProps) {
+  const clients = clientsResponse.data?.data; // Prod
 
-  const clients = clientsResponse.data?.data // Prod
+  const fileChannels = fileChannelsResponse;
 
-  const selectedClient = clients?.find(
-    (client) => client.id === formData.client,
-  );
+  // const selectedClient = clients?.find(
+  //   (client) => client.id === selectedClientId
+  // );
+
+  // console.log(formData)
+
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
+
+  useEffect(() => {
+  // Only pre-fill if we have a selected client and the form's client matches
+  if (selectedClient && formData.client === selectedClient.id && 
+      // And only if the identification is still empty (meaning DB had no data)
+      !formData.identification.firstName) {
+    
+    const updatedIdentification = {
+      firstName: selectedClient.givenName || '',
+      lastName: selectedClient.familyName || '',
+      streetAddress: selectedClient.customFields?.streetAddress || '',
+      streetAddress2: selectedClient.customFields?.streetAddress2 || '',
+      city: selectedClient.customFields?.city || '',
+      state: selectedClient.customFields?.state || '',
+      postalCode: selectedClient.customFields?.postalCode || '',
+      birthdate: selectedClient.customFields?.birthdate || '',
+    };
+
+    updateIdentification(updatedIdentification);
+
+    // Find and set file channel
+    const selectedClientFileChannel = fileChannelsResponse?.data?.find(
+      (channel) => channel.clientId === selectedClient.id,
+    );
+
+    if (selectedClientFileChannel?.id) {
+      updateFormData({
+        fileChannelId: selectedClientFileChannel.id,
+      });
+    }
+  }
+}, [selectedClient, formData.client, formData.identification.firstName]);
 
   return (
     <Card>
@@ -76,24 +128,37 @@ export function ConfigurationSection({
               <span>Client</span>
             </Label>
             <Select
-              value={formData.client}
+              value={selectedClient?.id || ''}
               onValueChange={(value) => {
-                updateFormData({ client: value });
+                const client = clients?.find((c) => c.id === value);
+                if (client) {
+                  // Call onClientSelect with the full client object
+                  onClientSelect(client);
+                  // Update form data with client ID
+                  updateFormData({ client: client.id });
 
-                // Pre-fill identification data when client is selected
-                const selectedClient = clients?.find(client => client.id === value);
-                if (selectedClient) {
-                  updateIdentification({
-                    firstName: selectedClient.givenName || '',
-                    lastName: selectedClient.familyName || '',
-                    // Add other fields if they exist in your client data
-                    streetAddress: selectedClient.customFields?.streetAddress|| '',
-                    streetAddress2: selectedClient.customFields?.unitapartment|| '',
-                    city: selectedClient.customFields?.city || '',
-                    state: selectedClient.customFields?.state || '',
-                    postalCode: selectedClient.customFields?.postalCode || '',
-                    birthdate: selectedClient.customFields?.birthdate || '',
-                  });
+                  
+
+                  // // Pre-fill identification data
+                  // updateIdentification({
+                  //   firstName: client.givenName || '',
+                  //   lastName: client.familyName || '',
+                  //   streetAddress: client.customFields?.streetAddress || '',
+                  //   streetAddress2: client.customFields?.unitapartment || '',
+                  //   city: client.customFields?.city || '',
+                  //   state: client.customFields?.state || '',
+                  //   postalCode: client.customFields?.postalCode || '',
+                  //   birthdate: client.customFields?.birthdate || '',
+                  // });
+
+                  // // Find and set file channel
+                  // const selectedClientFileChannel = fileChannels?.data?.find(
+                  //   (channel) => channel.clientId === client.id,
+                  // );
+
+                  // updateFormData({
+                  //   fileChannelId: selectedClientFileChannel?.id || undefined,
+                  // });
                 }
               }}
             >
@@ -101,13 +166,17 @@ export function ConfigurationSection({
                 <SelectValue placeholder="Select a client" />
               </SelectTrigger>
               <SelectContent>
-                {clients?.filter(client => client.id).map((client) => (
-                  <SelectItem key={client.id} value={client.id!}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{client.givenName} {client.familyName}</span>
-                    </div>
-                  </SelectItem>
-                ))}
+                {clients
+                  ?.filter((client) => client.id)
+                  .map((client) => (
+                    <SelectItem key={client.id} value={client.id!}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">
+                          {client.givenName} {client.familyName}
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
             {selectedClient && (
@@ -185,4 +254,3 @@ export function ConfigurationSection({
     </Card>
   );
 }
-

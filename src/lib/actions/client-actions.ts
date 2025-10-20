@@ -156,7 +156,25 @@ export interface ContractsResponse {
 
 export type ContractArray = Contract[]
 
+// file channels
 
+export interface FileChannel {
+  id?: string;
+  object?: string;
+  identityId?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  membershipType: "individual" | "company";
+  clientId?: string; // Optional, present when membershipType is "individual"
+  companyId?: string;
+  membershipEntityId?: string;
+  memberIds?: string[];
+}
+
+export interface ListFileChannelsResponse {
+  data?: FileChannel[];
+  nextToken?: string;
+}
 
 
 
@@ -340,6 +358,48 @@ export async function listContracts(clientId: string, token?: string) {
 
       const sdk = createSDK(token);
       const data = await sdk.listContracts({clientId: clientId})
+      revalidatePath('/internal');
+      return data
+    }
+  } catch (error) {
+    console.error('Error fetching forms:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch forms',
+    };
+  }
+}
+
+// listFileChannels action
+export async function listFileChannels(token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/channels/files`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.listFileChannels({limit: 2000})
       revalidatePath('/internal');
       return data
     }

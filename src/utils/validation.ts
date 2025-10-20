@@ -1,12 +1,12 @@
 import { FormDataSchema, IdentificationSchema } from "../types"
-import type { FormData, Identification } from "../types"
+import type { BackgroundCheckFormData, Identification } from "../types"
 
 export interface ValidationError {
   field: string
   message: string
 }
 
-export function validateFormData(data: FormData): ValidationError[] {
+export function validateFormData(data: BackgroundCheckFormData): ValidationError[] {
   const result = FormDataSchema.safeParse(data)
 
   if (result.success) {

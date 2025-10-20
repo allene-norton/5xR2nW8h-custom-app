@@ -26,7 +26,7 @@ export function FormCard({
 
   const handleResponseClick = () => {
     if (formResponse.formId) {
-      console.log(formResponse.formId)
+      // console.log(formResponse.formId)
       window.parent.postMessage(
         {
           id: formResponse.formId,
@@ -54,8 +54,6 @@ export function FormCard({
     return allAttachmentUrls;
   }, [formResponse.formFields]);
 
-  console.log(attachmentUrls[0])
-
 
   const getFileType = (filename: string) => {
     const extension = filename.split('.').pop()?.toLowerCase();
@@ -76,7 +74,7 @@ export function FormCard({
 
   const renderPreviewContent = () => {
     if (!previewFile) return null;
-    console.log(previewFile.url)
+    // console.log(previewFile.url)
 
     switch (previewFile.type) {
       case 'image':
