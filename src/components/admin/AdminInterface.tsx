@@ -56,7 +56,7 @@ export function AdminInterface({
   validationErrors = {}
 }: AdminInterfaceProps) {
 
-  // console.log(formData)
+  console.log(formData)
 
 
   return (

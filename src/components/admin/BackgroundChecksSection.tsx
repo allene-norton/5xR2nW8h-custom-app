@@ -45,8 +45,6 @@ export function BackgroundChecksSection({
   const requiredChecks: readonly string[] =
     FORM_TYPE_INFO[formType].requiredChecks;
   
-    console.log(`SELECTED CHECKS`, selectedChecks)
-
   const handleCheckChange = (checkName: string, checked: boolean) => {
     const newChecks = checked
       ? [...selectedChecks, checkName]

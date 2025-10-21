@@ -154,7 +154,6 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     setSelectedClient(client);
   };
 
-  console.log(`PARENT SELECTED CLIENT`, selectedClient);
 
   return (
     <div className="min-h-screen bg-gray-50">
