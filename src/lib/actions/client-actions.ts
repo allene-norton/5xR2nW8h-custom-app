@@ -498,8 +498,39 @@ export async function createFolder(channelId: string, formTypeName: string, toke
 
 // createFile action
 export async function createFile(channelId: string, folderName: string, fileName: string, fileContent: string | Blob | ArrayBuffer, token?: string) {
+  if (fileContent instanceof Blob) {
+    console.log(`FILE CONTENT!!!:`, {
+      type: fileContent.type,
+      size: fileContent.size,
+      constructor: fileContent.constructor.name
+    })
+  } else if (fileContent instanceof ArrayBuffer) {
+    console.log(`FILE CONTENT!!!:`, {
+      byteLength: fileContent.byteLength,
+      constructor: fileContent.constructor.name
+    })
+  } else {
+    // It's a string (base64)
+    console.log(`FILE CONTENT!!!:`, typeof fileContent, fileContent.length, 'characters')
+  }
+
   try {
     let createFileResponse;
+
+    let uploadContent: Blob | ArrayBuffer;
+    
+    if (typeof fileContent === 'string') {
+      // Convert base64 string to Blob
+      const binaryString = atob(fileContent);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      uploadContent = new Blob([bytes]);
+      console.log('Converted base64 to Blob:', uploadContent.size, 'bytes');
+    } else {
+      uploadContent = fileContent;
+    }
     
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -558,7 +589,7 @@ export async function createFile(channelId: string, folderName: string, fileName
       
       const uploadResponse = await fetch(createFileResponse.uploadUrl, {
         method: 'PUT',
-        body: fileContent,
+        body: uploadContent,
         // No authentication required for upload URL
       });
 
