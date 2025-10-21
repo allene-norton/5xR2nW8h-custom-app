@@ -11,13 +11,14 @@ import type { FileInfo, BackgroundCheckFile, BackgroundCheckFormData } from "../
 
 interface FileUploadSectionProps {
   uploadedFile?: FileInfo
+  backgroundCheckFile: BackgroundCheckFile
   formData: BackgroundCheckFormData
   updateFormData: (updates: { uploadedFile?: FileInfo }) => void
   onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
 }
 
-export function FileUploadSection({formData, uploadedFile, updateFormData, onFileCreated, updateCheckFileStatus }: FileUploadSectionProps) {
+export function FileUploadSection({formData, uploadedFile, backgroundCheckFile, updateFormData, onFileCreated, updateCheckFileStatus }: FileUploadSectionProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
@@ -126,9 +127,9 @@ export function FileUploadSection({formData, uploadedFile, updateFormData, onFil
       <CardHeader>
         <div className="flex items-center space-x-2">
           <Upload className="w-5 h-5 text-blue-600" />
-          <CardTitle>Background Report Upload</CardTitle>
+          <CardTitle>{backgroundCheckFile.checkName} Report Upload</CardTitle>
         </div>
-        <CardDescription>Upload the completed background check report (PDF only)</CardDescription>
+        <CardDescription>Upload the completed report for {backgroundCheckFile.checkName} (PDF only)</CardDescription>
       </CardHeader>
       <CardContent>
         {!uploadedFile ? (
@@ -142,7 +143,7 @@ export function FileUploadSection({formData, uploadedFile, updateFormData, onFil
           >
             <Upload className={`w-12 h-12 mx-auto mb-4 ${isDragOver ? "text-blue-500" : "text-gray-400"}`} />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {isDragOver ? "Drop your file here" : "Upload Background Report"}
+              {isDragOver ? "Drop your file here" : `Upload ${backgroundCheckFile.checkName} Report`}
             </h3>
             <p className="text-gray-600 mb-4">Drag and drop your PDF file here, or click to browse</p>
             <input type="file" accept=".pdf" onChange={handleFileSelect} className="hidden" id="file-upload" />

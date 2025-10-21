@@ -114,12 +114,18 @@ export function AdminInterface({
 
       {formData.fileChannelId ? (
         formData.folderCreated ? (
-          <FileUploadSection 
-          formData={formData}
-          updateFormData={updateFormData}
-          onFileCreated={onFileCreated}
-          updateCheckFileStatus={updateCheckFileStatus}
-           />
+          <div className="space-y-4">
+            {formData.backgroundCheckFiles?.map((backgroundCheckFile, index) => (
+              <FileUploadSection
+                key={index}
+                formData={formData}
+                backgroundCheckFile={backgroundCheckFile}
+                updateFormData={updateFormData}
+                onFileCreated={onFileCreated}
+                updateCheckFileStatus={updateCheckFileStatus}
+              />
+            ))}
+          </div>
         ) : (
           <CreateFolderSection
             onFolderCreated={onFolderCreated}
