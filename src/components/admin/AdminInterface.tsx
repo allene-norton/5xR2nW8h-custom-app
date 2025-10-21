@@ -35,7 +35,7 @@ interface AdminInterfaceProps {
   selectedClient: Client | null; // Changed from selectedClientId
   onClientSelect: (client: Client) => void; // Changed signature
   onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
-  onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
+  onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   validationErrors?: Record<string, string>;
 }
 

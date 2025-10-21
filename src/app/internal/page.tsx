@@ -167,12 +167,23 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
   };
 
   const handleFileCreated = async (updateBackgroundCheckFile : BackgroundCheckFile) => {
-    console.log(updateBackgroundCheckFile)
     try {
       updateCheckFileStatus(updateBackgroundCheckFile);
-      await saveFormData();
+      const updatedFiles = formData.backgroundCheckFiles.map((file) =>
+      file.checkName === updateBackgroundCheckFile.checkName
+        ? {
+            ...file,
+            fileUploaded: updateBackgroundCheckFile.fileUploaded,
+            fileName: updateBackgroundCheckFile.fileName,
+            fileId: updateBackgroundCheckFile.fileId
+          }
+        : file,
+    );
+    
+    // Pass the updated data directly to saveFormData
+    await saveFormData({ backgroundCheckFiles: updatedFiles });
     } catch{
-
+      console.log('something went wrong saving to db/updating form data')
     }
   }
 

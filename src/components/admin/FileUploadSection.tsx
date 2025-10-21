@@ -33,7 +33,7 @@ interface FileUploadSectionProps {
   backgroundCheckFile: BackgroundCheckFile;
   formData: BackgroundCheckFormData;
   updateFormData: (updates: { uploadedFile?: FileInfo }) => void;
-  onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
+  onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
 }
 
@@ -156,16 +156,16 @@ export function FileUploadSection({
       setUploadProgress(100);
 
       // Create file info object
-      const fileInfo: FileInfo = {
-        id: Date.now().toString(),
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file),
-        uploadedAt: new Date(),
-      };
+      
+      const fileInfo: BackgroundCheckFile = {
+        checkName: backgroundCheckFile.checkName,
+        fileUploaded: true,
+        fileName: file.name,
+        fileId: uploadFile.id
+      }
 
-      updateFormData({ uploadedFile: fileInfo });
+      // update form data and save to db
+      onFileCreated(fileInfo)
 
       setTimeout(() => {
         setIsUploading(false);
