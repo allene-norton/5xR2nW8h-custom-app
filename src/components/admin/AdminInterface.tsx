@@ -5,10 +5,10 @@ import type { BackgroundCheckFormData } from '@/types';
 import type {
   ListClientsResponse,
   ListFileChannelsResponse,
-  Client
+  Client,
 } from '@/lib/actions/client-actions';
 
-// COMPONENT IMPORTS 
+// COMPONENT IMPORTS
 import { ConfigurationSection } from '@/components/admin/ConfigurationSection';
 import { ApplicantInfoSection } from '@/components/admin/ApplicantInfoSection';
 import { BackgroundChecksSection } from '@/components/admin/BackgroundChecksSection';
@@ -16,16 +16,20 @@ import { CustomChecksSection } from '@/components/admin/CustomChecksSection';
 import { StatusSection } from '@/components/admin/StatusSection';
 import { FileUploadSection } from '@/components/admin/FileUploadSection';
 import { SubmittedFormsSection } from '@/components/admin/SubmittedFormsSection';
+import { CreateFolderSection } from '@/components/admin/CreateFolderSection';
 
 interface AdminInterfaceProps {
+  token?: string | undefined;
   formData: BackgroundCheckFormData;
   updateFormData: (updates: Partial<BackgroundCheckFormData>) => void;
-  updateIdentification: (updates: Partial<BackgroundCheckFormData['identification']>) => void;
+  updateIdentification: (
+    updates: Partial<BackgroundCheckFormData['identification']>,
+  ) => void;
   updateCheckFileStatus: (
-    checkName: string, 
+    checkName: string,
     fileUploaded: boolean,
     fileName?: string,
-    fileId?: string
+    fileId?: string,
   ) => void;
   resetFormData: () => void;
   clientsResponse: ListClientsResponse;
@@ -40,6 +44,7 @@ interface AdminInterfaceProps {
 }
 
 export function AdminInterface({
+  token,
   formData,
   updateFormData,
   updateIdentification,
@@ -53,11 +58,9 @@ export function AdminInterface({
   fileChannelsError,
   selectedClient,
   onClientSelect,
-  validationErrors = {}
+  validationErrors = {},
 }: AdminInterfaceProps) {
-
-  console.log(formData)
-
+  console.log(formData);
 
   return (
     <div className="space-y-8">
@@ -109,16 +112,26 @@ export function AdminInterface({
         updateFormData={updateFormData}
       />
 
+      {formData.folderCreated ? (
+        <FileUploadSection updateFormData={updateFormData} />
+      ) : (
+        <CreateFolderSection
+          updateFormData={updateFormData}
+          formData={formData}
+          token={token}
+        />
+      )}
+
       {/* File Upload */}
-      <FileUploadSection
+      {/* <FileUploadSection
         uploadedFile={formData.uploadedFile}
         updateFormData={updateFormData}
-      />
+      /> */}
 
       {/* Submitted Documents */}
-      <SubmittedFormsSection 
-      clientId={formData.client} 
-      fileChannelId={formData.fileChannelId}
+      <SubmittedFormsSection
+        clientId={formData.client}
+        fileChannelId={formData.fileChannelId}
       />
     </div>
   );
