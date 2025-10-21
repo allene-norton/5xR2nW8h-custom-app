@@ -15,23 +15,35 @@ import {
 } from '../ui/card';
 import { Button } from '../ui/button';
 import { Progress } from '../ui/progress';
-import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
+import {
+  Upload,
+  File,
+  X,
+  CheckCircle,
+  AlertCircle,
+  ExternalLink,
+  Eye,
+} from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 // TYPE AND CONSTANTS IMPORTS
-import type {
-  BackgroundCheckFile,
-  BackgroundCheckFormData,
-} from '../../types';
+import type { BackgroundCheckFile, BackgroundCheckFormData } from '../../types';
 import { FORM_TYPE_INFO } from '../../types';
 
 // API/SDK ACTIONS IMPORTS
-import { createFile } from '@/lib/actions/client-actions';
+import { createFile, retrieveFile } from '@/lib/actions/client-actions';
 
 interface FileUploadSectionProps {
   backgroundCheckFile: BackgroundCheckFile;
   formData: BackgroundCheckFormData;
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
+  onFileClick?: () => void;
 }
 
 export function FileUploadSection({
@@ -39,6 +51,7 @@ export function FileUploadSection({
   backgroundCheckFile,
   onFileCreated,
   updateCheckFileStatus,
+  onFileClick,
 }: FileUploadSectionProps) {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
@@ -47,6 +60,12 @@ export function FileUploadSection({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+
+  const [previewFile, setPreviewFile] = useState<{
+    url: string;
+    filename: string;
+    type: string;
+  } | null>(null);
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
   const folderName = `ClearTech Reports - ${formTypeName}`;
@@ -81,7 +100,7 @@ export function FileUploadSection({
     [],
   );
 
-  const handleFileUpload = async (file: File) => {
+  const handleFileUpload = useCallback(async (file: File) => {
     console.log(`FILE!:`, file);
     // Validate file type
     if (file.type !== 'application/pdf') {
@@ -128,9 +147,17 @@ export function FileUploadSection({
 
       console.log('Converting file to base64...');
       const arrayBuffer = await file.arrayBuffer();
-      const base64String = btoa(
-        String.fromCharCode(...new Uint8Array(arrayBuffer)),
-      );
+
+      const uint8Array = new Uint8Array(arrayBuffer);
+      let binaryString = '';
+      const chunkSize = 8192; // Process in chunks to avoid stack overflow
+
+      for (let i = 0; i < uint8Array.length; i += chunkSize) {
+        const chunk = uint8Array.slice(i, i + chunkSize);
+        binaryString += String.fromCharCode(...chunk);
+      }
+
+      const base64String = btoa(binaryString);
 
       console.log('About to call createFile with base64:', {
         channelId: formData.fileChannelId,
@@ -143,43 +170,36 @@ export function FileUploadSection({
         formData.fileChannelId!,
         folderName,
         file.name,
-        base64String, 
-      )
+        base64String,
+      );
       console.log('createFile completed', uploadFile);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
       // Create file info object
-      
+
       const fileInfo: BackgroundCheckFile = {
         checkName: backgroundCheckFile.checkName,
         fileUploaded: true,
         fileName: file.name,
-        fileId: uploadFile.id
-      }
-
+        fileId: uploadFile.id,
+      };
 
       // update form data and save to db
-      onFileCreated(fileInfo)
-
-
-
+      onFileCreated(fileInfo);
 
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
       }, 500);
-
-
     } catch (error) {
       console.error('=== Error caught in handleFileUpload ===', error);
       setUploadError('Failed to upload file. Please try again.');
       setIsUploading(false);
       setUploadProgress(0);
     }
-  };
-
+  }, [formData.fileChannelId, folderName, backgroundCheckFile.checkName, onFileCreated]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -189,6 +209,51 @@ export function FileUploadSection({
     return (
       Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i]
     );
+  };
+
+  const handleFilePreview = async (fileId: string) => {
+    try {
+      const fileType = 'pdf';
+      const getFileForPreview = await retrieveFile(fileId);
+      setPreviewFile({
+        url: getFileForPreview.downloadUrl,
+        filename: backgroundCheckFile.fileName!,
+        type: fileType,
+      });
+      // onFileClick?.();
+    } catch (error) {
+      console.error('Error previewing file:', error);
+      // Handle error appropriately
+    }
+  };
+
+  const renderPreviewContent = () => {
+    if (!previewFile) return null;
+    // console.log(previewFile.url)
+
+    switch (previewFile.type) {
+      case 'pdf':
+        return (
+          <iframe
+            src={previewFile.url}
+            className="w-full h-full border-0"
+            title={backgroundCheckFile.fileName!}
+          />
+        );
+      default:
+        return (
+          <div className="text-center py-8">
+            <p className="mb-4">Preview not available for this file type.</p>
+            <Button
+              onClick={() => window.open(previewFile.url, '_blank')}
+              variant="outline"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Open File
+            </Button>
+          </div>
+        );
+    }
   };
 
   return (
@@ -259,10 +324,53 @@ export function FileUploadSection({
                     Upload complete
                   </span>
                 </div>
+                {backgroundCheckFile.fileId ? (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      handleFilePreview(backgroundCheckFile.fileId!)
+                    }
+                    className="w-full bg-transparent whitespace-nowrap"
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    Preview File
+                  </Button>
+                ) : (
+                  <></>
+                )}
               </div>
             </div>
           </div>
         )}
+
+        {/* Preview Modal */}
+        <Dialog open={!!previewFile} onOpenChange={() => setPreviewFile(null)}>
+          <DialogContent
+            className="flex flex-col p-0"
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              width: '85vw',
+              height: '85vh',
+              maxWidth: '85vw',
+              maxHeight: '85vh',
+              margin: 0,
+              borderRadius: '0.5rem',
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <DialogHeader className="flex-shrink-0 px-6 py-4 border-b">
+              <DialogTitle className="text-lg font-semibold truncate">
+                {previewFile?.filename}
+              </DialogTitle>
+            </DialogHeader>
+            <div className="flex-1 overflow-hidden p-6">
+              {renderPreviewContent()}
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Upload Progress */}
         {isUploading && (
