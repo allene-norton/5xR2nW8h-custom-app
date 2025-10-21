@@ -223,15 +223,15 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   }, [formData, saveToDatabase, clientId]);
 
   // Auto-save effect
-  useEffect(() => {
-    if (!hasUnsavedChanges || !clientId) return;
+  // useEffect(() => {
+  //   if (!hasUnsavedChanges || !clientId) return;
 
-    const timer = setTimeout(() => {
-      saveToDatabase(formData);
-    }, AUTO_SAVE_INTERVAL);
+  //   const timer = setTimeout(() => {
+  //     saveToDatabase(formData);
+  //   }, AUTO_SAVE_INTERVAL);
 
-    return () => clearTimeout(timer);
-  }, [formData, hasUnsavedChanges, saveToDatabase, clientId]);
+  //   return () => clearTimeout(timer);
+  // }, [formData, hasUnsavedChanges, saveToDatabase, clientId]);
 
   return {
     formData,
