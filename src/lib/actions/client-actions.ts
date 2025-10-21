@@ -176,6 +176,26 @@ export interface ListFileChannelsResponse {
   nextToken?: string;
 }
 
+// files
+
+interface FileObject {
+  channelId: string;
+  createdAt: string;
+  creatorId: string;
+  downloadUrl: string;
+  id: string;
+  lastModifiedBy: {
+    id: string;
+    object: string;
+  };
+  linkUrl: string;
+  name: string;
+  object: string;
+  path: string;
+  size: number;
+  status: string;
+}
+
 
 
 
@@ -407,6 +427,52 @@ export async function listFileChannels(token?: string) {
     console.error('Error fetching forms:', error);
     return {
       error: error instanceof Error ? error.message : 'Failed to fetch forms',
+    };
+  }
+}
+
+// createFolder action
+export async function createFolder(channelId: string, formTypeName: string, token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files/folder`, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+        body: JSON.stringify({
+          channelId: channelId,
+          path: `ClearTech Reports - ${formTypeName}`,
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API create folder request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.createFile({fileType: `folder`, requestBody:{path: `ClearTech Reports - ${formTypeName}`, channelId: channelId}})
+      revalidatePath('/internal');
+      return data
+    }
+  } catch (error) {
+    console.error('Error fetching forms:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create folder',
     };
   }
 }
