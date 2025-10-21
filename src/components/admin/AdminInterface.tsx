@@ -1,7 +1,7 @@
 'use client';
 
 // TYPE IMPORTS
-import type { BackgroundCheckFormData } from '@/types';
+import type { BackgroundCheckFormData, BackgroundCheckFile } from '@/types';
 import type {
   ListClientsResponse,
   ListFileChannelsResponse,
@@ -24,12 +24,7 @@ interface AdminInterfaceProps {
   updateIdentification: (
     updates: Partial<BackgroundCheckFormData['identification']>,
   ) => void;
-  updateCheckFileStatus: (
-    checkName: string,
-    fileUploaded: boolean,
-    fileName?: string,
-    fileId?: string,
-  ) => void;
+  updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
   resetFormData: () => void;
   clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
@@ -40,6 +35,7 @@ interface AdminInterfaceProps {
   selectedClient: Client | null; // Changed from selectedClientId
   onClientSelect: (client: Client) => void; // Changed signature
   onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
+  onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   validationErrors?: Record<string, string>;
 }
 
@@ -58,6 +54,7 @@ export function AdminInterface({
   selectedClient,
   onClientSelect,
   onFolderCreated,
+  onFileCreated,
   validationErrors = {},
 }: AdminInterfaceProps) {
 
@@ -117,7 +114,12 @@ export function AdminInterface({
 
       {formData.fileChannelId ? (
         formData.folderCreated ? (
-          <FileUploadSection updateFormData={updateFormData} />
+          <FileUploadSection 
+          formData={formData}
+          updateFormData={updateFormData}
+          onFileCreated={onFileCreated}
+          updateCheckFileStatus={updateCheckFileStatus}
+           />
         ) : (
           <CreateFolderSection
             onFolderCreated={onFolderCreated}

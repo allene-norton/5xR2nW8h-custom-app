@@ -21,7 +21,9 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+  const [validationErrors, setValidationErrors] = useState<
+    Record<string, string>
+  >({});
 
   // Load data from Upstash on mount
   useEffect(() => {
@@ -51,12 +53,12 @@ export function useFormData({ clientId }: UseFormDataOptions) {
           } else {
             // No saved data for this client - reset to default
             console.log('No saved data, resetting to default');
-            setFormData(prev => ({
-            ...DEFAULT_FORM_DATA,
-            client: clientId, // Preserve the selected client
-          }));
-          setHasUnsavedChanges(false);
-          setLastSaved(null);
+            setFormData((prev) => ({
+              ...DEFAULT_FORM_DATA,
+              client: clientId, // Preserve the selected client
+            }));
+            setHasUnsavedChanges(false);
+            setLastSaved(null);
           }
         } else {
           console.error('API request failed:', response.statusText);
@@ -97,7 +99,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
           body: JSON.stringify({ clientId, data }),
         });
 
-        const result = await response.json()
+        const result = await response.json();
 
         if (response.ok) {
           setLastSaved(new Date());
@@ -111,13 +113,13 @@ export function useFormData({ clientId }: UseFormDataOptions) {
             });
             setValidationErrors(errors);
           }
-          
+
           // Throw error so saveFormData can catch it
           throw new Error(result.error || 'Failed to save form data');
         }
       } catch (error) {
         console.error('Error saving form data:', error);
-        throw error
+        throw error;
       } finally {
         setIsSaving(false);
       }
@@ -169,16 +171,19 @@ export function useFormData({ clientId }: UseFormDataOptions) {
 
   // Update file upload status for a specific check
   const updateCheckFileStatus = useCallback(
-    (
-      checkName: string,
-      fileUploaded: boolean,
-      fileName?: string,
-      fileId?: string,
-    ) => {
+    (updatedFileInfo: {
+      checkName: string;
+      fileUploaded: boolean;
+      fileName?: string;
+    }) => {
       setFormData((prev) => {
         const updatedFiles = prev.backgroundCheckFiles.map((file) =>
-          file.checkName === checkName
-            ? { ...file, fileUploaded, fileName, fileId }
+          file.checkName === updatedFileInfo.checkName
+            ? {
+                ...file,
+                fileUploaded: updatedFileInfo.fileUploaded,
+                fileName: updatedFileInfo.fileName,
+              }
             : file,
         );
 
@@ -204,22 +209,27 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   }, [clientId]);
 
   // Manual save
-  const saveFormData = useCallback(async (overrideData?: Partial<BackgroundCheckFormData>) => {
-  console.log('saveFormData called with clientId:', clientId);
-  const dataToSave = overrideData ? { ...formData, ...overrideData } : formData;
-  console.log('saveFormData called with formData:', dataToSave);
-  if (!clientId) {
-    console.error('No clientId provided for save');
-    throw new Error('No client selected');
-  }
-  try {
-    await saveToDatabase(dataToSave);
-    console.log('Save completed successfully');
-  } catch (error) {
-    console.error('Save failed in saveFormData:', error);
-    throw error;
-  }
-}, [formData, saveToDatabase, clientId]);
+  const saveFormData = useCallback(
+    async (overrideData?: Partial<BackgroundCheckFormData>) => {
+      console.log('saveFormData called with clientId:', clientId);
+      const dataToSave = overrideData
+        ? { ...formData, ...overrideData }
+        : formData;
+      console.log('saveFormData called with formData:', dataToSave);
+      if (!clientId) {
+        console.error('No clientId provided for save');
+        throw new Error('No client selected');
+      }
+      try {
+        await saveToDatabase(dataToSave);
+        console.log('Save completed successfully');
+      } catch (error) {
+        console.error('Save failed in saveFormData:', error);
+        throw error;
+      }
+    },
+    [formData, saveToDatabase, clientId],
+  );
 
   // Auto-save effect
   // useEffect(() => {

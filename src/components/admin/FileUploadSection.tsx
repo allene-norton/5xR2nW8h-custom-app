@@ -7,14 +7,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Button } from "../ui/button"
 import { Progress } from "../ui/progress"
 import { Upload, File, X, CheckCircle, AlertCircle } from "lucide-react"
-import type { FileInfo } from "../../types"
+import type { FileInfo, BackgroundCheckFile, BackgroundCheckFormData } from "../../types"
 
 interface FileUploadSectionProps {
   uploadedFile?: FileInfo
+  formData: BackgroundCheckFormData
   updateFormData: (updates: { uploadedFile?: FileInfo }) => void
+  onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
+  updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
 }
 
-export function FileUploadSection({ uploadedFile, updateFormData }: FileUploadSectionProps) {
+export function FileUploadSection({formData, uploadedFile, updateFormData, onFileCreated, updateCheckFileStatus }: FileUploadSectionProps) {
   const [isDragOver, setIsDragOver] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)

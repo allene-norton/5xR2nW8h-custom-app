@@ -121,6 +121,7 @@ export const FormDataSchema = z.object({
 export type BackgroundCheckFormData = z.infer<typeof FormDataSchema>;
 export type Identification = z.infer<typeof IdentificationSchema>;
 export type BackgroundCheckFiles = z.infer<typeof BackgroundCheckFilesSchema>;
+export type BackgroundCheckFile = z.infer<typeof BackgroundCheckFilesSchema>[number]
 
 // Default Form Data
 export const DEFAULT_FORM_DATA: BackgroundCheckFormData = {
