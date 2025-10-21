@@ -5,7 +5,9 @@ import { useFormData } from "../../hooks/useFormData"
 import { Badge } from "../../components/ui/badge"
 
 export default function ReportsPage() {
-  const { formData, isLoading } = useFormData('')
+const tempClientId = '8b891bf8-1827-4574-9290-1e76fa33dc41'
+
+  const { formData, isLoading } = useFormData({clientId: tempClientId})
 
   if (isLoading) {
     return (

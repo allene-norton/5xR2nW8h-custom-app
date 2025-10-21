@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
-import { DocumentCard } from "../shared/ContractCard"
+import { ContractCard } from "../shared/ContractCard"
 import { FolderOpen, RefreshCw } from "lucide-react"
 import { fetchClientDocuments, type SDKDocument } from "../../utils/sdk-integration"
 
