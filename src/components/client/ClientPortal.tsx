@@ -15,7 +15,7 @@ export function ClientPortal({ formData }: ClientPortalProps) {
       <CoverLetterDisplay formData={formData} />
 
       {/* Client Documents */}
-      <ClientDocumentsDisplay clientId={formData.client} />
+      {/* <ClientDocumentsDisplay clientId={formData.client} /> */}
     </div>
   )
 }

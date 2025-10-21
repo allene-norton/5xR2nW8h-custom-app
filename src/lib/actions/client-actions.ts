@@ -2,13 +2,13 @@
 
 import { revalidatePath } from 'next/cache';
 import { copilotApi } from 'copilot-node-sdk';
+import { fi } from 'date-fns/locale';
 
 const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
 const isDev = process.env.NODE_ENV === 'development';
 
 const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
-
 
 // ---------- Unified types (single source of truth)
 // clients
@@ -49,12 +49,18 @@ export interface FormField {
   formFieldId?: string;
   title?: string;
   description?: string;
-  type?: 'multiSelect' | 'singleSelect' | 'title' | 'shortAnswer' | 'longAnswer' | 'fileUpload';
+  type?:
+    | 'multiSelect'
+    | 'singleSelect'
+    | 'title'
+    | 'shortAnswer'
+    | 'longAnswer'
+    | 'fileUpload';
   isRequired?: boolean;
   multipleChoiceOptions?: string[];
 }
 
- export interface Form {
+export interface Form {
   id?: string;
   createdAt?: string;
   object?: 'form';
@@ -78,7 +84,13 @@ export interface FormsResponse {
 export interface FormResponseField {
   title?: string;
   description?: string;
-  type?: 'multiSelect' | 'singleSelect' | 'title' | 'shortAnswer' | 'longAnswer' | 'fileUpload'; // ts error here from sdk, possibly incorrect
+  type?:
+    | 'multiSelect'
+    | 'singleSelect'
+    | 'title'
+    | 'shortAnswer'
+    | 'longAnswer'
+    | 'fileUpload'; // ts error here from sdk, possibly incorrect
   multipleChoiceOptions?: string[];
   isRequired?: boolean;
   answer?: string | string[];
@@ -116,18 +128,17 @@ export interface FormResponsesApiResponse {
   data?: FormResponse[];
 }
 
-export type FormResponseArray = FormResponse[]
-
+export type FormResponseArray = FormResponse[];
 
 // contracts
 
 export interface ContractField {
   id?: string;
-  inputType?: string
+  inputType?: string;
   isOptional?: boolean;
   label?: string;
   page?: number;
-  type?: string
+  type?: string;
   value?: string;
 }
 
@@ -154,7 +165,7 @@ export interface ContractsResponse {
   data?: Contract[];
 }
 
-export type ContractArray = Contract[]
+export type ContractArray = Contract[];
 
 // file channels
 
@@ -164,7 +175,7 @@ export interface FileChannel {
   identityId?: string;
   createdAt?: string;
   updatedAt?: string;
-  membershipType: "individual" | "company";
+  membershipType: 'individual' | 'company';
   clientId?: string; // Optional, present when membershipType is "individual"
   companyId?: string;
   membershipEntityId?: string;
@@ -176,9 +187,25 @@ export interface ListFileChannelsResponse {
   nextToken?: string;
 }
 
+// files
 
-
-
+interface FileObject {
+  channelId: string;
+  createdAt: string;
+  creatorId: string;
+  downloadUrl: string;
+  id: string;
+  lastModifiedBy: {
+    id: string;
+    object: string;
+  };
+  linkUrl: string;
+  name: string;
+  object: string;
+  path: string;
+  size: number;
+  status: string;
+}
 
 //--------- api/sdk calls--------------
 
@@ -195,7 +222,6 @@ function createSDK(token: string) {
     token: token,
   });
 }
-
 
 // listClients action
 export async function listClients(
@@ -272,9 +298,9 @@ export async function listForms(token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listForms({limit: 2000})
+      const data = await sdk.listForms({ limit: 2000 });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -284,9 +310,8 @@ export async function listForms(token?: string) {
   }
 }
 
-
 // listFormResponses action
-export async function listFormResponses(formId: string, token?: string ) {
+export async function listFormResponses(formId: string, token?: string) {
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -294,12 +319,15 @@ export async function listFormResponses(formId: string, token?: string ) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/forms/${formId}/form-responses`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': assemblyApiKey,
+      const response = await fetch(
+        `${ASSEMBLY_BASE_URI}/forms/${formId}/form-responses`,
+        {
+          method: 'GET',
+          headers: {
+            'X-API-KEY': assemblyApiKey,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
@@ -315,9 +343,9 @@ export async function listFormResponses(formId: string, token?: string ) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFormResponses({id: formId})
+      const data = await sdk.listFormResponses({ id: formId });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -336,12 +364,15 @@ export async function listContracts(clientId: string, token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/contracts?clientId=${clientId}`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': assemblyApiKey,
+      const response = await fetch(
+        `${ASSEMBLY_BASE_URI}/contracts?clientId=${clientId}`,
+        {
+          method: 'GET',
+          headers: {
+            'X-API-KEY': assemblyApiKey,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
@@ -357,9 +388,9 @@ export async function listContracts(clientId: string, token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listContracts({clientId: clientId})
+      const data = await sdk.listContracts({ clientId: clientId });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -399,14 +430,276 @@ export async function listFileChannels(token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFileChannels({limit: 2000})
+      const data = await sdk.listFileChannels({ limit: 2000 });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
     return {
       error: error instanceof Error ? error.message : 'Failed to fetch forms',
+    };
+  }
+}
+
+// createFolder action
+export async function createFolder(
+  channelId: string,
+  formTypeName: string,
+  token?: string,
+) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const requestBody = {
+        channelId: channelId,
+        path: `ClearTech Reports - ${formTypeName}`,
+      };
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files/folder`, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          channelId: channelId,
+          path: `ClearTech Reports - ${formTypeName}`,
+        }),
+      });
+
+      console.log('Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+
+        let errorMessage;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText;
+        }
+        throw new Error(
+          `API create folder request failed: ${response.statusText}`,
+        );
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.createFile({
+        fileType: `folder`,
+        requestBody: {
+          path: `ClearTech Reports - ${formTypeName}`,
+          channelId: channelId,
+        },
+      });
+      revalidatePath('/internal');
+      return data;
+    }
+  } catch (error) {
+    console.error('Error creating folder:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create folder',
+    };
+  }
+}
+
+// createFile action
+export async function createFile(
+  channelId: string,
+  folderName: string,
+  fileName: string,
+  fileContent: string | Blob,
+  token?: string,
+) {
+  if (fileContent instanceof Blob) {
+    console.log(`FILE CONTENT!!!:`, {
+      type: fileContent.type,
+      size: fileContent.size,
+      constructor: fileContent.constructor.name,
+    });
+  } else {
+    // It's a string (base64)
+    console.log(
+      `FILE CONTENT!!!:`,
+      typeof fileContent,
+      fileContent.length,
+      'characters',
+    );
+  }
+
+  try {
+    let createFileResponse;
+
+    let uploadContent: Blob;
+
+    if (typeof fileContent === 'string') {
+      // Convert base64 string to Blob
+      const binaryString = atob(fileContent);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      uploadContent = new Blob([bytes]);
+      console.log('Converted base64 to Blob:', uploadContent.size, 'bytes');
+    } else {
+      uploadContent = fileContent;
+    }
+
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const requestBody = {
+        channelId: channelId,
+        path: `${folderName}/${fileName}`,
+      };
+
+      console.log(`API request body:`, requestBody);
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files/file`, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      console.log('Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+
+        let errorMessage;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText;
+        }
+        throw new Error(
+          `API create file request failed: ${response.statusText}`,
+        );
+      }
+
+      createFileResponse = await response.json();
+      console.log(`API Response data:`, createFileResponse);
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      createFileResponse = await sdk.createFile({
+        fileType: `file`,
+        requestBody: {
+          path: `${folderName}/${fileName}`,
+          channelId: channelId,
+        },
+      });
+      console.log(`SDK DATA`, createFileResponse);
+    }
+
+    // Upload the file content to the uploadUrl
+    if (createFileResponse.uploadUrl) {
+      console.log('Uploading file content to:', createFileResponse.uploadUrl);
+
+      const uploadResponse = await fetch(createFileResponse.uploadUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Length': uploadContent.size?.toString() || '0',
+          // Optional: helps with caching and display
+          'Cache-Control': 'public, max-age=31536000',
+        },
+        body: uploadContent,
+        // No authentication required for upload URL
+      });
+
+      if (!uploadResponse.ok) {
+        console.error(
+          'Upload failed:',
+          uploadResponse.status,
+          uploadResponse.statusText,
+        );
+        throw new Error(`File upload failed: ${uploadResponse.statusText}`);
+      }
+
+      console.log('File uploaded successfully');
+    } else {
+      console.warn('No uploadUrl received in response');
+    }
+
+    revalidatePath('/internal');
+    return createFileResponse;
+  } catch (error) {
+    console.error('Error creating file:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create file',
+    };
+  }
+}
+
+
+
+
+// retrieveFile action
+export async function retrieveFile(fileId: string, token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files/${fileId}`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.retrieveFile({id: fileId})
+      revalidatePath('/internal');
+      return data;
+    }
+  } catch (error) {
+    console.error('Error retrieving file:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to retrieve file',
     };
   }
 }

@@ -3,14 +3,14 @@
 import { Card, CardContent } from "../ui/card"
 import { StatusBadge } from "../shared/StatusBadge"
 import { Calendar, MapPin, User, Shield, FileText } from "lucide-react"
-import { type BackgroundCheckFormData, SAMPLE_CLIENTS, FORM_TYPE_INFO } from "../../types"
+import { type BackgroundCheckFormData, FORM_TYPE_INFO } from "../../types"
 
 interface CoverLetterDisplayProps {
   formData: BackgroundCheckFormData
 }
 
 export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
-  const client = SAMPLE_CLIENTS.find((c) => c.id === formData.client)
+  const client = formData.client
   const formTypeInfo = FORM_TYPE_INFO[formData.formType]
   const currentDate = new Date().toLocaleDateString("en-US", {
     year: "numeric",
@@ -72,7 +72,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
                     <strong>Name:</strong> {formData.identification.firstName} {formData.identification.lastName}
                   </p>
                   <p>
-                    <strong>Client:</strong> {client.name}
+                    <strong>Client:</strong> {formData.identification.firstName}
                   </p>
                   <p>
                     <strong>Form Type:</strong> {formTypeInfo.title}

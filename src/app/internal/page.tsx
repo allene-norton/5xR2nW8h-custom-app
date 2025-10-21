@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 // HOOKS IMPORTS
 import { useFormData } from '@/hooks/useFormData';
 
-// API/SDK IMPORTS
+// API/SDK/TYPE IMPORTS
 import {
   listClients,
   type ListClientsResponse,
@@ -13,6 +13,7 @@ import {
   type ListFileChannelsResponse,
   type Client,
 } from '@/lib/actions/client-actions';
+import { BackgroundCheckFile } from '@/types';
 
 // COMPONENT IMPORTS
 import { AdminInterface } from '@/components/admin/AdminInterface';
@@ -154,7 +155,37 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     setSelectedClient(client);
   };
 
-  console.log(`PARENT SELECTED CLIENT`, selectedClient);
+  const handleFolderCreated = async (updateCreateFolder: {
+    folderCreated: boolean;
+  }) => {
+    try {
+      console.log(updateCreateFolder);
+      await saveFormData(updateCreateFolder);
+    } catch (error) {
+      // Handle error
+    }
+  };
+
+  const handleFileCreated = async (updateBackgroundCheckFile : BackgroundCheckFile) => {
+    try {
+      updateCheckFileStatus(updateBackgroundCheckFile);
+      const updatedFiles = formData.backgroundCheckFiles.map((file) =>
+      file.checkName === updateBackgroundCheckFile.checkName
+        ? {
+            ...file,
+            fileUploaded: updateBackgroundCheckFile.fileUploaded,
+            fileName: updateBackgroundCheckFile.fileName,
+            fileId: updateBackgroundCheckFile.fileId
+          }
+        : file,
+    );
+    
+    // Pass the updated data directly to saveFormData
+    await saveFormData({ backgroundCheckFiles: updatedFiles });
+    } catch{
+      console.log('something went wrong saving to db/updating form data')
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -266,11 +297,13 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                       Validation Errors
                     </h3>
                     <ul className="text-sm text-red-700 space-y-1 list-disc list-inside">
-                      {Object.entries(validationErrors).map(([field, error]) => (
-                        <li key={field}>
-                          <strong>{field}:</strong> {error}
-                        </li>
-                      ))}
+                      {Object.entries(validationErrors).map(
+                        ([field, error]) => (
+                          <li key={field}>
+                            <strong>{field}:</strong> {error}
+                          </li>
+                        ),
+                      )}
                     </ul>
                   </div>
                 </div>
@@ -296,6 +329,8 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           fileChannelsError={fileChannelsError}
           selectedClient={selectedClient}
           onClientSelect={handleClientSelect}
+          onFolderCreated={handleFolderCreated}
+          onFileCreated={handleFileCreated}
           validationErrors={validationErrors}
         />
       </main>

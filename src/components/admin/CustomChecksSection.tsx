@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { Plus, X } from 'lucide-react';
-import { type FormType, BACKGROUND_CHECK_OPTIONS, BackgroundCheckFiles } from '../../types';
+import { type FormType, BACKGROUND_CHECK_OPTIONS, BackgroundCheckFiles, BackgroundCheckFormData, BackgroundCheckFile } from '../../types';
 
 interface CustomChecksSectionProps {
   formType: FormType;
@@ -20,11 +20,8 @@ interface CustomChecksSectionProps {
   selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
   updateFormData: (updates: { backgroundChecks: string[] }) => void;
-  updateCheckFileStatus: (
-    checkName: string,
-    fileUploaded: boolean,
-    fileName?: string,
-  ) => void;
+  onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
+  updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
 }
 
 export function CustomChecksSection({
