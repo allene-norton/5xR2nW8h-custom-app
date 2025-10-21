@@ -8,7 +8,7 @@ import {
   FormDataSchema,
 } from '../types';
 
-const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+// const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
 interface UseFormDataOptions {
   clientId: string;
