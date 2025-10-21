@@ -1,13 +1,26 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useCallback } from "react"
+
+import { useSearchParams } from 'next/navigation';
+
+
+// UI IMPORTS
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card"
 import { Button } from "../ui/button"
 import { Progress } from "../ui/progress"
 import { Upload, File, X, CheckCircle, AlertCircle } from "lucide-react"
-import type { FileInfo, BackgroundCheckFile, BackgroundCheckFormData } from "../../types"
+
+// TYPE AND CONSTANTS IMPORTS
+import type { FileInfo, BackgroundCheckFile, BackgroundCheckFormData} from "../../types"
+import { FORM_TYPE_INFO } from "../../types"
+
+// API/SDK ACTIONS IMPORTS
+import { createFile } from "@/lib/actions/client-actions"
+
+
+
 
 interface FileUploadSectionProps {
   uploadedFile?: FileInfo
@@ -19,10 +32,17 @@ interface FileUploadSectionProps {
 }
 
 export function FileUploadSection({formData, uploadedFile, backgroundCheckFile, updateFormData, onFileCreated, updateCheckFileStatus }: FileUploadSectionProps) {
+  
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') ?? undefined;
+  
   const [isDragOver, setIsDragOver] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
+
+  const formTypeName = FORM_TYPE_INFO[formData.formType].title;
+  const folderName = `ClearTech Reports - ${formTypeName}`
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault()
@@ -69,7 +89,7 @@ export function FileUploadSection({formData, uploadedFile, backgroundCheckFile, 
     setUploadProgress(0)
 
     try {
-      // Simulate upload progress
+      // Simulate upload progress **remove???***
       const progressInterval = setInterval(() => {
         setUploadProgress((prev) => {
           if (prev >= 90) {
@@ -80,8 +100,8 @@ export function FileUploadSection({formData, uploadedFile, backgroundCheckFile, 
         })
       }, 200)
 
-      // Simulate API call delay
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+     
+      const uploadFile = await createFile(formData.fileChannelId!, folderName, file.name)
 
       clearInterval(progressInterval)
       setUploadProgress(100)

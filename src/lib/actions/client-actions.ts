@@ -495,3 +495,90 @@ export async function createFolder(channelId: string, formTypeName: string, toke
     };
   }
 }
+
+// createFile action
+export async function createFile(channelId: string, folderName: string, fileName: string, fileContent: string | Blob | ArrayBuffer, token?: string) {
+  try {
+    let createFileResponse;
+    
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const requestBody = {
+        channelId: channelId,
+        path: `${folderName}/${fileName}`
+      };
+
+      console.log(`API request body:`, requestBody)
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files/file`, {
+        method: 'POST',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      console.log('Response status:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        
+        let errorMessage;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText;
+        }
+        throw new Error(`API create file request failed: ${response.statusText}`);
+      }
+
+      createFileResponse = await response.json();
+      console.log(`API Response data:`, createFileResponse)
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      createFileResponse = await sdk.createFile({fileType: `file`, requestBody:{path: `${folderName}/${fileName}`, channelId: channelId}})
+      console.log(`SDK DATA`, createFileResponse)
+    }
+
+    // Upload the file content to the uploadUrl
+    if (createFileResponse.uploadUrl) {
+      console.log('Uploading file content to:', createFileResponse.uploadUrl);
+      
+      const uploadResponse = await fetch(createFileResponse.uploadUrl, {
+        method: 'PUT',
+        body: fileContent,
+        // No authentication required for upload URL
+      });
+
+      if (!uploadResponse.ok) {
+        console.error('Upload failed:', uploadResponse.status, uploadResponse.statusText);
+        throw new Error(`File upload failed: ${uploadResponse.statusText}`);
+      }
+
+      console.log('File uploaded successfully');
+    } else {
+      console.warn('No uploadUrl received in response');
+    }
+
+    revalidatePath('/internal');
+    return createFileResponse;
+    
+  } catch (error) {
+    console.error('Error creating file:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create file',
+    };
+  }
+}
