@@ -4,33 +4,6 @@ import { z } from 'zod';
 export type FormType = 'tenant' | 'employment' | 'nonprofit';
 export type Status = 'cleared' | 'pending' | 'denied';
 
-// Client Information
-export interface ClientInfo {
-  id: string;
-  name: string;
-  email?: string;
-  phone?: string;
-}
-
-// File Information
-export interface FileInfo {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  url?: string;
-  uploadedAt: Date;
-}
-
-// Document Types
-export interface Document {
-  id: string;
-  title: string;
-  type: 'pdf' | 'image' | 'other';
-  fileInfo: FileInfo;
-  status: 'uploaded' | 'processing' | 'ready';
-}
-
 // Background Check Options by Form Type
 export const BACKGROUND_CHECK_OPTIONS = {
   tenant: [
@@ -105,16 +78,6 @@ export const FormDataSchema = z.object({
   backgroundCheckFiles: BackgroundCheckFilesSchema,
   status: z.enum(['cleared', 'pending', 'denied']),
   memo: z.string().optional(),
-  uploadedFile: z
-    .object({
-      id: z.string(),
-      name: z.string(),
-      size: z.number(),
-      type: z.string(),
-      url: z.string().optional(),
-      uploadedAt: z.date(),
-    })
-    .optional(),
   fileChannelId: z.string().optional(),
   folderCreated: z.boolean()
 });
@@ -146,33 +109,6 @@ export const DEFAULT_FORM_DATA: BackgroundCheckFormData = {
   folderCreated: false,
 };
 
-// Sample Clients
-export const SAMPLE_CLIENTS: ClientInfo[] = [
-  {
-    id: '1',
-    name: 'John Doe',
-    email: 'john.doe@email.com',
-    phone: '(555) 123-4567',
-  },
-  {
-    id: '2',
-    name: 'Jane Doe',
-    email: 'jane.doe@email.com',
-    phone: '(555) 987-6543',
-  },
-  {
-    id: '3',
-    name: 'Robert Smith',
-    email: 'robert.smith@email.com',
-    phone: '(555) 456-7890',
-  },
-  {
-    id: '4',
-    name: 'Sarah Johnson',
-    email: 'sarah.johnson@email.com',
-    phone: '(555) 321-0987',
-  },
-];
 
 // Form Type Descriptions
 export const FORM_TYPE_INFO = {

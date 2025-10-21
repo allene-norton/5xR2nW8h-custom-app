@@ -120,7 +120,6 @@ export function AdminInterface({
                 key={index}
                 formData={formData}
                 backgroundCheckFile={backgroundCheckFile}
-                updateFormData={updateFormData}
                 onFileCreated={onFileCreated}
                 updateCheckFileStatus={updateCheckFileStatus}
               />
@@ -139,12 +138,7 @@ export function AdminInterface({
         </div>
       )}
 
-      {/* File Upload */}
-      {/* <FileUploadSection
-        uploadedFile={formData.uploadedFile}
-        updateFormData={updateFormData}
-      /> */}
-
+  
       {/* Submitted Documents */}
       <SubmittedFormsSection
         clientId={formData.client}

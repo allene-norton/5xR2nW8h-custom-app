@@ -19,7 +19,6 @@ import { Upload, File, X, CheckCircle, AlertCircle } from 'lucide-react';
 
 // TYPE AND CONSTANTS IMPORTS
 import type {
-  FileInfo,
   BackgroundCheckFile,
   BackgroundCheckFormData,
 } from '../../types';
@@ -29,19 +28,15 @@ import { FORM_TYPE_INFO } from '../../types';
 import { createFile } from '@/lib/actions/client-actions';
 
 interface FileUploadSectionProps {
-  uploadedFile?: FileInfo;
   backgroundCheckFile: BackgroundCheckFile;
   formData: BackgroundCheckFormData;
-  updateFormData: (updates: { uploadedFile?: FileInfo }) => void;
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
 }
 
 export function FileUploadSection({
   formData,
-  uploadedFile,
   backgroundCheckFile,
-  updateFormData,
   onFileCreated,
   updateCheckFileStatus,
 }: FileUploadSectionProps) {
@@ -179,10 +174,6 @@ export function FileUploadSection({
     }
   };
 
-  const handleRemoveFile = () => {
-    updateFormData({ uploadedFile: undefined });
-    setUploadError(null);
-  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -263,14 +254,6 @@ export function FileUploadSection({
                   </span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleRemoveFile}
-                className="text-gray-400 hover:text-red-600"
-              >
-                <X className="w-4 h-4" />
-              </Button>
             </div>
           </div>
         )}
