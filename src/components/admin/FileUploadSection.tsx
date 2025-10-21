@@ -143,9 +143,9 @@ export function FileUploadSection({
         formData.fileChannelId!,
         folderName,
         file.name,
-        base64String, // Pass base64 string instead of ArrayBuffer
-      );
-      console.log('=== createFile completed ===', uploadFile);
+        base64String, 
+      )
+      console.log('createFile completed', uploadFile);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
@@ -159,13 +159,19 @@ export function FileUploadSection({
         fileId: uploadFile.id
       }
 
+
       // update form data and save to db
       onFileCreated(fileInfo)
+
+
+
 
       setTimeout(() => {
         setIsUploading(false);
         setUploadProgress(0);
       }, 500);
+
+
     } catch (error) {
       console.error('=== Error caught in handleFileUpload ===', error);
       setUploadError('Failed to upload file. Please try again.');

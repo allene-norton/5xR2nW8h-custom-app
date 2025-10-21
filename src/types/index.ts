@@ -57,15 +57,14 @@ export const BackgroundCheckFilesSchema = z.array(
 export const IdentificationSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
   lastName: z.string().min(1, 'Last name is required'),
-  streetAddress: z.string().min(1, 'Street address is required'),
+  streetAddress: z.string().optional(),        // example.min(1, 'Street address is required'),
   streetAddress2: z.string().optional(),
-  city: z.string().min(1, 'City is required'),
+  city: z.string().optional(),
   state: z
     .string()
-    .min(2, 'State is required')
-    .max(2, 'State must be 2 characters'),
-  postalCode: z.string().min(5, 'Postal code is required'),
-  birthdate: z.string().min(1, 'Birthdate is required'),
+    .optional(),
+  postalCode: z.string().optional(),
+  birthdate: z.string().optional(),
 });
 
 export const FormDataSchema = z.object({
