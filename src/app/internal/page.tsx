@@ -154,9 +154,10 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     setSelectedClient(client);
   };
 
-    const handleFolderCreated = async () => {
+    const handleFolderCreated = async (updateCreateFolder: {folderCreated: boolean}) => {
     try {
-      await saveFormData();
+      console.log(updateCreateFolder)
+      await saveFormData(updateCreateFolder);
       // Handle success
     } catch (error) {
       // Handle error

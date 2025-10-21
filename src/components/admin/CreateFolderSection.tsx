@@ -14,7 +14,7 @@ import { createFolder } from '@/lib/actions/client-actions';
 interface CreateFolderSectionProps {
   updateFormData: (updates: { folderCreated?: boolean }) => void;
   formData: BackgroundCheckFormData;
-  onFolderCreated?: () => void
+  onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
 }
 
 export function CreateFolderSection({
@@ -57,8 +57,9 @@ export function CreateFolderSection({
         return;
       }
 
-      updateFormData({ folderCreated: true });
-      onFolderCreated?.()
+      const updateCreateFolder = {folderCreated: true}
+      updateFormData(updateCreateFolder);
+      onFolderCreated?.(updateCreateFolder)
     } catch (error) {
       console.error('Error creating folder:', error);
     }

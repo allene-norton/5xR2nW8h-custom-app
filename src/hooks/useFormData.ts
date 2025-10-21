@@ -204,23 +204,22 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   }, [clientId]);
 
   // Manual save
-  const saveFormData = useCallback(async () => {
-    console.log('saveFormData called with clientId:', clientId);
-    console.log('saveFormData called with formData:', formData);
-
-    if (!clientId) {
-      console.error('No clientId provided for save');
-      throw new Error('No client selected');
-    }
-
-    try {
-      await saveToDatabase(formData);
-      console.log('Save completed successfully');
-    } catch (error) {
-      console.error('Save failed in saveFormData:', error);
-      throw error
-    }
-  }, [formData, saveToDatabase, clientId]);
+  const saveFormData = useCallback(async (overrideData?: Partial<BackgroundCheckFormData>) => {
+  console.log('saveFormData called with clientId:', clientId);
+  const dataToSave = overrideData ? { ...formData, ...overrideData } : formData;
+  console.log('saveFormData called with formData:', dataToSave);
+  if (!clientId) {
+    console.error('No clientId provided for save');
+    throw new Error('No client selected');
+  }
+  try {
+    await saveToDatabase(dataToSave);
+    console.log('Save completed successfully');
+  } catch (error) {
+    console.error('Save failed in saveFormData:', error);
+    throw error;
+  }
+}, [formData, saveToDatabase, clientId]);
 
   // Auto-save effect
   // useEffect(() => {

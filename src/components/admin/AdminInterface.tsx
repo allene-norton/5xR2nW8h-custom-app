@@ -39,7 +39,7 @@ interface AdminInterfaceProps {
   fileChannelsError: string | null;
   selectedClient: Client | null; // Changed from selectedClientId
   onClientSelect: (client: Client) => void; // Changed signature
-  onFolderCreated?: () => void;
+  onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
   validationErrors?: Record<string, string>;
 }
 
