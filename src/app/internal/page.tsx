@@ -154,6 +154,15 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     setSelectedClient(client);
   };
 
+    const handleFolderCreated = async () => {
+    try {
+      await saveFormData();
+      // Handle success
+    } catch (error) {
+      // Handle error
+    }
+  };
+
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -295,6 +304,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           fileChannelsError={fileChannelsError}
           selectedClient={selectedClient}
           onClientSelect={handleClientSelect}
+          onFolderCreated={handleFolderCreated}
           validationErrors={validationErrors}
         />
       </main>

@@ -14,12 +14,13 @@ import { createFolder } from '@/lib/actions/client-actions';
 interface CreateFolderSectionProps {
   updateFormData: (updates: { folderCreated?: boolean }) => void;
   formData: BackgroundCheckFormData;
-  // onCreateFolder?: () => void
+  onFolderCreated?: () => void
 }
 
 export function CreateFolderSection({
   updateFormData,
   formData,
+  onFolderCreated
 }: CreateFolderSectionProps) {
 
   const searchParams = useSearchParams();
@@ -29,7 +30,7 @@ export function CreateFolderSection({
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
 
-  const onCreateFolder = async () => {
+  const handleCreateFolder = async () => {
     if (!formData.fileChannelId) {
       throw new Error(
         `File Channel not found. Check that a file channel exists for the client in your Assembly dashboard`,
@@ -53,11 +54,11 @@ export function CreateFolderSection({
 
       if (result.error) {
         console.error('Failed to create folder:', result.error);
-        // Optionally show toast or set error state here
         return;
       }
 
       updateFormData({ folderCreated: true });
+      onFolderCreated?.()
     } catch (error) {
       console.error('Error creating folder:', error);
     }
@@ -73,7 +74,7 @@ export function CreateFolderSection({
         <p className="mb-6 text-center text-sm text-muted-foreground">
           Create a folder to start organizing and uploading your files
         </p>
-        <Button onClick={() => onCreateFolder()} size="lg">
+        <Button onClick={() => handleCreateFolder()} size="lg">
           Create a folder to start uploading files
         </Button>
       </CardContent>

@@ -39,6 +39,7 @@ interface AdminInterfaceProps {
   fileChannelsError: string | null;
   selectedClient: Client | null; // Changed from selectedClientId
   onClientSelect: (client: Client) => void; // Changed signature
+  onFolderCreated?: () => void;
   validationErrors?: Record<string, string>;
 }
 
@@ -56,9 +57,13 @@ export function AdminInterface({
   fileChannelsError,
   selectedClient,
   onClientSelect,
+  onFolderCreated,
   validationErrors = {},
 }: AdminInterfaceProps) {
+
+
   console.log(formData);
+
 
   return (
     <div className="space-y-8">
@@ -110,13 +115,20 @@ export function AdminInterface({
         updateFormData={updateFormData}
       />
 
-      {formData.folderCreated ? (
-        <FileUploadSection updateFormData={updateFormData} />
+      {formData.fileChannelId ? (
+        formData.folderCreated ? (
+          <FileUploadSection updateFormData={updateFormData} />
+        ) : (
+          <CreateFolderSection
+            onFolderCreated={onFolderCreated}
+            updateFormData={updateFormData}
+            formData={formData}
+          />
+        )
       ) : (
-        <CreateFolderSection
-          updateFormData={updateFormData}
-          formData={formData}
-        />
+        <div className="text-center py-8 text-gray-600">
+          <p>No file channel found for this client. Please create one in your Assembly workspace.</p>
+        </div>
       )}
 
       {/* File Upload */}
