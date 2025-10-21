@@ -115,6 +115,7 @@ export const FormDataSchema = z.object({
     })
     .optional(),
   fileChannelId: z.string().optional(),
+  folderCreated: z.boolean()
 });
 
 export type BackgroundCheckFormData = z.infer<typeof FormDataSchema>;
@@ -140,6 +141,7 @@ export const DEFAULT_FORM_DATA: BackgroundCheckFormData = {
   status: 'pending',
   memo: '',
   fileChannelId: '',
+  folderCreated: false,
 };
 
 // Sample Clients
