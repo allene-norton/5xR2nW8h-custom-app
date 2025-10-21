@@ -175,6 +175,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
       checkName: string;
       fileUploaded: boolean;
       fileName?: string;
+      fileId?: string
     }) => {
       setFormData((prev) => {
         const updatedFiles = prev.backgroundCheckFiles.map((file) =>
@@ -183,6 +184,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
                 ...file,
                 fileUploaded: updatedFileInfo.fileUploaded,
                 fileName: updatedFileInfo.fileName,
+                fileId: updatedFileInfo.fileId
               }
             : file,
         );

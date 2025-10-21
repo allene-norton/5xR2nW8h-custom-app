@@ -77,6 +77,7 @@ export const BackgroundCheckFilesSchema = z.array(
       checkName: z.string(),
       fileUploaded: z.boolean(),
       fileName: z.string().optional(),
+      fileId: z.string().optional(),
     }),
   )
 
