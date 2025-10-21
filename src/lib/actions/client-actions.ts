@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { copilotApi } from 'copilot-node-sdk';
+import { fi } from 'date-fns/locale';
 
 const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
@@ -654,6 +655,51 @@ export async function createFile(
     console.error('Error creating file:', error);
     return {
       error: error instanceof Error ? error.message : 'Failed to create file',
+    };
+  }
+}
+
+
+
+
+// retrieveFile action
+export async function retrieveFile(fileId: string, token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files/${fileId}`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.retrieveFile({id: fileId})
+      revalidatePath('/internal');
+      return data;
+    }
+  } catch (error) {
+    console.error('Error retrieving file:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to retrieve file',
     };
   }
 }
