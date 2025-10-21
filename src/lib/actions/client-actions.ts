@@ -9,7 +9,6 @@ const isDev = process.env.NODE_ENV === 'development';
 
 const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
 
-
 // ---------- Unified types (single source of truth)
 // clients
 export interface Client {
@@ -49,12 +48,18 @@ export interface FormField {
   formFieldId?: string;
   title?: string;
   description?: string;
-  type?: 'multiSelect' | 'singleSelect' | 'title' | 'shortAnswer' | 'longAnswer' | 'fileUpload';
+  type?:
+    | 'multiSelect'
+    | 'singleSelect'
+    | 'title'
+    | 'shortAnswer'
+    | 'longAnswer'
+    | 'fileUpload';
   isRequired?: boolean;
   multipleChoiceOptions?: string[];
 }
 
- export interface Form {
+export interface Form {
   id?: string;
   createdAt?: string;
   object?: 'form';
@@ -78,7 +83,13 @@ export interface FormsResponse {
 export interface FormResponseField {
   title?: string;
   description?: string;
-  type?: 'multiSelect' | 'singleSelect' | 'title' | 'shortAnswer' | 'longAnswer' | 'fileUpload'; // ts error here from sdk, possibly incorrect
+  type?:
+    | 'multiSelect'
+    | 'singleSelect'
+    | 'title'
+    | 'shortAnswer'
+    | 'longAnswer'
+    | 'fileUpload'; // ts error here from sdk, possibly incorrect
   multipleChoiceOptions?: string[];
   isRequired?: boolean;
   answer?: string | string[];
@@ -116,18 +127,17 @@ export interface FormResponsesApiResponse {
   data?: FormResponse[];
 }
 
-export type FormResponseArray = FormResponse[]
-
+export type FormResponseArray = FormResponse[];
 
 // contracts
 
 export interface ContractField {
   id?: string;
-  inputType?: string
+  inputType?: string;
   isOptional?: boolean;
   label?: string;
   page?: number;
-  type?: string
+  type?: string;
   value?: string;
 }
 
@@ -154,7 +164,7 @@ export interface ContractsResponse {
   data?: Contract[];
 }
 
-export type ContractArray = Contract[]
+export type ContractArray = Contract[];
 
 // file channels
 
@@ -164,7 +174,7 @@ export interface FileChannel {
   identityId?: string;
   createdAt?: string;
   updatedAt?: string;
-  membershipType: "individual" | "company";
+  membershipType: 'individual' | 'company';
   clientId?: string; // Optional, present when membershipType is "individual"
   companyId?: string;
   membershipEntityId?: string;
@@ -196,10 +206,6 @@ interface FileObject {
   status: string;
 }
 
-
-
-
-
 //--------- api/sdk calls--------------
 
 // Helper function to create SDK instance
@@ -215,7 +221,6 @@ function createSDK(token: string) {
     token: token,
   });
 }
-
 
 // listClients action
 export async function listClients(
@@ -292,9 +297,9 @@ export async function listForms(token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listForms({limit: 2000})
+      const data = await sdk.listForms({ limit: 2000 });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -304,9 +309,8 @@ export async function listForms(token?: string) {
   }
 }
 
-
 // listFormResponses action
-export async function listFormResponses(formId: string, token?: string ) {
+export async function listFormResponses(formId: string, token?: string) {
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -314,12 +318,15 @@ export async function listFormResponses(formId: string, token?: string ) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/forms/${formId}/form-responses`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': assemblyApiKey,
+      const response = await fetch(
+        `${ASSEMBLY_BASE_URI}/forms/${formId}/form-responses`,
+        {
+          method: 'GET',
+          headers: {
+            'X-API-KEY': assemblyApiKey,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
@@ -335,9 +342,9 @@ export async function listFormResponses(formId: string, token?: string ) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFormResponses({id: formId})
+      const data = await sdk.listFormResponses({ id: formId });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -356,12 +363,15 @@ export async function listContracts(clientId: string, token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/contracts?clientId=${clientId}`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': assemblyApiKey,
+      const response = await fetch(
+        `${ASSEMBLY_BASE_URI}/contracts?clientId=${clientId}`,
+        {
+          method: 'GET',
+          headers: {
+            'X-API-KEY': assemblyApiKey,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
@@ -377,9 +387,9 @@ export async function listContracts(clientId: string, token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listContracts({clientId: clientId})
+      const data = await sdk.listContracts({ clientId: clientId });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -419,9 +429,9 @@ export async function listFileChannels(token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFileChannels({limit: 2000})
+      const data = await sdk.listFileChannels({ limit: 2000 });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -432,7 +442,11 @@ export async function listFileChannels(token?: string) {
 }
 
 // createFolder action
-export async function createFolder(channelId: string, formTypeName: string, token?: string) {
+export async function createFolder(
+  channelId: string,
+  formTypeName: string,
+  token?: string,
+) {
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -454,16 +468,15 @@ export async function createFolder(channelId: string, formTypeName: string, toke
         body: JSON.stringify({
           channelId: channelId,
           path: `ClearTech Reports - ${formTypeName}`,
-        })
+        }),
       });
 
       console.log('Response status:', response.status, response.statusText);
 
-
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
-        
+
         let errorMessage;
         try {
           const errorJson = JSON.parse(errorText);
@@ -471,7 +484,9 @@ export async function createFolder(channelId: string, formTypeName: string, toke
         } catch {
           errorMessage = errorText;
         }
-        throw new Error(`API create folder request failed: ${response.statusText}`);
+        throw new Error(
+          `API create folder request failed: ${response.statusText}`,
+        );
       }
 
       const data = await response.json();
@@ -484,9 +499,15 @@ export async function createFolder(channelId: string, formTypeName: string, toke
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.createFile({fileType: `folder`, requestBody:{path: `ClearTech Reports - ${formTypeName}`, channelId: channelId}})
+      const data = await sdk.createFile({
+        fileType: `folder`,
+        requestBody: {
+          path: `ClearTech Reports - ${formTypeName}`,
+          channelId: channelId,
+        },
+      });
       revalidatePath('/internal');
-      return data
+      return data;
     }
   } catch (error) {
     console.error('Error creating folder:', error);
@@ -497,28 +518,34 @@ export async function createFolder(channelId: string, formTypeName: string, toke
 }
 
 // createFile action
-export async function createFile(channelId: string, folderName: string, fileName: string, fileContent: string | Blob | ArrayBuffer, token?: string) {
+export async function createFile(
+  channelId: string,
+  folderName: string,
+  fileName: string,
+  fileContent: string | Blob,
+  token?: string,
+) {
   if (fileContent instanceof Blob) {
     console.log(`FILE CONTENT!!!:`, {
       type: fileContent.type,
       size: fileContent.size,
-      constructor: fileContent.constructor.name
-    })
-  } else if (fileContent instanceof ArrayBuffer) {
-    console.log(`FILE CONTENT!!!:`, {
-      byteLength: fileContent.byteLength,
-      constructor: fileContent.constructor.name
-    })
+      constructor: fileContent.constructor.name,
+    });
   } else {
     // It's a string (base64)
-    console.log(`FILE CONTENT!!!:`, typeof fileContent, fileContent.length, 'characters')
+    console.log(
+      `FILE CONTENT!!!:`,
+      typeof fileContent,
+      fileContent.length,
+      'characters',
+    );
   }
 
   try {
     let createFileResponse;
 
-    let uploadContent: Blob | ArrayBuffer;
-    
+    let uploadContent: Blob;
+
     if (typeof fileContent === 'string') {
       // Convert base64 string to Blob
       const binaryString = atob(fileContent);
@@ -531,7 +558,7 @@ export async function createFile(channelId: string, folderName: string, fileName
     } else {
       uploadContent = fileContent;
     }
-    
+
     if (isDev) {
       // Dev mode: use Assembly API directly
       if (!assemblyApiKey) {
@@ -540,10 +567,10 @@ export async function createFile(channelId: string, folderName: string, fileName
 
       const requestBody = {
         channelId: channelId,
-        path: `${folderName}/${fileName}`
+        path: `${folderName}/${fileName}`,
       };
 
-      console.log(`API request body:`, requestBody)
+      console.log(`API request body:`, requestBody);
 
       const response = await fetch(`${ASSEMBLY_BASE_URI}/files/file`, {
         method: 'POST',
@@ -551,7 +578,7 @@ export async function createFile(channelId: string, folderName: string, fileName
           'X-API-KEY': assemblyApiKey,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(requestBody)
+        body: JSON.stringify(requestBody),
       });
 
       console.log('Response status:', response.status, response.statusText);
@@ -559,7 +586,7 @@ export async function createFile(channelId: string, folderName: string, fileName
       if (!response.ok) {
         const errorText = await response.text();
         console.error('API Error Response:', errorText);
-        
+
         let errorMessage;
         try {
           const errorJson = JSON.parse(errorText);
@@ -567,11 +594,13 @@ export async function createFile(channelId: string, folderName: string, fileName
         } catch {
           errorMessage = errorText;
         }
-        throw new Error(`API create file request failed: ${response.statusText}`);
+        throw new Error(
+          `API create file request failed: ${response.statusText}`,
+        );
       }
 
       createFileResponse = await response.json();
-      console.log(`API Response data:`, createFileResponse)
+      console.log(`API Response data:`, createFileResponse);
     } else {
       // Prod mode: use Copilot SDK with token
       if (!token) {
@@ -579,22 +608,38 @@ export async function createFile(channelId: string, folderName: string, fileName
       }
 
       const sdk = createSDK(token);
-      createFileResponse = await sdk.createFile({fileType: `file`, requestBody:{path: `${folderName}/${fileName}`, channelId: channelId}})
-      console.log(`SDK DATA`, createFileResponse)
+      createFileResponse = await sdk.createFile({
+        fileType: `file`,
+        requestBody: {
+          path: `${folderName}/${fileName}`,
+          channelId: channelId,
+        },
+      });
+      console.log(`SDK DATA`, createFileResponse);
     }
 
     // Upload the file content to the uploadUrl
     if (createFileResponse.uploadUrl) {
       console.log('Uploading file content to:', createFileResponse.uploadUrl);
-      
+
       const uploadResponse = await fetch(createFileResponse.uploadUrl, {
         method: 'PUT',
+        headers: {
+          'Content-Type': 'application/pdf',
+          'Content-Length': uploadContent.size?.toString() || '0',
+          // Optional: helps with caching and display
+          'Cache-Control': 'public, max-age=31536000',
+        },
         body: uploadContent,
         // No authentication required for upload URL
       });
 
       if (!uploadResponse.ok) {
-        console.error('Upload failed:', uploadResponse.status, uploadResponse.statusText);
+        console.error(
+          'Upload failed:',
+          uploadResponse.status,
+          uploadResponse.statusText,
+        );
         throw new Error(`File upload failed: ${uploadResponse.statusText}`);
       }
 
@@ -605,7 +650,6 @@ export async function createFile(channelId: string, folderName: string, fileName
 
     revalidatePath('/internal');
     return createFileResponse;
-    
   } catch (error) {
     console.error('Error creating file:', error);
     return {
