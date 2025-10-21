@@ -440,10 +440,16 @@ export async function createFolder(channelId: string, formTypeName: string, toke
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
+      const requestBody = {
+        channelId: channelId,
+        path: `ClearTech Reports - ${formTypeName}`,
+      };
+
       const response = await fetch(`${ASSEMBLY_BASE_URI}/files/folder`, {
         method: 'POST',
         headers: {
           'X-API-KEY': assemblyApiKey,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           channelId: channelId,
@@ -451,7 +457,20 @@ export async function createFolder(channelId: string, formTypeName: string, toke
         })
       });
 
+      console.log('Response status:', response.status, response.statusText);
+
+
       if (!response.ok) {
+        const errorText = await response.text();
+        console.error('API Error Response:', errorText);
+        
+        let errorMessage;
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMessage = errorJson.message || errorJson.error || errorText;
+        } catch {
+          errorMessage = errorText;
+        }
         throw new Error(`API create folder request failed: ${response.statusText}`);
       }
 
@@ -470,7 +489,7 @@ export async function createFolder(channelId: string, formTypeName: string, toke
       return data
     }
   } catch (error) {
-    console.error('Error fetching forms:', error);
+    console.error('Error creating folder:', error);
     return {
       error: error instanceof Error ? error.message : 'Failed to create folder',
     };

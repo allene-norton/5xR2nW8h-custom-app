@@ -19,7 +19,6 @@ import { SubmittedFormsSection } from '@/components/admin/SubmittedFormsSection'
 import { CreateFolderSection } from '@/components/admin/CreateFolderSection';
 
 interface AdminInterfaceProps {
-  token?: string | undefined;
   formData: BackgroundCheckFormData;
   updateFormData: (updates: Partial<BackgroundCheckFormData>) => void;
   updateIdentification: (
@@ -44,7 +43,6 @@ interface AdminInterfaceProps {
 }
 
 export function AdminInterface({
-  token,
   formData,
   updateFormData,
   updateIdentification,
@@ -118,7 +116,6 @@ export function AdminInterface({
         <CreateFolderSection
           updateFormData={updateFormData}
           formData={formData}
-          token={token}
         />
       )}
 

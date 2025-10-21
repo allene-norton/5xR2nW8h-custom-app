@@ -4,6 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { FolderPlus } from 'lucide-react';
 
+import { useSearchParams } from 'next/navigation';
+
+
 import { BackgroundCheckFormData, FORM_TYPE_INFO } from '@/types';
 
 import { createFolder } from '@/lib/actions/client-actions';
@@ -11,15 +14,19 @@ import { createFolder } from '@/lib/actions/client-actions';
 interface CreateFolderSectionProps {
   updateFormData: (updates: { folderCreated?: boolean }) => void;
   formData: BackgroundCheckFormData;
-  token?: string | undefined;
   // onCreateFolder?: () => void
 }
 
 export function CreateFolderSection({
   updateFormData,
   formData,
-  token,
 }: CreateFolderSectionProps) {
+
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token') ?? undefined;
+
+
+
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
 
   const onCreateFolder = async () => {
@@ -30,14 +37,19 @@ export function CreateFolderSection({
     }
 
     try {
+      console.log('Creating folder with params:', {
+      fileChannelId: formData.fileChannelId,
+      formTypeName,
+      token: token ? 'present' : 'missing'
+    });
       const result = await createFolder(
         formData.fileChannelId,
         formTypeName,
         token,
       );
 
-      const res = await result.json()
-      console.log(res)
+      
+      console.log(result)
 
       if (result.error) {
         console.error('Failed to create folder:', result.error);
