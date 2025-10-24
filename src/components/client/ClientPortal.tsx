@@ -4,6 +4,7 @@ import type { BackgroundCheckFormData } from "../../types"
 import { CoverLetterDisplay } from "./CoverLetterDisplay"
 import { ClientDocumentsDisplay } from "./ClientDocumentsDisplay"
 import { ListFilesResponse } from "@/lib/actions/client-actions"
+import { SubmittedFormsSection } from "@/components/admin/SubmittedFormsSection"
 
 interface ClientPortalProps {
   formData: BackgroundCheckFormData
@@ -16,8 +17,11 @@ export function ClientPortal({ formData, reportFiles }: ClientPortalProps) {
       {/* Cover Letter */}
       <CoverLetterDisplay formData={formData} />
 
+      {/* Report Documents */}
+      <ClientDocumentsDisplay clientId={formData.client} reportFiles={reportFiles} />
+
       {/* Client Documents */}
-      <ClientDocumentsDisplay clientId={formData.client} fileChannelId={formData.fileChannelId} reportFiles={reportFiles} />
+      <SubmittedFormsSection clientId={formData.client} variant={'client'} />
     </div>
   )
 }
