@@ -29,6 +29,7 @@ export default function ReportsPage() {
   const [loggedInUser, setLoggedInUser] = useState<any>({});
   const [userLoading, setUserLoading] = useState<any>();
   const [reportFiles, setReportFiles] = useState<any>([])
+  const [filesLoading, setFilesLoading] = useState<any>([])
 
   const { formData, isLoading: formLoading } = useFormData({
     clientId: loggedInUser.id || undefined,
@@ -60,21 +61,21 @@ export default function ReportsPage() {
     if (!formData || !loggedInUser.id) return;
     
     try {
-      // Use formData properties here - for example:
+      setFilesLoading(true)
       const files = await listFiles(formData.fileChannelId!, formTypeName, token );
       
       setReportFiles(files);
     } catch (error) {
       console.error('Error fetching report files:', error);
+    } finally {
+      setFilesLoading(false)
     }
   };
 
   fetchReportFiles();
 }, [formData, loggedInUser.id]);
 
-console.log(`REPORT FILES`, reportFiles)
-
-  if (userLoading || formLoading || !formData) {
+  if (userLoading || formLoading || filesLoading || !formData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
