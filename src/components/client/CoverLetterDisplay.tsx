@@ -34,7 +34,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
                 />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Clear Tech</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">ClearTech</h1>
                   <p className="text-gray-600">Background Checks and Security Consulting</p>
                 </div>
               </div>
@@ -163,7 +163,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
             <br/>
             <p className="text-gray-700 leading-relaxed">
               This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
-              applicable state and local laws.</p><br/>
+              applicable state and local laws.</p>
               <p className="text-gray-700 leading-relaxed"> If you have any questions about these results or need additional
               information, please contact our office at admin@cleartechbackground.com
             </p><br/>
