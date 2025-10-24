@@ -189,23 +189,30 @@ export interface ListFileChannelsResponse {
 
 // files
 
-interface FileObject {
-  channelId: string;
-  createdAt: string;
-  creatorId: string;
-  downloadUrl: string;
-  id: string;
-  lastModifiedBy: {
-    id: string;
-    object: string;
+export interface FileObject {
+  channelId?: string;
+  createdAt?: string;
+  creatorId?: string;
+  downloadUrl?: string;
+  id?: string;
+  lastModifiedBy?: {
+    id?: string;
+    object?: string;
   };
-  linkUrl: string;
-  name: string;
-  object: string;
-  path: string;
-  size: number;
-  status: string;
+  linkUrl?: string;
+  name?: string;
+  object?: string;
+  path?: string;
+  size?: number;
+  status?: string;
 }
+
+export interface ListFilesResponse {
+  data?: FileObject[];
+  nextToken?: string;
+}
+
+export type FilesArray = FileObject[];
 
 //--------- api/sdk calls--------------
 
@@ -659,10 +666,7 @@ export async function createFile(
   }
 }
 
-
-
-
-// retrieveFile action
+// listFiles action
 export async function retrieveFile(fileId: string, token?: string) {
   try {
     if (isDev) {
@@ -692,7 +696,7 @@ export async function retrieveFile(fileId: string, token?: string) {
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.retrieveFile({id: fileId})
+      const data = await sdk.retrieveFile({ id: fileId });
       revalidatePath('/internal');
       return data;
     }
@@ -700,6 +704,128 @@ export async function retrieveFile(fileId: string, token?: string) {
     console.error('Error retrieving file:', error);
     return {
       error: error instanceof Error ? error.message : 'Failed to retrieve file',
+    };
+  }
+}
+
+// listFiles action
+export async function listFiles(
+  channelId: string,
+  formTypeName: string,
+  token?: string,
+) {
+  const formattedPath = encodeURI(`ClearTech Reports - ${formTypeName}`)
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      
+      console.log(`FORMATTED PATH`, formattedPath)
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/files?channelId=${channelId}&path=${formattedPath}`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const data = await sdk.listFiles({channelId: channelId, path: formattedPath})
+      revalidatePath('/internal');
+      return data;
+    }
+  } catch (error) {
+    console.error('Error fetching files:', error);
+    return {
+      error: error instanceof Error ? error.message : 'Failed to fetch files',
+    };
+  }
+}
+
+// loggedInClient action
+export async function getLoggedInUser(clientId?: string, token?: string) {
+  try {
+    if (isDev) {
+      console.log(`IS DEV`, isDev);
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return data;
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+
+      const data: {
+        workspace: Awaited<ReturnType<typeof sdk.retrieveWorkspace>>;
+        client?: Awaited<ReturnType<typeof sdk.retrieveClient>>;
+        company?: Awaited<ReturnType<typeof sdk.retrieveCompany>>;
+        internalUser?: Awaited<ReturnType<typeof sdk.retrieveInternalUser>>;
+      } = {
+        workspace: await sdk.retrieveWorkspace(),
+      };
+      const tokenPayload = await sdk.getTokenPayload?.();
+
+      if (tokenPayload?.clientId) {
+        data.client = await sdk.retrieveClient({
+          id: tokenPayload.clientId,
+        });
+      }
+      if (tokenPayload?.companyId) {
+        data.company = await sdk.retrieveCompany({
+          id: tokenPayload.companyId,
+        });
+      }
+      if (tokenPayload?.internalUserId) {
+        data.internalUser = await sdk.retrieveInternalUser({
+          id: tokenPayload.internalUserId,
+        });
+      }
+
+      revalidatePath('/internal');
+      return data;
+    }
+  } catch (error) {
+    console.error('Error retrieving logged in user:', error);
+    return {
+      error:
+        error instanceof Error
+          ? error.message
+          : 'Failed to retrieve logged in user',
     };
   }
 }

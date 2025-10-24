@@ -34,13 +34,14 @@ const PDFViewer = dynamic(() => import('./PDFViewer'), {
 
 interface ContractCardProps {
   contract: Contract;
-  variant?: 'admin' | 'client'; // or whatever variants you have
+  variant?: 'admin' | 'client'; 
   onResponseClick?: () => void;
   onFileClick?: () => void;
 }
 
 export function ContractCard({
   contract,
+  variant,
   onResponseClick,
   onFileClick,
 }: ContractCardProps) {
@@ -66,9 +67,8 @@ export function ContractCard({
     onResponseClick?.();
   };
 
-
   const handleFilePreview = (url: string, filename: string) => {
-    const fileType = 'pdf'
+    const fileType = 'pdf';
     setPreviewFile({ url, filename, type: fileType });
     onFileClick?.();
   };
@@ -107,15 +107,19 @@ export function ContractCard({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {/* <Button
-          variant="outline"
-          size="sm"
-          onClick={handleResponseClick}
-          className="w-full bg-transparent whitespace-nowrap"
-        >
-          <ExternalLink className="h-4 w-4 mr-2" />
-          Form Response
-        </Button> */}
+          {variant === 'client' ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleResponseClick}
+              className="w-full bg-transparent whitespace-nowrap"
+            >
+              <ExternalLink className="h-4 w-4 mr-2" />
+              Go to Contracts App
+            </Button>
+          ) : (
+            <></>
+          )}
           {contract.signedFileUrl && (
             <Button
               variant="outline"

@@ -27,11 +27,11 @@ import {
 
 interface SubmittedFormsSectionProps {
   clientId: string;
-  fileChannelId: string | undefined
+  variant?: 'admin' | 'client';
 }
 
 export function SubmittedFormsSection({
-  clientId, fileChannelId
+  clientId, variant
 }: SubmittedFormsSectionProps) {
 
   const searchParams = useSearchParams();
@@ -174,7 +174,8 @@ export function SubmittedFormsSection({
           </Button>
         </div>
         <CardDescription>
-          Documents submitted by the client through the portal
+          {variant === 'client'? 'Your submitted forms and documents': 'Documents submitted by the client through the portal'}
+          
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -210,14 +211,14 @@ export function SubmittedFormsSection({
               <FormCard
                 key={form.id}
                 formResponse={form}
-                variant="admin"
+                variant={variant}
               />
             ))}
              {contracts.map((contract: Contract) => (
               <ContractCard
                 key={contract.id}
                 contract={contract}
-                variant="admin"
+                variant={variant}
               />
             ))}
           </div>
