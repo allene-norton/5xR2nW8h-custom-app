@@ -165,7 +165,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
               This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
               applicable state and local laws.</p><br/>
               <p className="text-gray-700 leading-relaxed"> If you have any questions about these results or need additional
-              information, please contact our office at (555) 123-4567.
+              information, please contact our office at admin@cleartechbackground.com
             </p><br/>
 
             <p className="text-gray-700 leading-relaxed">Thank you for choosing ClearTech Background Services.</p>
