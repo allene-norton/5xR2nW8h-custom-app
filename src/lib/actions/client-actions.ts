@@ -208,9 +208,11 @@ export interface FileObject {
 }
 
 export interface ListFilesResponse {
-  data?: File[];
+  data?: FileObject[];
   nextToken?: string;
 }
+
+export type FilesArray = FileObject[];
 
 //--------- api/sdk calls--------------
 
