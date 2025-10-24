@@ -1,7 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
+import { useEffect, useState, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 
 // COMPONENTS IMPORTS
@@ -18,9 +17,8 @@ import { getLoggedInUser, listFiles } from '@/lib/actions/client-actions';
 
 // UI IMPORTS
 import { Badge } from '../../components/ui/badge';
-import { format } from 'path';
 
-export default function ReportsPage() {
+function ReportsContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
 
@@ -36,10 +34,8 @@ export default function ReportsPage() {
   });
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
-  
 
   useEffect(() => {
-
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
@@ -57,23 +53,23 @@ export default function ReportsPage() {
   }, [token]);
 
   useEffect(() => {
-  const fetchReportFiles = async () => {
-    if (!formData || !loggedInUser.id) return;
-    
-    try {
-      setFilesLoading(true)
-      const files = await listFiles(formData.fileChannelId!, formTypeName, token );
+    const fetchReportFiles = async () => {
+      if (!formData || !loggedInUser.id) return;
       
-      setReportFiles(files);
-    } catch (error) {
-      console.error('Error fetching report files:', error);
-    } finally {
-      setFilesLoading(false)
-    }
-  };
+      try {
+        setFilesLoading(true)
+        const files = await listFiles(formData.fileChannelId!, formTypeName, token );
+        
+        setReportFiles(files);
+      } catch (error) {
+        console.error('Error fetching report files:', error);
+      } finally {
+        setFilesLoading(false)
+      }
+    };
 
-  fetchReportFiles();
-}, [formData, loggedInUser.id]);
+    fetchReportFiles();
+  }, [formData, loggedInUser.id]);
 
   if (userLoading || formLoading || filesLoading || !formData) {
     return (
@@ -99,10 +95,10 @@ export default function ReportsPage() {
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center">
                   <img 
-                  src="/ct-logo.png" 
-                  alt="CT Logo" 
-                  className="w-12 h-12 rounded-lg object-contain"
-                />
+                    src="/ct-logo.png" 
+                    alt="CT Logo" 
+                    className="w-12 h-12 rounded-lg object-contain"
+                  />
                 </div>
               </div>
               <div>
@@ -153,5 +149,26 @@ export default function ReportsPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600">
+          Loading your background check report...
+        </p>
+      </div>
+    </div>
+  );
+}
+
+export default function ReportsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ReportsContent />
+    </Suspense>
   );
 }
