@@ -10,8 +10,11 @@ import { ClientPortal } from '../../components/client/ClientPortal';
 // HOOKS IMPORTS
 import { useFormData } from '../../hooks/useFormData';
 
+// TYPE AND CONSTANTS IMPORTS
+import { FORM_TYPE_INFO } from '@/types';
+
 // SERVER ACTIONS
-import { getLoggedInUser } from '@/lib/actions/client-actions';
+import { getLoggedInUser, listFiles } from '@/lib/actions/client-actions';
 
 // UI IMPORTS
 import { Badge } from '../../components/ui/badge';
@@ -25,12 +28,17 @@ export default function ReportsPage() {
 
   const [loggedInUser, setLoggedInUser] = useState<any>({});
   const [userLoading, setUserLoading] = useState<any>();
+  const [reportFiles, setReportFiles] = useState<any>([])
 
   const { formData, isLoading: formLoading } = useFormData({
     clientId: loggedInUser.id || undefined,
   });
 
+  const formTypeName = FORM_TYPE_INFO[formData.formType].title;
+  
+
   useEffect(() => {
+
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
@@ -45,8 +53,26 @@ export default function ReportsPage() {
     };
 
     fetchUserInfo();
-    console.log(`TOKEN`, token)
   }, [token]);
+
+  useEffect(() => {
+  const fetchReportFiles = async () => {
+    if (!formData || !loggedInUser.id) return;
+    
+    try {
+      // Use formData properties here - for example:
+      const files = await listFiles(formData.fileChannelId!, formTypeName, token );
+      
+      setReportFiles(files);
+    } catch (error) {
+      console.error('Error fetching report files:', error);
+    }
+  };
+
+  fetchReportFiles();
+}, [formData, loggedInUser.id]);
+
+console.log(`REPORT FILES`, reportFiles)
 
   if (userLoading || formLoading || !formData) {
     return (
