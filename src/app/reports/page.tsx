@@ -70,15 +70,19 @@ export default function ReportsPage() {
             {/* Logo and Title */}
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-lg">CT</span>
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+                  <img 
+                  src="/ct-logo.png" 
+                  alt="CT Logo" 
+                  className="w-12 h-12 rounded-lg object-contain"
+                />
                 </div>
               </div>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">
-                  ClearTech Background Services
+                  Background Check Report
                 </h1>
-                <p className="text-sm text-gray-500">Background Check Report</p>
+                <p className="text-sm text-gray-500">Clear Tech</p>
               </div>
             </div>
 

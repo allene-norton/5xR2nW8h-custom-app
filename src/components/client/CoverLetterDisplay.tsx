@@ -26,18 +26,20 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center space-x-3 mb-2">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                  <span className="text-white font-bold text-xl">CT</span>
+                <div className="w-12 h-12 rounded-lg flex items-center justify-center">
+                  <img 
+                  src="/ct-logo.png" 
+                  alt="CT Logo" 
+                  className="w-12 h-12 rounded-lg object-contain"
+                />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">ClearTech Background Services</h1>
-                  <p className="text-gray-600">Professional Background Screening Solutions</p>
+                  <h1 className="text-2xl font-bold text-gray-900">Clear Tech</h1>
+                  <p className="text-gray-600">Background Checks and Security Consulting</p>
                 </div>
               </div>
               <div className="text-sm text-gray-600 space-y-1">
-                <p>123 Business Avenue, Suite 100</p>
-                <p>Chicago, IL 60601</p>
-                <p>Phone: (555) 123-4567 | Email: info@cleartech.com</p>
+                <p> Contact Us: admin@cleartechbackground.com</p>
               </div>
             </div>
             <div className="text-right">
@@ -55,7 +57,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
               <span>Date: {currentDate}</span>
             </div>
             <div>
-              Reference #: BGC-{formData.client}-{Date.now().toString().slice(-6)}
+              Reference #: BGC-{formData.client.split('-',1)}
             </div>
           </div>
 
@@ -158,12 +160,13 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
                 <p className="text-gray-700 text-sm leading-relaxed">{formData.memo}</p>
               </div>
             )}
-
+            <br/>
             <p className="text-gray-700 leading-relaxed">
               This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
-              applicable state and local laws. If you have any questions about these results or need additional
+              applicable state and local laws.</p><br/>
+              <p className="text-gray-700 leading-relaxed"> If you have any questions about these results or need additional
               information, please contact our office at (555) 123-4567.
-            </p>
+            </p><br/>
 
             <p className="text-gray-700 leading-relaxed">Thank you for choosing ClearTech Background Services.</p>
 
@@ -186,10 +189,10 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
             <strong>Confidentiality Notice:</strong> This document contains confidential and privileged information. If
             you are not the intended recipient, please notify the sender immediately and destroy this document.
           </p>
-          <p>
+          {/* <p>
             <strong>Dispute Process:</strong> If you believe any information in this report is inaccurate, you have the
             right to dispute it. Please contact us within 30 days of receiving this report.
-          </p>
+          </p> */}
         </div>
       </CardContent>
     </Card>
