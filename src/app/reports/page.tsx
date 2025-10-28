@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 
 // COMPONENTS IMPORTS
 import { ClientPortal } from '../../components/client/ClientPortal';
+import { ReportUnavailable } from '@/components/client/ReportUnavailable';
 
 // HOOKS IMPORTS
 import { useFormData } from '../../hooks/useFormData';
@@ -24,13 +25,13 @@ function ReportsContent() {
 
   const tempClientId = '8b891bf8-1827-4574-9290-1e76fa33dc41';
 
-  const [loggedInUser, setLoggedInUser] = useState<any>({});
-  const [userLoading, setUserLoading] = useState<any>();
-  const [reportFiles, setReportFiles] = useState<any>([])
-  const [filesLoading, setFilesLoading] = useState<any>([])
+  const [loggedInUser, setLoggedInUser] = useState<any>(null);
+  const [userLoading, setUserLoading] = useState<any>(true);
+  const [reportFiles, setReportFiles] = useState<any>([]);
+  const [filesLoading, setFilesLoading] = useState<any>(false);
 
   const { formData, isLoading: formLoading } = useFormData({
-    clientId: loggedInUser.id || undefined,
+    clientId: loggedInUser?.id || undefined,
   });
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
@@ -39,11 +40,12 @@ function ReportsContent() {
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
-        const userInfo = await getLoggedInUser(tempClientId, /*token*/);
+        const userInfo = await getLoggedInUser(tempClientId /*token*/);
         console.log(userInfo);
         setLoggedInUser(userInfo);
       } catch (error) {
         console.error('Error fetching user info:', error);
+        setLoggedInUser(null);
       } finally {
         setUserLoading(false);
       }
@@ -54,22 +56,26 @@ function ReportsContent() {
 
   useEffect(() => {
     const fetchReportFiles = async () => {
-      if (!formData || !loggedInUser.id) return;
-      
+      if (!formData || !loggedInUser?.id) return;
+
       try {
-        setFilesLoading(true)
-        const files = await listFiles(formData.fileChannelId!, formTypeName, token );
-        
+        setFilesLoading(true);
+        const files = await listFiles(
+          formData.fileChannelId!,
+          formTypeName,
+          token,
+        );
+
         setReportFiles(files);
       } catch (error) {
         console.error('Error fetching report files:', error);
       } finally {
-        setFilesLoading(false)
+        setFilesLoading(false);
       }
     };
 
     fetchReportFiles();
-  }, [formData, loggedInUser.id]);
+  }, [formData, loggedInUser?.id, token, formTypeName]);
 
   if (userLoading || formLoading || filesLoading || !formData) {
     return (
@@ -84,6 +90,18 @@ function ReportsContent() {
     );
   }
 
+    if (
+    !loggedInUser ||
+    loggedInUser === null ||
+    loggedInUser === undefined ||
+    Object.keys(loggedInUser).length === 0 ||
+    formData.client === undefined ||
+    formData.client === null ||
+    formData.client === ''
+  ) {
+    return <ReportUnavailable />;
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -94,9 +112,9 @@ function ReportsContent() {
             <div className="flex items-center space-x-4">
               <div className="flex-shrink-0">
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center">
-                  <img 
-                    src="/ct-logo.png" 
-                    alt="CT Logo" 
+                  <img
+                    src="/ct-logo.png"
+                    alt="CT Logo"
                     className="w-12 h-12 rounded-lg object-contain"
                   />
                 </div>
@@ -157,9 +175,7 @@ function LoadingFallback() {
     <div className="flex items-center justify-center min-h-screen bg-gray-50">
       <div className="text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">
-          Loading your background check report...
-        </p>
+        <p className="text-gray-600">Loading your background check report...</p>
       </div>
     </div>
   );
