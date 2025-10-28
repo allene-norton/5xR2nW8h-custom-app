@@ -29,6 +29,7 @@ interface InternalPageProps {
 }
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
+  console.log(`SEARCHPARAMS`, searchParams)
   // ----------- STATES-------------------------------------------
   // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
@@ -71,6 +72,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     resetFormData,
     saveFormData,
   } = useFormData({ clientId: selectedClient?.id || '' });
+
 
   // FETCH CLIENTS AND FILE CHANNELS ON MOUNT
   useEffect(() => {
