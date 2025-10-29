@@ -87,7 +87,7 @@ export function ConfigurationSection({
       city: selectedClient.customFields?.city || '',
       state: selectedClient.customFields?.state || '',
       postalCode: selectedClient.customFields?.postalCode || '',
-      birthdate: selectedClient.customFields?.birthdate || '', //birthDate in CT fields
+      birthdate: selectedClient.customFields?.birthDate || '', //birthDate in CT fields
     };
 
     updateIdentification(updatedIdentification);
