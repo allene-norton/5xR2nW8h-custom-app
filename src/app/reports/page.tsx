@@ -31,6 +31,7 @@ function ReportsContent() {
   const [userLoading, setUserLoading] = useState<any>(true);
   const [reportFiles, setReportFiles] = useState<any>([]);
   const [filesLoading, setFilesLoading] = useState<any>(false);
+  const [shouldFetchFiles, setShouldFetchFiles] = useState<boolean>(false);
 
   const { formData, isLoading: formLoading } = useFormData({
     clientId: loggedInUser?.id || undefined,
@@ -60,9 +61,18 @@ function ReportsContent() {
   }, [token]);
 
   useEffect(() => {
+    if (formData?.fileChannelId && loggedInUser?.id && token && !shouldFetchFiles) {
+      console.log('All dependencies ready, triggering file fetch');
+      setShouldFetchFiles(true);
+    }
+  }, [formData?.fileChannelId, loggedInUser?.id, token, shouldFetchFiles]);
+
+  useEffect(() => {
     const fetchReportFiles = async () => {
-      console.log(`client side channel:`, formData.fileChannelId)
-      if (!formData || !loggedInUser?.id) return;
+      if (!shouldFetchFiles) return;
+
+      console.log(`client side channel:`, formData?.fileChannelId);
+      console.log('Fetching files...');
 
       try {
         setFilesLoading(true);
@@ -71,6 +81,8 @@ function ReportsContent() {
           formTypeName,
           token,
         );
+
+        console.log('Files fetched:', files);
 
         setReportFiles(files);
       } catch (error) {
