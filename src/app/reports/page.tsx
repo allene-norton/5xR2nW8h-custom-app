@@ -40,6 +40,7 @@ function ReportsContent() {
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
+        console.log(`retrieveing client from token`, token)
         const userInfo = await getLoggedInUser(token);
         console.log(userInfo);
         setLoggedInUser(userInfo);
