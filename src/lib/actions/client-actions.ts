@@ -6,7 +6,8 @@ import { fi } from 'date-fns/locale';
 
 const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
-const isDev = process.env.NODE_ENV === 'development';
+// const isDev = process.env.NODE_ENV === 'development';
+const isDev= false
 
 const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
 

@@ -29,7 +29,8 @@ interface InternalPageProps {
 }
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
-  console.log(`SEARCHPARAMS`, searchParams)
+  // console.log(`SEARCHPARAMS`, searchParams)
+  console.log(`token`, searchParams.token)
   // ----------- STATES-------------------------------------------
   // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
