@@ -120,11 +120,12 @@ export function SubmittedFormsSection({
 
     try {
       // get all contracts for client
+      console.log(`loading contracts for client`, clientId)
       const contractsData = await listContracts(clientId, token);
       // console.log(`ContractsData:`, contractsData);
 
       if ('error' in contractsData) {
-        console.error('Error fetching forms:', contractsData.error);
+        console.error('Error fetching contracts:', contractsData.error);
         return;
       }
 
