@@ -760,7 +760,7 @@ export async function listFiles(
 }
 
 // loggedInClient action
-export async function getLoggedInUser(clientId?: string, token?: string) {
+export async function getLoggedInUser(token?: string) {
   try {
     if (isDev) {
       console.log(`IS DEV`, isDev);
@@ -785,6 +785,7 @@ export async function getLoggedInUser(clientId?: string, token?: string) {
       return data;
     } else {
       // Prod mode: use Copilot SDK with token
+      console.log(`server action token`, token)
       if (!token) {
         throw new Error('Token is required in production');
       }
