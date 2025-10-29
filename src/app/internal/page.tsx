@@ -31,6 +31,7 @@ interface InternalPageProps {
 export default function InternalPage({ searchParams }: InternalPageProps) {
   // console.log(`SEARCHPARAMS`, searchParams)
   console.log(`token`, searchParams.token)
+  const token = searchParams.token
   // ----------- STATES-------------------------------------------
   // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
@@ -335,6 +336,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           onFolderCreated={handleFolderCreated}
           onFileCreated={handleFileCreated}
           validationErrors={validationErrors}
+          token={token}
         />
       </main>
 

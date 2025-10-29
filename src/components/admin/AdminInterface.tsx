@@ -37,6 +37,7 @@ interface AdminInterfaceProps {
   onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   validationErrors?: Record<string, string>;
+  token?: string
 }
 
 export function AdminInterface({
@@ -56,6 +57,7 @@ export function AdminInterface({
   onFolderCreated,
   onFileCreated,
   validationErrors = {},
+  token
 }: AdminInterfaceProps) {
 
 
@@ -122,6 +124,7 @@ export function AdminInterface({
                 backgroundCheckFile={backgroundCheckFile}
                 onFileCreated={onFileCreated}
                 updateCheckFileStatus={updateCheckFileStatus}
+                token={token}
               />
             ))}
           </div>

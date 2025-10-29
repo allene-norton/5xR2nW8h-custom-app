@@ -44,6 +44,7 @@ interface FileUploadSectionProps {
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
   onFileClick?: () => void;
+  token?: string
 }
 
 export function FileUploadSection({
@@ -52,9 +53,10 @@ export function FileUploadSection({
   onFileCreated,
   updateCheckFileStatus,
   onFileClick,
+  token
 }: FileUploadSectionProps) {
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token') ?? undefined;
+  // const searchParams = useSearchParams();
+  // const token = searchParams.get('token') ?? undefined;
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -164,6 +166,7 @@ export function FileUploadSection({
         folderName,
         fileName: file.name,
         base64Length: base64String.length,
+        token: token
       });
 
       const uploadFile = await createFile(
@@ -171,6 +174,7 @@ export function FileUploadSection({
         folderName,
         file.name,
         base64String,
+        token
       );
       console.log('createFile completed', uploadFile);
 
@@ -214,7 +218,7 @@ export function FileUploadSection({
   const handleFilePreview = async (fileId: string) => {
     try {
       const fileType = 'pdf';
-      const getFileForPreview = await retrieveFile(fileId);
+      const getFileForPreview = await retrieveFile(fileId, token);
       setPreviewFile({
         url: getFileForPreview.downloadUrl,
         filename: backgroundCheckFile.fileName!,
