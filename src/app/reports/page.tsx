@@ -40,7 +40,7 @@ function ReportsContent() {
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
-        const userInfo = await getLoggedInUser(tempClientId /*token*/);
+        const userInfo = await getLoggedInUser(token);
         console.log(userInfo);
         setLoggedInUser(userInfo);
       } catch (error) {
