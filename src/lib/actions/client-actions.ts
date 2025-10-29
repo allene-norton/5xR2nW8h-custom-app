@@ -716,6 +716,7 @@ export async function listFiles(
   token?: string,
 ) {
   const formattedPath = encodeURI(`ClearTech Reports - ${formTypeName}`)
+  const sdkFormattedPath = `ClearTech Reports - ${formTypeName}`
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -746,8 +747,11 @@ export async function listFiles(
         throw new Error('Token is required in production');
       }
 
+      
+
       const sdk = createSDK(token);
-      const data = await sdk.listFiles({channelId: channelId, path: formattedPath})
+      console.log(`SDK created, about to fetch files for path `, sdkFormattedPath)
+      const data = await sdk.listFiles({channelId: channelId, path: sdkFormattedPath})
       revalidatePath('/reports');
       return data;
     }
