@@ -81,7 +81,7 @@ function ReportsContent() {
     };
 
     fetchReportFiles();
-  }, [formData, loggedInUser?.id, token, formTypeName]);
+  }, [formData?.fileChannelId, loggedInUser?.id, token, formTypeName]);
 
   if (userLoading || formLoading || filesLoading || !formData) {
     return (
