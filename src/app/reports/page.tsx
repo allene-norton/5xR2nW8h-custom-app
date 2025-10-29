@@ -93,7 +93,7 @@ function ReportsContent() {
     };
 
     fetchReportFiles();
-  }, [formData?.fileChannelId, loggedInUser?.id, token, formTypeName]);
+  }, [shouldFetchFiles, formData?.fileChannelId, formTypeName, token]);
 
   if (userLoading || formLoading || filesLoading || !formData) {
     return (
