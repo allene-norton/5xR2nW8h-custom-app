@@ -738,7 +738,7 @@ export async function listFiles(
       }
 
       const data = await response.json();
-      revalidatePath('/internal');
+      revalidatePath('/reports');
       return data;
     } else {
       // Prod mode: use Copilot SDK with token
@@ -748,7 +748,7 @@ export async function listFiles(
 
       const sdk = createSDK(token);
       const data = await sdk.listFiles({channelId: channelId, path: formattedPath})
-      revalidatePath('/internal');
+      revalidatePath('/reports');
       return data;
     }
   } catch (error) {

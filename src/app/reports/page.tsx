@@ -23,6 +23,8 @@ function ReportsContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
 
+  
+
   const tempClientId = '8b891bf8-1827-4574-9290-1e76fa33dc41';
 
   const [loggedInUser, setLoggedInUser] = useState<any>(null);
@@ -33,6 +35,8 @@ function ReportsContent() {
   const { formData, isLoading: formLoading } = useFormData({
     clientId: loggedInUser?.id || undefined,
   });
+
+  console.log(`client formData`, formData)
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
 
@@ -57,6 +61,7 @@ function ReportsContent() {
 
   useEffect(() => {
     const fetchReportFiles = async () => {
+      console.log(`client side channel:`, formData.fileChannelId)
       if (!formData || !loggedInUser?.id) return;
 
       try {
