@@ -115,7 +115,8 @@ function ReportsContent() {
     Object.keys(loggedInUser).length === 0 ||
     formData.client === undefined ||
     formData.client === null ||
-    formData.client === ''
+    formData.client === '' ||
+    formData.folderCreated === false
   ) {
     return <ReportUnavailable />;
   }
