@@ -131,10 +131,10 @@ export function SubmittedFormsSection({
 
       const contracts = contractsData.data;
       console.log(`all found contracts for client`, contracts)
-      const signedContracts = contracts.filter((contract: Contract) => contract.status === 'signed');
+      const signedContracts = contracts.filter((contract: Contract) => contract.status === "signed");
 
 
-      // console.log(`Contracts:`, signedContracts)
+      console.log(`Signed Contracts:`, signedContracts)
 
     
 
