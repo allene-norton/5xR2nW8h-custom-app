@@ -200,7 +200,7 @@ export function SubmittedFormsSection({
               Try Again
             </Button>
           </div>
-        ) : forms.length === 0 ? (
+        ) : forms.length === 0 && contracts.length === 0 ? (
           <div className="text-center py-8">
             <FolderOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
             <p className="text-gray-600">
