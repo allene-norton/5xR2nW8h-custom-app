@@ -145,7 +145,6 @@ export function AdminInterface({
       {/* Submitted Documents */}
       <SubmittedFormsSection
         clientId={formData.client}
-        fileChannelId={formData.fileChannelId}
       />
     </div>
   );
