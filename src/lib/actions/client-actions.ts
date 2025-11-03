@@ -837,6 +837,8 @@ export async function getLoggedInUser(token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
+      const clientId = 'tempClientId'
+
       const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
         method: 'GET',
         headers: {

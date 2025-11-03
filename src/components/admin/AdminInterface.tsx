@@ -85,7 +85,6 @@ export function AdminInterface({
       <ApplicantInfoSection
         identification={formData.identification}
         updateIdentification={updateIdentification}
-        clientId={formData.client}
       />
 
       {/* Background Checks */}
