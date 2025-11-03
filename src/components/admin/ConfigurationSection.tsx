@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
 // UI IMPORTS
 import {
@@ -19,7 +19,30 @@ import {
   SelectValue,
 } from '../ui/select';
 import { Badge } from '../ui/badge';
-import { Settings, User, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import {
+  Settings,
+  User,
+  FileText,
+  Search,
+  Check,
+  ChevronsUpDown,
+} from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+} from '@/components/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import ReactSelect from 'react-select';
 
 // TYPE IMPORTS
 import {
@@ -65,45 +88,64 @@ export function ConfigurationSection({
 
   const fileChannels = fileChannelsResponse;
 
-  // const selectedClient = clients?.find(
-  //   (client) => client.id === selectedClientId
+  const [clientSearchTerm, setClientSearchTerm] = useState('');
+  const [open, setOpen] = useState(false);
+
+  // const filteredClients = clients?.filter(
+  //   (client) =>
+  //     client.id &&
+  //     `${client.givenName} ${client.familyName}`
+  //       .toLowerCase()
+  //       .includes(clientSearchTerm.toLowerCase()),
   // );
 
-  // console.log(formData)
+  const clientOptions =
+    clients
+      ?.filter((client) => client.id)
+      .map((client) => ({
+        value: client.id!,
+        label: `${client.givenName} ${client.familyName}`,
+        client: client,
+      })) || [];
+
+  const selectedOption =
+    clientOptions.find((option) => option.value === selectedClient?.id) || null;
 
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
   useEffect(() => {
-  // Only pre-fill if we have a selected client and the form's client matches
-  if (selectedClient && formData.client === selectedClient.id && 
+    // Only pre-fill if we have a selected client and the form's client matches
+    if (
+      selectedClient &&
+      formData.client === selectedClient.id &&
       // And only if the identification is still empty (meaning DB had no data)
-      !formData.identification.firstName) {
-    
-    const updatedIdentification = {
-      firstName: selectedClient.givenName || '',
-      lastName: selectedClient.familyName || '',
-      streetAddress: selectedClient.customFields?.streetAddress || '',
-      streetAddress2: selectedClient.customFields?.streetAddress2 || '',
-      city: selectedClient.customFields?.city || '',
-      state: selectedClient.customFields?.state || '',
-      postalCode: selectedClient.customFields?.postalCode || '',
-      birthdate: selectedClient.customFields?.birthDate || '', //birthDate in CT fields
-    };
+      !formData.identification.firstName
+    ) {
+      const updatedIdentification = {
+        firstName: selectedClient.givenName || '',
+        lastName: selectedClient.familyName || '',
+        streetAddress: selectedClient.customFields?.streetAddress || '',
+        streetAddress2: selectedClient.customFields?.streetAddress2 || '',
+        city: selectedClient.customFields?.city || '',
+        state: selectedClient.customFields?.state || '',
+        postalCode: selectedClient.customFields?.postalCode || '',
+        birthdate: selectedClient.customFields?.birthDate || '', //birthDate in CT fields
+      };
 
-    updateIdentification(updatedIdentification);
+      updateIdentification(updatedIdentification);
 
-    // Find and set file channel
-    const selectedClientFileChannel = fileChannelsResponse?.data?.find(
-      (channel) => channel.clientId === selectedClient.id,
-    );
+      // Find and set file channel
+      const selectedClientFileChannel = fileChannelsResponse?.data?.find(
+        (channel) => channel.clientId === selectedClient.id,
+      );
 
-    if (selectedClientFileChannel?.id) {
-      updateFormData({
-        fileChannelId: selectedClientFileChannel.id,
-      });
+      if (selectedClientFileChannel?.id) {
+        updateFormData({
+          fileChannelId: selectedClientFileChannel.id,
+        });
+      }
     }
-  }
-}, [selectedClient, formData.client, formData.identification.firstName]);
+  }, [selectedClient, formData.client, formData.identification.firstName]);
 
   return (
     <Card>
@@ -127,58 +169,55 @@ export function ConfigurationSection({
               <User className="w-4 h-4" />
               <span>Client</span>
             </Label>
-            <Select
-              value={selectedClient?.id || ''}
-              onValueChange={(value) => {
-                const client = clients?.find((c) => c.id === value);
-                if (client) {
-                  // Call onClientSelect with the full client object
-                  onClientSelect(client);
-                  // Update form data with client ID
-                  updateFormData({ client: client.id });
 
-                  
-
-                  // // Pre-fill identification data
-                  // updateIdentification({
-                  //   firstName: client.givenName || '',
-                  //   lastName: client.familyName || '',
-                  //   streetAddress: client.customFields?.streetAddress || '',
-                  //   streetAddress2: client.customFields?.unitapartment || '',
-                  //   city: client.customFields?.city || '',
-                  //   state: client.customFields?.state || '',
-                  //   postalCode: client.customFields?.postalCode || '',
-                  //   birthdate: client.customFields?.birthdate || '',
-                  // });
-
-                  // // Find and set file channel
-                  // const selectedClientFileChannel = fileChannels?.data?.find(
-                  //   (channel) => channel.clientId === client.id,
-                  // );
-
-                  // updateFormData({
-                  //   fileChannelId: selectedClientFileChannel?.id || undefined,
-                  // });
+            <ReactSelect
+              id="client-select"
+              value={selectedOption}
+              onChange={(option) => {
+                if (option) {
+                  onClientSelect(option.client);
+                  updateFormData({ client: option.client.id });
                 }
               }}
-            >
-              <SelectTrigger id="client-select">
-                <SelectValue placeholder="Select a client" />
-              </SelectTrigger>
-              <SelectContent>
-                {clients
-                  ?.filter((client) => client.id)
-                  .map((client) => (
-                    <SelectItem key={client.id} value={client.id!}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">
-                          {client.givenName} {client.familyName}
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-              </SelectContent>
-            </Select>
+              options={clientOptions}
+              isSearchable
+              placeholder="Select a client..."
+              className="react-select-container"
+              classNamePrefix="react-select"
+              styles={{
+                control: (base) => ({
+                  ...base,
+                  minHeight: '40px',
+                  borderColor: 'hsl(var(--border))',
+                  fontSize: '14px',
+                  '&:hover': {
+                    borderColor: 'hsl(var(--border))',
+                  },
+                }),
+                input: (base) => ({
+                  ...base,
+                  fontSize: '14px',
+                }),
+                placeholder: (base) => ({
+                  ...base,
+                  fontSize: '14px',
+                }),
+                singleValue: (base) => ({
+                  ...base,
+                  fontSize: '14px',
+                }),
+                option: (base, state) => ({
+                  ...base,
+                  fontSize: '14px',
+                  backgroundColor: state.isSelected
+                    ? 'hsl(var(--accent))'
+                    : state.isFocused
+                      ? 'hsl(var(--accent) / 0.5)'
+                      : 'transparent',
+                }),
+              }}
+            />
+
             {selectedClient && (
               <div className="text-sm text-gray-600 space-y-1">
                 <p>
