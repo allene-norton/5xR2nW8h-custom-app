@@ -107,7 +107,7 @@ export function ContractCard({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {variant === 'client' ? (
+          {/* {variant === 'client' ? (
             <Button
               variant="outline"
               size="sm"
@@ -119,7 +119,7 @@ export function ContractCard({
             </Button>
           ) : (
             <></>
-          )}
+          )} */}
           {contract.signedFileUrl && (
             <Button
               variant="outline"
