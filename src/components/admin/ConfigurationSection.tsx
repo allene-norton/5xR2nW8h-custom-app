@@ -188,7 +188,7 @@ export function ConfigurationSection({
                 control: (base) => ({
                   ...base,
                   minHeight: '40px',
-                  borderColor: 'hsl(var(--border))',
+                  borderColor: '#e5e5e5',
                   fontSize: '14px',
                   '&:hover': {
                     borderColor: 'hsl(var(--border))',
