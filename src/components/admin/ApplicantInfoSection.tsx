@@ -14,14 +14,20 @@ import type { Identification } from "../../types"
 // VALIDATION IMPORTS
 import { validateRequired, validateState, validatePostalCode } from "../../utils/validation"
 
+// SERVER ACTION IMPORTS
+import { updateClient, UpdateClientRequest, CustomFieldsData } from "@/lib/actions/client-actions"
+
 
 interface ApplicantInfoSectionProps {
   identification: Identification
   updateIdentification: (updates: Partial<Identification>) => void
+  onSave?: (success: boolean, error?: string) => void 
+  clientId?: string 
 }
 
-export function ApplicantInfoSection({ identification, updateIdentification }: ApplicantInfoSectionProps) {
+export function ApplicantInfoSection({ identification, updateIdentification, onSave, clientId }: ApplicantInfoSectionProps) {
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [isSaving, setIsSaving] = useState(false)
 
   const handleInputChange = (field: keyof Identification, value: string) => {
     updateIdentification({ [field]: value })
@@ -53,6 +59,40 @@ export function ApplicantInfoSection({ identification, updateIdentification }: A
 
     setErrors((prev) => ({ ...prev, [field]: error }))
   }
+
+  const handleSave = async () => {
+  if (!clientId || !onSave) return
+  
+  setIsSaving(true)
+  
+  try {
+    // Format the custom fields data according to CustomFieldsData interface
+    const customFieldsData: CustomFieldsData = {
+      streetAddress: identification.streetAddress,
+      streetAddress2: identification.streetAddress2 || "",
+      city: identification.city,
+      state: identification.state,
+      postalCode: identification.postalCode,
+      birthDate: identification.birthdate
+    }
+
+    // Structure the request according to UpdateClientRequest interface
+    const updateRequest: UpdateClientRequest = {
+      givenName: identification.firstName,
+      familyName: identification.lastName,
+      customFields: JSON.stringify(customFieldsData)
+    }
+
+    await updateClient(clientId, updateRequest)
+
+    onSave(true)
+  } catch (error) {
+    console.error('Failed to update client:', error)
+    onSave(false, error instanceof Error ? error.message : 'Failed to update client')
+  } finally {
+    setIsSaving(false)
+  }
+}
 
   return (
     <Card>

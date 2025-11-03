@@ -34,13 +34,13 @@ export interface Client {
   updatedAt?: string;
 }
 
-interface UpdateClientRequest {
+export interface UpdateClientRequest {
   givenName?: string;
   familyName?: string;
   customFields?: string; 
 }
 
-interface CustomFieldsData {
+export interface CustomFieldsData {
   streetAddress?: string;
   streetAddress2?: string;
   city?: string;
