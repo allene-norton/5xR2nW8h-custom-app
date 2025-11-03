@@ -119,7 +119,7 @@ export function FormCard({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
-        <Button
+        {/* <Button
           variant="outline"
           size="sm"
           onClick={handleResponseClick}
@@ -127,7 +127,7 @@ export function FormCard({
         >
           <ExternalLink className="h-4 w-4 mr-2" />
           Form Response
-        </Button>
+        </Button> */}
         {attachmentUrls.length > 0 && (
           <div className="flex flex-col gap-2">
             {attachmentUrls.map((url, index) => {

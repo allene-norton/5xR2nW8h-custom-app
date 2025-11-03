@@ -12,6 +12,9 @@ import {
   listFileChannels,
   type ListFileChannelsResponse,
   type Client,
+  updateClient,
+  type UpdateClientRequest,
+  type CustomFieldsData,
 } from '@/lib/actions/client-actions';
 import { BackgroundCheckFile } from '@/types';
 
@@ -30,8 +33,8 @@ interface InternalPageProps {
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
   // console.log(`SEARCHPARAMS`, searchParams)
-  console.log(`token`, searchParams.token)
-  const token = searchParams.token
+  console.log(`token`, searchParams.token);
+  const token = searchParams.token;
   // ----------- STATES-------------------------------------------
   // CLIENTS STATES
   const [clientsResponse, setClientsResponse] = useState<ListClientsResponse>({
@@ -74,7 +77,6 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     resetFormData,
     saveFormData,
   } = useFormData({ clientId: selectedClient?.id || '' });
-
 
   // FETCH CLIENTS AND FILE CHANNELS ON MOUNT
   useEffect(() => {
@@ -170,26 +172,56 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     }
   };
 
-  const handleFileCreated = async (updateBackgroundCheckFile : BackgroundCheckFile) => {
+  const handleFileCreated = async (
+    updateBackgroundCheckFile: BackgroundCheckFile,
+  ) => {
     try {
       updateCheckFileStatus(updateBackgroundCheckFile);
       const updatedFiles = formData.backgroundCheckFiles.map((file) =>
-      file.checkName === updateBackgroundCheckFile.checkName
-        ? {
-            ...file,
-            fileUploaded: updateBackgroundCheckFile.fileUploaded,
-            fileName: updateBackgroundCheckFile.fileName,
-            fileId: updateBackgroundCheckFile.fileId
-          }
-        : file,
-    );
-    
-    // Pass the updated data directly to saveFormData
-    await saveFormData({ backgroundCheckFiles: updatedFiles });
-    } catch{
-      console.log('something went wrong saving to db/updating form data')
+        file.checkName === updateBackgroundCheckFile.checkName
+          ? {
+              ...file,
+              fileUploaded: updateBackgroundCheckFile.fileUploaded,
+              fileName: updateBackgroundCheckFile.fileName,
+              fileId: updateBackgroundCheckFile.fileId,
+            }
+          : file,
+      );
+
+      // Pass the updated data directly to saveFormData
+      await saveFormData({ backgroundCheckFiles: updatedFiles });
+    } catch {
+      console.log('something went wrong saving to db/updating form data');
     }
-  }
+  };
+
+  const handleSaveApplicantInfo = async (clientId: string) => {
+    if (!formData.identification) return;
+
+    try {
+      const customFieldsData = {
+      streetAddress: formData.identification.streetAddress,
+      streetAddress2: formData.identification.streetAddress2 || "",
+      city: formData.identification.city,
+      state: formData.identification.state,
+      postalCode: formData.identification.postalCode,
+      birthDate: formData.identification.birthdate
+    }
+
+    // Create the request with customFields as object, using double type assertion
+    const updateRequest = {
+      givenName: formData.identification.firstName,
+      familyName: formData.identification.lastName,
+      customFields: customFieldsData // Send as object, not JSON string
+    } as unknown as UpdateClientRequest // Double assertion: first to unknown, then to target type
+
+      await updateClient(clientId, updateRequest, token);
+      console.log('Client information updated successfully');
+    } catch (error) {
+      console.error('Failed to update client information:', error);
+      throw error;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -245,9 +277,19 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                       selectedClient.id,
                     );
                     setSaveError(null); // Clear previous errors
+
+                    if (!selectedClient.id) {
+                      setSaveError('No client ID available');
+                      return;
+                    }
+
                     try {
-                      await saveFormData();
-                      console.log('Save completed successfully');
+                      // Save both form data AND update client information
+                      await Promise.all([
+                        saveFormData(),
+                        handleSaveApplicantInfo(selectedClient.id),
+                      ]);
+                      console.log('All saves completed successfully');
                     } catch (error) {
                       console.error('Save failed:', error);
                       setSaveError(

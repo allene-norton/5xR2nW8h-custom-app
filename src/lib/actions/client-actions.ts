@@ -7,7 +7,7 @@ import { fi } from 'date-fns/locale';
 const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
 // const isDev = process.env.NODE_ENV === 'development';
-const isDev= false
+const isDev = false;
 
 const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
 
@@ -32,6 +32,21 @@ export interface Client {
   object?: 'client';
   status?: string;
   updatedAt?: string;
+}
+
+export interface UpdateClientRequest {
+  givenName?: string;
+  familyName?: string;
+  customFields?: string; 
+}
+
+export interface CustomFieldsData {
+  streetAddress?: string;
+  streetAddress2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  birthDate?: string;
 }
 
 export interface ClientsData {
@@ -272,6 +287,49 @@ export async function listClients(
     return {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to fetch clients',
+    };
+  }
+}
+
+// updateClient action
+export async function updateClient(clientId: string, body: UpdateClientRequest, token?: string) {
+  try {
+    if (isDev) {
+      // Dev mode: use Assembly API directly
+      if (!assemblyApiKey) {
+        throw new Error('ASSEMBLY_API_KEY is required for dev mode');
+      }
+
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/clients`, {
+        method: 'GET',
+        headers: {
+          'X-API-KEY': assemblyApiKey,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      revalidatePath('/internal');
+      return { success: true, data };
+    } else {
+      // Prod mode: use Copilot SDK with token
+      if (!token) {
+        throw new Error('Token is required in production');
+      }
+
+      const sdk = createSDK(token);
+      const updatedClient = await sdk.updateClient({id: clientId, requestBody: body})
+      revalidatePath('/internal');
+      return { success: true, data: updatedClient as Client };
+    }
+  } catch (error) {
+    console.error('Error fetching clients:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to update client',
     };
   }
 }
@@ -715,8 +773,8 @@ export async function listFiles(
   formTypeName: string,
   token?: string,
 ) {
-  const formattedPath = encodeURI(`ClearTech Reports - ${formTypeName}`)
-  const sdkFormattedPath = `ClearTech Reports - ${formTypeName}`
+  const formattedPath = encodeURI(`ClearTech Reports - ${formTypeName}`);
+  const sdkFormattedPath = `ClearTech Reports - ${formTypeName}`;
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -724,15 +782,17 @@ export async function listFiles(
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      
-      console.log(`FORMATTED PATH`, formattedPath)
+      console.log(`FORMATTED PATH`, formattedPath);
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/files?channelId=${channelId}&path=${formattedPath}`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': assemblyApiKey,
+      const response = await fetch(
+        `${ASSEMBLY_BASE_URI}/files?channelId=${channelId}&path=${formattedPath}`,
+        {
+          method: 'GET',
+          headers: {
+            'X-API-KEY': assemblyApiKey,
+          },
         },
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`API request failed: ${response.statusText}`);
@@ -747,11 +807,15 @@ export async function listFiles(
         throw new Error('Token is required in production');
       }
 
-      
-
       const sdk = createSDK(token);
-      console.log(`SDK created, about to fetch files for path `, sdkFormattedPath)
-      const data = await sdk.listFiles({channelId: channelId, path: sdkFormattedPath})
+      console.log(
+        `SDK created, about to fetch files for path `,
+        sdkFormattedPath,
+      );
+      const data = await sdk.listFiles({
+        channelId: channelId,
+        path: sdkFormattedPath,
+      });
       revalidatePath('/reports');
       return data;
     }
@@ -773,6 +837,8 @@ export async function getLoggedInUser(token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
+      const clientId = 'tempClientId'
+
       const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
         method: 'GET',
         headers: {
@@ -789,7 +855,7 @@ export async function getLoggedInUser(token?: string) {
       return data;
     } else {
       // Prod mode: use Copilot SDK with token
-      console.log(`server action token`, token)
+      console.log(`server action token`, token);
       if (!token) {
         throw new Error('Token is required in production');
       }
