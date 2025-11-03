@@ -35,16 +35,18 @@ export interface Client {
 }
 
 interface UpdateClientRequest {
-  givenName: string;
-  familyName: string;
-  customFields: {
-    streetAddress: string;
-    streetAddress2: string;
-    city: string;
-    state: string;
-    postalCode: string;
-    birthDate: string;
-  };
+  givenName?: string;
+  familyName?: string;
+  customFields?: string; 
+}
+
+interface CustomFieldsData {
+  streetAddress?: string;
+  streetAddress2?: string;
+  city?: string;
+  state?: string;
+  postalCode?: string;
+  birthDate?: string;
 }
 
 export interface ClientsData {
@@ -290,7 +292,7 @@ export async function listClients(
 }
 
 // updateClient action
-export async function updateClient(clientId: string, token?: string) {
+export async function updateClient(clientId: string, body: UpdateClientRequest, token?: string) {
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -319,15 +321,15 @@ export async function updateClient(clientId: string, token?: string) {
       }
 
       const sdk = createSDK(token);
-      const clients = await sdk.listClients({ limit: 2000 });
+      const updatedClient = await sdk.updateClient({id: clientId, requestBody: body})
       revalidatePath('/internal');
-      return { success: true, data: clients as ClientsData };
+      return { success: true, data: updatedClient as Client };
     }
   } catch (error) {
     console.error('Error fetching clients:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Failed to fetch clients',
+      error: error instanceof Error ? error.message : 'Failed to update client',
     };
   }
 }
