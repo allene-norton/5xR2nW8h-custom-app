@@ -6,17 +6,30 @@ import  { FORM_TYPE_INFO, type BackgroundCheckFormData } from '@/types';
 export async function generateCoverLetterPDF(formData: BackgroundCheckFormData): Promise<Blob> {
   // Create a temporary div with the cover letter content
   const tempDiv = document.createElement('div');
-  // Use pixel dimensions that html2canvas can handle properly
-  // A4 at 96 DPI: 794x1123 pixels, with padding
+   // Use pixel dimensions that html2canvas can handle properly
   tempDiv.style.position = 'absolute';
   tempDiv.style.left = '-9999px';
-  tempDiv.style.width = '754px'; // 794px - 40px padding
-  tempDiv.style.minHeight = '1083px'; // 1123px - 40px padding  
+  tempDiv.style.width = '754px';
+  tempDiv.style.minHeight = '1083px';
   tempDiv.style.backgroundColor = 'white';
   tempDiv.style.padding = '40px';
   tempDiv.style.boxSizing = 'content-box';
   tempDiv.style.fontFamily = 'Arial, sans-serif';
   tempDiv.style.color = '#000000';
+  
+  // Add a completely isolated CSS environment
+  tempDiv.style.cssText = `
+    position: absolute !important;
+    left: -9999px !important;
+    width: 754px !important;
+    min-height: 1083px !important;
+    background-color: white !important;
+    padding: 40px !important;
+    box-sizing: content-box !important;
+    font-family: Arial, sans-serif !important;
+    color: #000000 !important;
+    all: initial !important;
+  `;
 
   // Add CSS reset to prevent oklch and other problematic styles
   // tempDiv.style.cssText = `
@@ -153,48 +166,119 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
     </div>
   `;
 
-  document.body.appendChild(tempDiv);
+  // Create a completely isolated container to prevent CSS interference
+  const isolatedContainer = document.createElement('div');
+  isolatedContainer.style.cssText = `
+    position: absolute !important;
+    left: -10000px !important;
+    top: -10000px !important;
+    width: 1000px !important;
+    height: 2000px !important;
+    overflow: hidden !important;
+    z-index: -9999 !important;
+    all: initial !important;
+    * {
+      all: unset !important;
+      display: revert !important;
+      box-sizing: border-box !important;
+      color: #000000 !important;
+      background-color: white !important;
+      font-family: Arial, sans-serif !important;
+    }
+  `;
+  
+  isolatedContainer.appendChild(tempDiv);
+  document.body.appendChild(isolatedContainer);
 
   // Wait for any images to load
-  await new Promise(resolve => setTimeout(resolve, 100));
+  await new Promise(resolve => setTimeout(resolve, 200));
 
   try {
-    // Convert to canvas then PDF with additional options
+    // Convert to canvas with more aggressive isolation options
     const canvas = await html2canvas(tempDiv, {
-      scale: 1, // Reduce scale to avoid memory issues
+      scale: 1,
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
       width: tempDiv.offsetWidth,
       height: tempDiv.offsetHeight,
       ignoreElements: (element) => {
-        // Skip elements that might have problematic styles
+        // More aggressive element filtering
         if (element instanceof HTMLElement) {
-          return !!(element.style?.color?.includes('oklch'));
+          const computedStyle = window.getComputedStyle(element);
+          const inlineStyle = element.style.cssText || '';
+          
+          // Check for oklch in computed and inline styles
+          if (computedStyle.color?.includes('oklch') || 
+              computedStyle.backgroundColor?.includes('oklch') ||
+              inlineStyle.includes('oklch')) {
+            return true;
+          }
         }
         return false;
       },
       onclone: (clonedDoc) => {
-        // Remove any stylesheets that might contain oklch
-        const stylesheets = clonedDoc.querySelectorAll('link[rel="stylesheet"], style');
-        stylesheets.forEach(sheet => {
-          if (sheet.textContent && sheet.textContent.includes('oklch')) {
-            sheet.remove();
-          }
-        });
+        // Remove ALL external stylesheets to prevent conflicts
+        const allStyles = clonedDoc.querySelectorAll('link[rel="stylesheet"], style');
+        allStyles.forEach(sheet => sheet.remove());
         
-        // Add safe CSS reset to cloned document
-        const style = clonedDoc.createElement('style');
-        style.textContent = `
-          * {
+        // Add comprehensive CSS reset that overrides everything
+        const resetStyle = clonedDoc.createElement('style');
+        resetStyle.textContent = `
+          /* Comprehensive reset to prevent oklch and other modern CSS issues */
+          *, *::before, *::after {
+            all: unset !important;
+            display: revert !important;
+            box-sizing: border-box !important;
             color: #000000 !important;
             background-color: transparent !important;
+            font-family: Arial, sans-serif !important;
+            font-size: revert !important;
+            font-weight: revert !important;
+            line-height: revert !important;
+            margin: revert !important;
+            padding: revert !important;
+            border: revert !important;
+            border-radius: revert !important;
           }
-          body * {
+          
+          /* Specific overrides for common problematic properties */
+          div, p, h1, h2, h3, h4, h5, h6, span, strong {
+            color: inherit !important;
+            background: transparent !important;
             font-family: Arial, sans-serif !important;
           }
+          
+          /* Ensure no oklch or other modern color functions */
+          * {
+            color: rgb(0, 0, 0) !important;
+            background-color: rgb(255, 255, 255) !important;
+            border-color: rgb(229, 231, 235) !important;
+          }
+          
+          /* Override any CSS custom properties that might use oklch */
+          :root {
+            --color-primary: #000000 !important;
+            --color-secondary: #666666 !important;
+            --color-background: #ffffff !important;
+          }
         `;
-        clonedDoc.head.appendChild(style);
+        clonedDoc.head.appendChild(resetStyle);
+        
+        // Remove any CSS custom properties from all elements
+        const allElements = clonedDoc.querySelectorAll('*');
+        allElements.forEach(el => {
+          if (el instanceof HTMLElement) {
+            // Clear any CSS custom properties
+            const style = el.style;
+            for (let i = style.length - 1; i >= 0; i--) {
+              const property = style[i];
+              if (property.startsWith('--') || style.getPropertyValue(property).includes('oklch')) {
+                style.removeProperty(property);
+              }
+            }
+          }
+        });
       }
     });
 
