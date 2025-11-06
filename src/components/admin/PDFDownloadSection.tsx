@@ -6,66 +6,41 @@ import { Button } from '@/components/ui/button';
 import { Download, GripVertical, FileText, Image } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { BackgroundCheckFormData, BackgroundCheckFile } from '@/types';
-import { generateCoverLetterPDF, mergePDFs } from '@/lib/pdf-utils';
+import {
+  generateCoverLetterPDF,
+  mergePDFs,
+  processFileForPDF,
+} from '@/lib/pdf-utils';
+import { FileItem } from '@/components/admin/AdminInterface'; // Import from AdminInterface
 
-interface FileItem {
-  id: string;
-  name: string;
-  type: 'cover' | 'submitted' | 'uploaded';
-  url?: string;
-  file?: File;
-  data?: any; // For cover letter data
-}
+// interface FileItem {
+//   id: string;
+//   name: string;
+//   type: 'cover' | 'submitted' | 'uploaded';
+//   url?: string;
+//   file?: File;
+//   data?: any; // For cover letter data
+// }
 
 interface PDFDownloadSectionProps {
   formData: BackgroundCheckFormData;
   submittedFiles: Array<{ id: string; name: string; url: string }>;
   uploadedFiles: BackgroundCheckFile[];
+  allFileItems: FileItem[];
 }
 
 export function PDFDownloadSection({
   formData,
   submittedFiles,
   uploadedFiles,
+  allFileItems,
 }: PDFDownloadSectionProps) {
   const [fileItems, setFileItems] = useState<FileItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
-    // Initialize file items with cover letter first
-    const items: FileItem[] = [
-      {
-        id: 'cover-letter',
-        name: 'Cover Letter',
-        type: 'cover',
-        data: formData,
-      },
-    ];
-
-    // Add submitted files
-    submittedFiles.forEach((file, index) => {
-      items.push({
-        id: `submitted-${index}`,
-        name: file.name,
-        type: 'submitted',
-        url: file.url,
-      });
-    });
-
-    // Add uploaded files
-    uploadedFiles.forEach((file, index) => {
-      if (file.fileUrl) {
-        items.push({
-          id: `uploaded-${index}`,
-          name: file.fileName || `Uploaded File ${index + 1}`,
-          type: 'uploaded',
-          url: file.fileUrl,
-        });
-      }
-    });
-
-    setFileItems(items);
-  }, [formData, submittedFiles, uploadedFiles]);
+    setFileItems(allFileItems);
+  }, [allFileItems]);
 
   const handleDragEnd = (result: any) => {
     if (!result.destination) return;
@@ -93,26 +68,58 @@ export function PDFDownloadSection({
   const handleDownloadPDF = async () => {
     setIsGenerating(true);
     try {
-      const pdfFiles = [];
+      const pdfFiles: Blob[] = [];
 
       for (const item of fileItems) {
         if (item.type === 'cover') {
           // Generate cover letter PDF
-          const coverPDF = await generateCoverLetterPDF(item.data);
-          pdfFiles.push(coverPDF);
+          try {
+            const coverPDF = await generateCoverLetterPDF(item.data);
+            if (coverPDF && coverPDF.type === 'application/pdf') {
+              pdfFiles.push(coverPDF);
+            } else {
+              console.warn('Cover letter PDF generation returned invalid data');
+            }
+          } catch (coverError) {
+            console.error('Error generating cover letter PDF:', coverError);
+          }
         } else if (item.url) {
-          // Fetch and convert other files to PDF if needed
-          const response = await fetch(item.url);
-          const blob = await response.blob();
-          pdfFiles.push(blob);
+          try {
+            const response = await fetch(item.url);
+            if (!response.ok) {
+              throw new Error(`Failed to fetch file: ${response.statusText}`);
+            }
+
+            const blob = await response.blob();
+
+            // Use the utility function to process the file
+            const processedPDF = await processFileForPDF(blob, item.name);
+            if (processedPDF) {
+              pdfFiles.push(processedPDF);
+              console.log(`Processed file ${item.name} successfully`);
+            }
+          } catch (fileError) {
+            console.error(`Error processing file ${item.name}:`, fileError);
+          }
         }
       }
 
-      // Merge all PDFs
-      const mergedPDF = await mergePDFs(pdfFiles);
-      
-      // Download the merged PDF
-      const url = URL.createObjectURL(mergedPDF);
+      if (pdfFiles.length === 0) {
+        throw new Error('No valid files could be processed');
+      }
+
+      console.log(`Processing ${pdfFiles.length} files for PDF generation`);
+
+      let finalPDF: Blob;
+
+      if (pdfFiles.length === 1) {
+        finalPDF = pdfFiles[0];
+      } else {
+        finalPDF = await mergePDFs(pdfFiles);
+      }
+
+      // Download the PDF
+      const url = URL.createObjectURL(finalPDF);
       const a = document.createElement('a');
       a.href = url;
       a.download = `${formData.identification.firstName}_${formData.identification.lastName}_Background_Check.pdf`;
@@ -122,6 +129,9 @@ export function PDFDownloadSection({
       URL.revokeObjectURL(url);
     } catch (error) {
       console.error('Error generating PDF:', error);
+      alert(
+        'Error generating PDF. Please check that all files are valid and try again.',
+      );
     } finally {
       setIsGenerating(false);
     }
@@ -144,9 +154,10 @@ export function PDFDownloadSection({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-600 mb-4">
-          Drag and drop to reorder files. The cover letter will be included at the beginning of the PDF.
+          Drag and drop to reorder files. The cover letter will be included at
+          the beginning of the PDF.
         </p>
-        
+
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="file-list">
             {(provided) => (
@@ -156,7 +167,7 @@ export function PDFDownloadSection({
                 className="space-y-2"
               >
                 {fileItems.map((item, index) => (
-                  <Draggable key={item.id} draggableId={item.id} index={index}>
+                  <Draggable key={item.id} draggableId={item.id!} index={index}>
                     {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
@@ -171,16 +182,18 @@ export function PDFDownloadSection({
                         >
                           <GripVertical className="w-4 h-4 text-gray-400" />
                         </div>
-                        
+
                         {getFileIcon(item.type)}
-                        
+
                         <div className="flex-1">
                           <p className="text-sm font-medium">{item.name}</p>
                           <p className="text-xs text-gray-500 capitalize">
-                            {item.type === 'cover' ? 'Generated Cover Letter' : `${item.type} File`}
+                            {item.type === 'cover'
+                              ? 'Generated Cover Letter'
+                              : `${item.type} File`}
                           </p>
                         </div>
-                        
+
                         <div className="text-xs text-gray-400">
                           #{index + 1}
                         </div>

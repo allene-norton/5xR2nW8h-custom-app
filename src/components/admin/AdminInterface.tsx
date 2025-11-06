@@ -19,7 +19,7 @@ import { SubmittedFormsSection } from '@/components/admin/SubmittedFormsSection'
 import { CreateFolderSection } from '@/components/admin/CreateFolderSection';
 import { PDFDownloadSection } from '@/components/admin/PDFDownloadSection';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export interface FileItem {
   id?: string;
@@ -36,7 +36,7 @@ interface AdminInterfaceProps {
   updateIdentification: (
     updates: Partial<BackgroundCheckFormData['identification']>,
   ) => void;
-  updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
+  updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
   resetFormData: () => void;
   clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
@@ -46,10 +46,10 @@ interface AdminInterfaceProps {
   fileChannelsError: string | null;
   selectedClient: Client | null; // Changed from selectedClientId
   onClientSelect: (client: Client) => void; // Changed signature
-  onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
-  onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void
+  onFolderCreated?: (updateCreateFolder: { folderCreated: boolean }) => void;
+  onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   validationErrors?: Record<string, string>;
-  token?: string
+  token?: string;
   submittedFiles?: Array<{ id: string; name: string; url: string }>;
 }
 
@@ -71,18 +71,48 @@ export function AdminInterface({
   onFileCreated,
   validationErrors = {},
   submittedFiles = [],
-  token
+  token,
 }: AdminInterfaceProps) {
+  const [fileItems, setFileItems] = useState<FileItem[]>([
+    {
+      id: 'cover-letter',
+      name: 'Cover Letter',
+      type: 'cover',
+      data: formData,
+    },
+  ]);
+  const [isClientChanging, setIsClientChanging] = useState(false);
 
-  const [fileItems, setFileItems] = useState<FileItem[]>([]);
+  // console.log(formData);
 
-
-  console.log(formData);
+  useEffect(() => {
+    setIsClientChanging(true);
+    setFileItems([
+      {
+        id: 'cover-letter',
+        name: 'Cover Letter',
+        type: 'cover',
+        data: formData,
+      },
+    ]);
+    // Reset loading after a short delay
+    setTimeout(() => setIsClientChanging(false), 100);
+  }, [selectedClient?.id]);
 
   const handleSetFileItem = (fileObj: FileItem) => {
-    setFileItems([...fileItems, fileObj])
-  }
+    if (isClientChanging) return; // Prevent updates during client changes
 
+    setFileItems((prev) => {
+      const existingIndex = prev.findIndex((item) => item.id === fileObj.id);
+      if (existingIndex !== -1) {
+        const updated = [...prev];
+        updated[existingIndex] = fileObj;
+        return updated;
+      } else {
+        return [...prev, fileObj];
+      }
+    });
+  };
 
   return (
     <div className="space-y-8">
@@ -135,34 +165,40 @@ export function AdminInterface({
       />
 
       {formData.fileChannelId ? (
-        formData.folderCreated ? (
+        formData.folderCreated && !isClientChanging ? ( // Add !isClientChanging
           <div className="space-y-4">
-            {formData.backgroundCheckFiles?.map((backgroundCheckFile, index) => (
-              <FileUploadSection
-                key={index}
-                formData={formData}
-                backgroundCheckFile={backgroundCheckFile}
-                onFileCreated={onFileCreated}
-                updateCheckFileStatus={updateCheckFileStatus}
-                setFileItem={handleSetFileItem}
-                token={token}
-              />
-            ))}
+            {formData.backgroundCheckFiles?.map(
+              (backgroundCheckFile, index) => (
+                <FileUploadSection
+                  key={`${selectedClient?.id}-${index}`} // Add client ID to key
+                  formData={formData}
+                  backgroundCheckFile={backgroundCheckFile}
+                  onFileCreated={onFileCreated}
+                  updateCheckFileStatus={updateCheckFileStatus}
+                  setFileItem={handleSetFileItem}
+                  token={token}
+                />
+              ),
+            )}
           </div>
         ) : (
-          <CreateFolderSection
-            onFolderCreated={onFolderCreated}
-            updateFormData={updateFormData}
-            formData={formData}
-          />
+          !isClientChanging && ( // Only show when not changing clients
+            <CreateFolderSection
+              onFolderCreated={onFolderCreated}
+              updateFormData={updateFormData}
+              formData={formData}
+            />
+          )
         )
       ) : (
         <div className="text-center py-8 text-gray-600">
-          <p>No file channel found for this client. Please create one in your Assembly workspace.</p>
+          <p>
+            No file channel found for this client. Please create one in your
+            Assembly workspace.
+          </p>
         </div>
       )}
 
-  
       {/* Submitted Documents */}
       <SubmittedFormsSection
         clientId={formData.client}
@@ -173,6 +209,7 @@ export function AdminInterface({
         formData={formData}
         submittedFiles={submittedFiles}
         uploadedFiles={formData.backgroundCheckFiles || []}
+        allFileItems={fileItems}
       />
     </div>
   );

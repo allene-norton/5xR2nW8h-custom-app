@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef} from 'react';
 
 import { useSearchParams } from 'next/navigation';
 
@@ -72,9 +72,59 @@ export function FileUploadSection({
     type: string;
   } | null>(null);
 
+  const fileItemSetRef = useRef(new Set<string>());
+
+
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
   const folderName = `ClearTech Reports - ${formTypeName}`;
 
+
+
+  useEffect(() => {
+    const setUploadedFileItem = async () => {
+      // Only proceed if we have the required data and haven't already set this file item
+      if (
+        backgroundCheckFile.fileUploaded && 
+        backgroundCheckFile.fileId && 
+        setFileItem &&
+        !fileItemSetRef.current.has(backgroundCheckFile.fileId)
+      ) {
+        try {
+          const getFileForPreview = await retrieveFile(backgroundCheckFile.fileId, token);
+          const fileItem: FileItem = {
+            id: backgroundCheckFile.fileId,
+            name: backgroundCheckFile.fileName || `ClearTech Uploaded File ${backgroundCheckFile.checkName}`,
+            type: 'uploaded',
+            url: getFileForPreview.downloadUrl,
+            data: null
+          };
+          
+          setFileItem(fileItem);
+          // Mark this file ID as already processed
+          fileItemSetRef.current.add(backgroundCheckFile.fileId);
+        } catch (error) {
+          console.error('Error setting uploaded file item:', error);
+        }
+      }
+    };
+
+    setUploadedFileItem();
+  }, [
+    backgroundCheckFile.fileUploaded, 
+    backgroundCheckFile.fileId, 
+    backgroundCheckFile.fileName, 
+    backgroundCheckFile.checkName, 
+    token
+    // Remove setFileItem from dependencies to break the loop
+  ]);
+
+  // Clear the tracking when the component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      fileItemSetRef.current.clear();
+    };
+  }, [backgroundCheckFile.fileId]);
+  
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);

@@ -6,11 +6,36 @@ import  { FORM_TYPE_INFO, type BackgroundCheckFormData } from '@/types';
 export async function generateCoverLetterPDF(formData: BackgroundCheckFormData): Promise<Blob> {
   // Create a temporary div with the cover letter content
   const tempDiv = document.createElement('div');
+  // Use pixel dimensions that html2canvas can handle properly
+  // A4 at 96 DPI: 794x1123 pixels, with padding
   tempDiv.style.position = 'absolute';
   tempDiv.style.left = '-9999px';
-  tempDiv.style.width = '800px';
+  tempDiv.style.width = '754px'; // 794px - 40px padding
+  tempDiv.style.minHeight = '1083px'; // 1123px - 40px padding  
   tempDiv.style.backgroundColor = 'white';
   tempDiv.style.padding = '40px';
+  tempDiv.style.boxSizing = 'content-box';
+  tempDiv.style.fontFamily = 'Arial, sans-serif';
+  tempDiv.style.color = '#000000';
+
+  // Add CSS reset to prevent oklch and other problematic styles
+  // tempDiv.style.cssText = `
+  //   position: absolute;
+  //   left: -9999px;
+  //   width: 210mm;
+  //   min-height: 297mm;
+  //   background-color: white;
+  //   padding: 20mm;
+  //   box-sizing: border-box;
+  //   font-family: Arial, sans-serif;
+  //   color: #000000;
+  //   all: initial;
+  //   * {
+  //     all: unset;
+  //     display: revert;
+  //     box-sizing: border-box;
+  //   }
+  // `;
   
   // Generate the cover letter HTML (replicating CoverLetterDisplay logic)
   const client = formData.client;
@@ -130,26 +155,98 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
 
   document.body.appendChild(tempDiv);
 
+  // Wait for any images to load
+  await new Promise(resolve => setTimeout(resolve, 100));
+
   try {
-    // Convert to canvas then PDF
+    // Convert to canvas then PDF with additional options
     const canvas = await html2canvas(tempDiv, {
-      scale: 2,
+      scale: 1, // Reduce scale to avoid memory issues
       useCORS: true,
       allowTaint: true,
+      backgroundColor: '#ffffff',
+      width: tempDiv.offsetWidth,
+      height: tempDiv.offsetHeight,
+      ignoreElements: (element) => {
+        // Skip elements that might have problematic styles
+        if (element instanceof HTMLElement) {
+          return !!(element.style?.color?.includes('oklch'));
+        }
+        return false;
+      },
+      onclone: (clonedDoc) => {
+        // Remove any stylesheets that might contain oklch
+        const stylesheets = clonedDoc.querySelectorAll('link[rel="stylesheet"], style');
+        stylesheets.forEach(sheet => {
+          if (sheet.textContent && sheet.textContent.includes('oklch')) {
+            sheet.remove();
+          }
+        });
+        
+        // Add safe CSS reset to cloned document
+        const style = clonedDoc.createElement('style');
+        style.textContent = `
+          * {
+            color: #000000 !important;
+            background-color: transparent !important;
+          }
+          body * {
+            font-family: Arial, sans-serif !important;
+          }
+        `;
+        clonedDoc.head.appendChild(style);
+      }
     });
 
-    const imgData = canvas.toDataURL('image/png');
+    // Verify canvas was created properly
+    if (!canvas || canvas.width === 0 || canvas.height === 0) {
+      throw new Error('Failed to generate canvas from HTML content');
+    }
+
+    const imgData = canvas.toDataURL('image/png', 1.0);
+    
+    // Verify the image data is valid
+    if (!imgData || imgData === 'data:,' || !imgData.startsWith('data:image/png;base64,')) {
+      throw new Error('Failed to generate valid PNG data from canvas');
+    }
+
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
     
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    // Calculate dimensions to fit the page with margins
+    const marginMM = 10; // 10mm margins
+    const availableWidth = pdfWidth - (2 * marginMM);
+    const availableHeight = pdfHeight - (2 * marginMM);
+    
+    // Scale to fit within available space while maintaining aspect ratio
+    const canvasAspectRatio = canvas.width / canvas.height;
+    const availableAspectRatio = availableWidth / availableHeight;
+    
+    let finalWidth, finalHeight;
+    
+    if (canvasAspectRatio > availableAspectRatio) {
+      // Canvas is wider relative to available space
+      finalWidth = availableWidth;
+      finalHeight = availableWidth / canvasAspectRatio;
+    } else {
+      // Canvas is taller relative to available space
+      finalHeight = availableHeight;
+      finalWidth = availableHeight * canvasAspectRatio;
+    }
+    
+    // Center the content
+    const xOffset = marginMM + (availableWidth - finalWidth) / 2;
+    const yOffset = marginMM + (availableHeight - finalHeight) / 2;
+    
+    pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
     
     return pdf.output('blob');
   } finally {
     document.body.removeChild(tempDiv);
   }
 }
+
 
 function getStatusColor(status: string): string {
   switch (status) {
@@ -176,6 +273,90 @@ function getStatusContent(status: string): string {
       incorrect, please contact us immediately to discuss the dispute process.</p>`;
     default:
       return '';
+  }
+}
+
+export async function convertImageToPDF(imageBlob: Blob, fileName?: string): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(imageBlob);
+    
+    img.onload = () => {
+      try {
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = pdf.internal.pageSize.getHeight();
+        
+        // Calculate dimensions to fit the page while maintaining aspect ratio
+        const marginMM = 10; // 10mm margins
+        const availableWidth = pdfWidth - (2 * marginMM);
+        const availableHeight = pdfHeight - (2 * marginMM);
+        
+        const imgAspectRatio = img.width / img.height;
+        const availableAspectRatio = availableWidth / availableHeight;
+        
+        let finalWidth, finalHeight;
+        
+        if (imgAspectRatio > availableAspectRatio) {
+          finalWidth = availableWidth;
+          finalHeight = availableWidth / imgAspectRatio;
+        } else {
+          finalHeight = availableHeight;
+          finalWidth = availableHeight * imgAspectRatio;
+        }
+        
+        // Center the image
+        const xOffset = marginMM + (availableWidth - finalWidth) / 2;
+        const yOffset = marginMM + (availableHeight - finalHeight) / 2;
+        
+        // Determine image format for jsPDF
+        const format = imageBlob.type.includes('png') ? 'PNG' : 'JPEG';
+        
+        pdf.addImage(img, format, xOffset, yOffset, finalWidth, finalHeight);
+        const pdfBlob = pdf.output('blob');
+        URL.revokeObjectURL(url);
+        resolve(pdfBlob);
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        reject(error);
+      }
+    };
+    
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error(`Failed to load image: ${fileName || 'unknown'}`));
+    };
+    
+    img.src = url;
+  });
+}
+
+export async function processFileForPDF(blob: Blob, fileName?: string): Promise<Blob | null> {
+  const mimeType = blob.type;
+  
+  if (mimeType === 'application/pdf' || mimeType === 'application/octet-stream') {
+    // Validate PDF files
+    const arrayBuffer = await blob.arrayBuffer();
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const pdfHeader = String.fromCharCode(...uint8Array.slice(0, 4));
+    
+    if (pdfHeader === '%PDF') {
+      return blob;
+    } else {
+      console.warn(`File ${fileName || 'unknown'} does not appear to be a valid PDF`);
+      return null;
+    }
+  } else if (mimeType.startsWith('image/')) {
+    // Convert images to PDF
+    try {
+      return await convertImageToPDF(blob, fileName);
+    } catch (error) {
+      console.error(`Failed to convert image ${fileName || 'unknown'} to PDF:`, error);
+      return null;
+    }
+  } else {
+    console.warn(`Unsupported file type for ${fileName || 'unknown'}: ${mimeType}`);
+    return null;
   }
 }
 
