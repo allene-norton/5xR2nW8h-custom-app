@@ -7,15 +7,15 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
   // Create a temporary div with the cover letter content
   const tempDiv = document.createElement('div');
    // Use pixel dimensions that html2canvas can handle properly
-  tempDiv.style.position = 'absolute';
-  tempDiv.style.left = '-9999px';
-  tempDiv.style.width = '754px';
-  tempDiv.style.minHeight = '1083px';
-  tempDiv.style.backgroundColor = 'white';
-  tempDiv.style.padding = '40px';
-  tempDiv.style.boxSizing = 'content-box';
-  tempDiv.style.fontFamily = 'Arial, sans-serif';
-  tempDiv.style.color = '#000000';
+  // tempDiv.style.position = 'absolute';
+  // tempDiv.style.left = '-9999px';
+  // tempDiv.style.width = '754px';
+  // tempDiv.style.minHeight = '1083px';
+  // tempDiv.style.backgroundColor = 'white';
+  // tempDiv.style.padding = '40px';
+  // tempDiv.style.boxSizing = 'content-box';
+  // tempDiv.style.fontFamily = 'Arial, sans-serif';
+  // tempDiv.style.color = '#000000';
   
   // Add a completely isolated CSS environment
   tempDiv.style.cssText = `
@@ -167,6 +167,7 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
   `;
 
   // Create a completely isolated container to prevent CSS interference
+  // Create a completely isolated container to prevent CSS interference
   const isolatedContainer = document.createElement('div');
   isolatedContainer.style.cssText = `
     position: absolute !important;
@@ -177,18 +178,19 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
     overflow: hidden !important;
     z-index: -9999 !important;
     all: initial !important;
-    * {
-      all: unset !important;
-      display: revert !important;
-      box-sizing: border-box !important;
-      color: #000000 !important;
-      background-color: white !important;
-      font-family: Arial, sans-serif !important;
-    }
   `;
   
   isolatedContainer.appendChild(tempDiv);
-  document.body.appendChild(isolatedContainer);
+  
+  // Safe DOM manipulation with error handling
+  let containerAdded = false;
+  try {
+    document.body.appendChild(isolatedContainer);
+    containerAdded = true;
+  } catch (error) {
+    console.error('Error adding container to DOM:', error);
+    throw new Error('Failed to create PDF container');
+  }
 
   // Wait for any images to load
   await new Promise(resolve => setTimeout(resolve, 200));
@@ -255,30 +257,8 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
             background-color: rgb(255, 255, 255) !important;
             border-color: rgb(229, 231, 235) !important;
           }
-          
-          /* Override any CSS custom properties that might use oklch */
-          :root {
-            --color-primary: #000000 !important;
-            --color-secondary: #666666 !important;
-            --color-background: #ffffff !important;
-          }
         `;
         clonedDoc.head.appendChild(resetStyle);
-        
-        // Remove any CSS custom properties from all elements
-        const allElements = clonedDoc.querySelectorAll('*');
-        allElements.forEach(el => {
-          if (el instanceof HTMLElement) {
-            // Clear any CSS custom properties
-            const style = el.style;
-            for (let i = style.length - 1; i >= 0; i--) {
-              const property = style[i];
-              if (property.startsWith('--') || style.getPropertyValue(property).includes('oklch')) {
-                style.removeProperty(property);
-              }
-            }
-          }
-        });
       }
     });
 
@@ -327,7 +307,22 @@ export async function generateCoverLetterPDF(formData: BackgroundCheckFormData):
     
     return pdf.output('blob');
   } finally {
-    document.body.removeChild(tempDiv);
+    // Safe cleanup with proper error handling
+    if (containerAdded && isolatedContainer && isolatedContainer.parentNode) {
+      try {
+        isolatedContainer.parentNode.removeChild(isolatedContainer);
+      } catch (cleanupError) {
+        console.warn('Error removing PDF container (this is usually harmless):', cleanupError);
+        // Try alternative cleanup
+        try {
+          if (document.body.contains(isolatedContainer)) {
+            document.body.removeChild(isolatedContainer);
+          }
+        } catch (alternativeError) {
+          console.warn('Alternative cleanup also failed:', alternativeError);
+        }
+      }
+    }
   }
 }
 
