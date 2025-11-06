@@ -3,6 +3,36 @@ import html2canvas from 'html2canvas';
 import { PDFDocument } from 'pdf-lib';
 import { FORM_TYPE_INFO, type BackgroundCheckFormData } from '@/types';
 
+async function imageToBase64(imagePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      
+      canvas.width = img.width;
+      canvas.height = img.height;
+      
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        const base64 = canvas.toDataURL('image/png');
+        resolve(base64);
+      } else {
+        reject(new Error('Could not get canvas context'));
+      }
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Could not load image'));
+    };
+    
+    img.src = imagePath;
+  });
+}
+
+
 export async function generateCoverLetterPDF(
   formData: BackgroundCheckFormData,
 ): Promise<Blob> {
@@ -522,6 +552,234 @@ export async function generateCoverLetterPDF(
   //   }
   // }
 
+  // const iframe = document.createElement('iframe');
+  // iframe.style.cssText = `
+  //   position: fixed !important;
+  //   top: -10000px !important;
+  //   left: -10000px !important;
+  //   width: 800px !important;
+  //   height: 1200px !important;
+  //   border: none !important;
+  //   visibility: hidden !important;
+  // `;
+
+  // document.body.appendChild(iframe);
+
+  // try {
+  //   // Wait for iframe to load
+  //   await new Promise((resolve) => {
+  //     iframe.onload = resolve;
+  //     // Set a basic HTML document
+  //     iframe.src = 'about:blank';
+  //   });
+
+  //   const iframeDoc = iframe.contentDocument;
+  //   if (!iframeDoc) {
+  //     throw new Error('Unable to access iframe document');
+  //   }
+
+  //   // Write a completely clean HTML document
+  //   iframeDoc.open();
+  //   iframeDoc.write(`
+  //     <!DOCTYPE html>
+  //     <html>
+  //     <head>
+  //       <style>
+  //         * {
+  //           margin: 0;
+  //           padding: 0;
+  //           box-sizing: border-box;
+  //           color: #000000;
+  //           background-color: transparent;
+  //           font-family: Arial, sans-serif;
+  //         }
+  //         body {
+  //           background-color: white;
+  //           font-family: Arial, sans-serif;
+  //           color: #000000;
+  //         }
+  //         .pdf-container {
+  //           width: 754px;
+  //           min-height: 1083px;
+  //           background-color: white;
+  //           padding: 40px;
+  //           box-sizing: content-box;
+  //           font-family: Arial, sans-serif;
+  //           color: #000000;
+  //         }
+  //       </style>
+  //     </head>
+  //     <body>
+  //       <div class="pdf-container" id="pdf-content">
+  //         <!-- Content will be inserted here -->
+  //       </div>
+  //     </body>
+  //     </html>
+  //   `);
+  //   iframeDoc.close();
+
+  //   // Wait for document to be ready
+  //   await new Promise((resolve) => setTimeout(resolve, 100));
+
+  //   const container = iframeDoc.getElementById('pdf-content');
+  //   if (!container) {
+  //     throw new Error('Unable to find PDF container in iframe');
+  //   }
+
+  //   // Generate the content
+  //   const client = formData.client;
+  //   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
+  //   const currentDate = new Date().toLocaleDateString('en-US', {
+  //     year: 'numeric',
+  //     month: 'long',
+  //     day: 'numeric',
+  //   });
+
+  //   container.innerHTML = `
+  //     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #374151;">
+  //       <!-- Letterhead -->
+  //       <div style="border-bottom: 1px solid #e5e7eb; padding-bottom: 24px; margin-bottom: 32px;">
+  //         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+  //           <div>
+  //             <div style="display: flex; align-items: center; margin-bottom: 8px;">
+  //               <div style="width: 48px; height: 48px; background-color: #3b82f6; border-radius: 8px; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">CT</div>
+  //               <div>
+  //                 <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #111827;">ClearTech</h1>
+  //                 <p style="margin: 0; color: #6b7280;">Background Checks and Security Consulting</p>
+  //               </div>
+  //             </div>
+  //             <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">Contact Us: admin@cleartechbackground.com</p>
+  //           </div>
+  //           <div style="background: ${getStatusColor(formData.status)}; padding: 8px 16px; border-radius: 8px; color: white; font-weight: 600; text-transform: uppercase;">
+  //             ${formData.status}
+  //           </div>
+  //         </div>
+  //       </div>
+
+  //       <!-- Date and Reference -->
+  //       <div style="display: flex; justify-content: space-between; font-size: 14px; color: #6b7280; margin-bottom: 24px;">
+  //         <span>Date: ${currentDate}</span>
+  //         <span>Reference #: BGC-${formData.client.split('-', 1)}</span>
+  //       </div>
+
+  //       <!-- Applicant Information -->
+  //       ${
+  //         client
+  //           ? `
+  //         <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
+  //           <h3 style="font-weight: 600; color: #111827; margin-bottom: 16px;">Applicant Information</h3>
+  //           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px;">
+  //             <div>
+  //               <p><strong>Name:</strong> ${formData.identification.firstName} ${formData.identification.lastName}</p>
+  //               <p><strong>Client:</strong> ${formData.identification.firstName}</p>
+  //               <p><strong>Form Type:</strong> ${formTypeInfo.title}</p>
+  //             </div>
+  //             <div>
+  //               <p>${formData.identification.streetAddress}</p>
+  //               ${formData.identification.streetAddress2 ? `<p>${formData.identification.streetAddress2}</p>` : ''}
+  //               <p>${formData.identification.city}, ${formData.identification.state} ${formData.identification.postalCode}</p>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       `
+  //           : ''
+  //       }
+
+  //       <!-- Letter Body -->
+  //       <div style="line-height: 1.8;">
+  //         <p>Dear ${formData.identification.firstName} ${formData.identification.lastName},</p>
+          
+  //         <p>We are pleased to provide you with the results of your background screening conducted by ClearTech
+  //         Background Services. This comprehensive screening was performed in accordance with the requirements for
+  //         <strong>${formTypeInfo.title.toLowerCase()}</strong> and includes the background checks listed below.</p>
+
+  //         <!-- Background Checks -->
+  //         <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 24px 0;">
+  //           <h4 style="font-weight: 600; color: #1e40af; margin-bottom: 12px;">Background Checks Performed</h4>
+  //           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+  //             ${formData.backgroundChecks
+  //               .map(
+  //                 (check) => `
+  //               <div style="display: flex; align-items: center; font-size: 14px;">
+  //                 <div style="width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-right: 8px;"></div>
+  //                 <span style="color: #1e40af;">${check}</span>
+  //               </div>
+  //             `,
+  //               )
+  //               .join('')}
+  //           </div>
+  //         </div>
+
+  //         <!-- Status Content -->
+  //         ${getStatusContent(formData.status)}
+
+  //         <!-- Additional Notes -->
+  //         ${
+  //           formData.memo
+  //             ? `
+  //           <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 24px 0;">
+  //             <h4 style="font-weight: 600; color: #111827; margin-bottom: 8px;">Additional Notes</h4>
+  //             <p style="color: #374151; font-size: 14px; line-height: 1.6;">${formData.memo}</p>
+  //           </div>
+  //         `
+  //             : ''
+  //         }
+
+  //         <br>
+  //         <p>This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
+  //         applicable state and local laws.</p>
+          
+  //         <p>If you have any questions about these results or need additional
+  //         information, please contact our office at admin@cleartechbackground.com</p>
+          
+  //         <br>
+  //         <p>Thank you for choosing ClearTech Background Services.</p>
+
+  //         <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+  //           <p>
+  //             Sincerely,<br><br>
+  //             <strong>ClearTech Background Services Team</strong><br>
+  //             <span style="font-size: 14px; color: #6b7280;">Professional Background Screening Division</span>
+  //           </p>
+  //         </div>
+  //       </div>
+
+  //       <!-- Footer -->
+  //       <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
+  //         <p style="margin-bottom: 8px;">
+  //           <strong>Confidentiality Notice:</strong> This document contains confidential and privileged information. If
+  //           you are not the intended recipient, please notify the sender immediately and destroy this document.
+  //         </p>
+  //       </div>
+  //     </div>
+  //   `;
+
+  //   // Wait for content to render
+  //   await new Promise((resolve) => setTimeout(resolve, 300));
+
+  //   // Generate canvas from the clean iframe
+  //   const canvas = await html2canvas(container, {
+  //     scale: 1,
+  //     useCORS: false,
+  //     allowTaint: false,
+  //     backgroundColor: '#ffffff',
+  //     logging: false,
+  //     foreignObjectRendering: true,
+  //   } as any); // Type assertion to bypass TypeScript checking
+
+  // Convert logo to base64 first
+  const logoSrc = `${window.location.origin}/ct-logo.png`;
+  let logoBase64 = '';
+  
+  try {
+    logoBase64 = await imageToBase64(logoSrc);
+    console.log('Logo converted to base64 successfully');
+  } catch (error) {
+    console.error('Failed to convert logo to base64:', error);
+    throw new Error('Could not load the required logo image. Please ensure ct-logo.png exists in the public folder.');
+  }
+
+  // Create a completely isolated iframe for PDF generation
   const iframe = document.createElement('iframe');
   iframe.style.cssText = `
     position: fixed !important;
@@ -539,7 +797,6 @@ export async function generateCoverLetterPDF(
     // Wait for iframe to load
     await new Promise((resolve) => {
       iframe.onload = resolve;
-      // Set a basic HTML document
       iframe.src = 'about:blank';
     });
 
@@ -548,7 +805,7 @@ export async function generateCoverLetterPDF(
       throw new Error('Unable to access iframe document');
     }
 
-    // Write a completely clean HTML document
+    // Write the HTML document
     iframeDoc.open();
     iframeDoc.write(`
       <!DOCTYPE html>
@@ -577,6 +834,12 @@ export async function generateCoverLetterPDF(
             font-family: Arial, sans-serif;
             color: #000000;
           }
+          .logo-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            margin-right: 12px;
+          }
         </style>
       </head>
       <body>
@@ -589,20 +852,20 @@ export async function generateCoverLetterPDF(
     iframeDoc.close();
 
     // Wait for document to be ready
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 100));
 
     const container = iframeDoc.getElementById('pdf-content');
     if (!container) {
       throw new Error('Unable to find PDF container in iframe');
     }
 
-    // Generate the content
+    // Generate the content with base64 embedded logo
     const client = formData.client;
     const formTypeInfo = FORM_TYPE_INFO[formData.formType];
-    const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
+    const currentDate = new Date().toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long", 
+      day: "numeric",
     });
 
     container.innerHTML = `
@@ -612,7 +875,7 @@ export async function generateCoverLetterPDF(
           <div style="display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
               <div style="display: flex; align-items: center; margin-bottom: 8px;">
-                <div style="width: 48px; height: 48px; background-color: #3b82f6; border-radius: 8px; margin-right: 12px; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold;">CT</div>
+                <img src="${logoBase64}" alt="CT Logo" class="logo-img">
                 <div>
                   <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #111827;">ClearTech</h1>
                   <p style="margin: 0; color: #6b7280;">Background Checks and Security Consulting</p>
@@ -629,13 +892,11 @@ export async function generateCoverLetterPDF(
         <!-- Date and Reference -->
         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #6b7280; margin-bottom: 24px;">
           <span>Date: ${currentDate}</span>
-          <span>Reference #: BGC-${formData.client.split('-', 1)}</span>
+          <span>Reference #: BGC-${formData.client.split('-',1)}</span>
         </div>
 
         <!-- Applicant Information -->
-        ${
-          client
-            ? `
+        ${client ? `
           <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h3 style="font-weight: 600; color: #111827; margin-bottom: 16px;">Applicant Information</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px;">
@@ -651,9 +912,7 @@ export async function generateCoverLetterPDF(
               </div>
             </div>
           </div>
-        `
-            : ''
-        }
+        ` : ''}
 
         <!-- Letter Body -->
         <div style="line-height: 1.8;">
@@ -667,16 +926,12 @@ export async function generateCoverLetterPDF(
           <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 24px 0;">
             <h4 style="font-weight: 600; color: #1e40af; margin-bottom: 12px;">Background Checks Performed</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              ${formData.backgroundChecks
-                .map(
-                  (check) => `
+              ${formData.backgroundChecks.map(check => `
                 <div style="display: flex; align-items: center; font-size: 14px;">
                   <div style="width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-right: 8px;"></div>
                   <span style="color: #1e40af;">${check}</span>
                 </div>
-              `,
-                )
-                .join('')}
+              `).join('')}
             </div>
           </div>
 
@@ -684,16 +939,12 @@ export async function generateCoverLetterPDF(
           ${getStatusContent(formData.status)}
 
           <!-- Additional Notes -->
-          ${
-            formData.memo
-              ? `
+          ${formData.memo ? `
             <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 24px 0;">
               <h4 style="font-weight: 600; color: #111827; margin-bottom: 8px;">Additional Notes</h4>
               <p style="color: #374151; font-size: 14px; line-height: 1.6;">${formData.memo}</p>
             </div>
-          `
-              : ''
-          }
+          ` : ''}
 
           <br>
           <p>This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
@@ -725,17 +976,17 @@ export async function generateCoverLetterPDF(
     `;
 
     // Wait for content to render
-    await new Promise((resolve) => setTimeout(resolve, 300));
+    await new Promise(resolve => setTimeout(resolve, 300));
 
     // Generate canvas from the clean iframe
     const canvas = await html2canvas(container, {
       scale: 1,
-      useCORS: false,
-      allowTaint: false,
+      useCORS: false, // Not needed since we're using base64
+      allowTaint: false, // Not needed since we're using base64
       backgroundColor: '#ffffff',
       logging: false,
-      foreignObjectRendering: true,
-    } as any); // Type assertion to bypass TypeScript checking
+      foreignObjectRendering: true
+    });
 
     // Verify canvas
     if (!canvas || canvas.width === 0 || canvas.height === 0) {
@@ -743,28 +994,24 @@ export async function generateCoverLetterPDF(
     }
 
     const imgData = canvas.toDataURL('image/png', 1.0);
-
-    if (
-      !imgData ||
-      imgData === 'data:,' ||
-      !imgData.startsWith('data:image/png;base64,')
-    ) {
+    
+    if (!imgData || imgData === 'data:,' || !imgData.startsWith('data:image/png;base64,')) {
       throw new Error('Failed to generate valid PNG data from canvas');
     }
 
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-
+    
     const marginMM = 10;
-    const availableWidth = pdfWidth - 2 * marginMM;
-    const availableHeight = pdfHeight - 2 * marginMM;
-
+    const availableWidth = pdfWidth - (2 * marginMM);
+    const availableHeight = pdfHeight - (2 * marginMM);
+    
     const canvasAspectRatio = canvas.width / canvas.height;
     const availableAspectRatio = availableWidth / availableHeight;
-
+    
     let finalWidth, finalHeight;
-
+    
     if (canvasAspectRatio > availableAspectRatio) {
       finalWidth = availableWidth;
       finalHeight = availableWidth / canvasAspectRatio;
@@ -772,12 +1019,12 @@ export async function generateCoverLetterPDF(
       finalHeight = availableHeight;
       finalWidth = availableHeight * canvasAspectRatio;
     }
-
+    
     const xOffset = marginMM + (availableWidth - finalWidth) / 2;
     const yOffset = marginMM + (availableHeight - finalHeight) / 2;
-
+    
     pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
-
+    
     return pdf.output('blob');
   } finally {
     // Clean up iframe
@@ -786,6 +1033,7 @@ export async function generateCoverLetterPDF(
     }
   }
 }
+
 
 function getStatusColor(status: string): string {
   switch (status) {
