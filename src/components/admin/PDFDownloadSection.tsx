@@ -66,80 +66,82 @@ export function PDFDownloadSection({
   };
 
   const handleDownloadPDF = async () => {
-    setIsGenerating(true);
-    try {
-      const pdfFiles: Blob[] = [];
-
-      for (const item of fileItems) {
-        if (item.type === 'cover') {
-          try {
-            const coverPDF = await generateCoverLetterPDF(item.data);
-            if (coverPDF && coverPDF.type === 'application/pdf') {
-              pdfFiles.push(coverPDF);
-            } else {
-              console.warn('Cover letter PDF generation returned invalid data');
-            }
-          } catch (coverError) {
-            console.error('Error generating cover letter PDF:', coverError);
+  setIsGenerating(true);
+  try {
+    const pdfFiles: Blob[] = [];
+    
+    for (const item of fileItems) {
+      if (item.type === 'cover') {
+        try {
+          const coverPDF = await generateCoverLetterPDF(item.data);
+          if (coverPDF && coverPDF.type === 'application/pdf') {
+            pdfFiles.push(coverPDF);
+          } else {
+            console.warn('Cover letter PDF generation returned invalid data');
           }
-        } else if (item.url) {
-          try {
-            const response = await fetch(item.url);
-            if (!response.ok) {
-              throw new Error(`Failed to fetch file: ${response.statusText}`);
-            }
-            const blob = await response.blob();
-            const processedPDF = await processFileForPDF(blob, item.name);
-            if (processedPDF) {
-              pdfFiles.push(processedPDF);
-              console.log(`Processed file ${item.name} successfully`);
-            }
-          } catch (fileError) {
-            console.error(`Error processing file ${item.name}:`, fileError);
+        } catch (coverError) {
+          console.error('Error generating cover letter PDF:', coverError);
+        }
+      } else if (item.url) {
+        try {
+          const response = await fetch(item.url);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch file: ${response.statusText}`);
           }
+          const blob = await response.blob();
+          const processedPDF = await processFileForPDF(blob, item.name);
+          if (processedPDF) {
+            pdfFiles.push(processedPDF);
+            console.log(`Processed file ${item.name} successfully`);
+          }
+        } catch (fileError) {
+          console.error(`Error processing file ${item.name}:`, fileError);
         }
       }
-
-      if (pdfFiles.length === 0) {
-        throw new Error('No valid files could be processed');
-      }
-
-      console.log(`Processing ${pdfFiles.length} files for PDF generation`);
-
-      let finalPDF: Blob;
-      if (pdfFiles.length === 1) {
-        finalPDF = pdfFiles[0];
-      } else {
-        finalPDF = await mergePDFs(pdfFiles);
-      }
-
-      const filename = `${formData.identification.firstName}_${formData.identification.lastName}_Background_Check.pdf`;
-
-      // Create blob URL and open in new window - simple and reliable
-      const url = URL.createObjectURL(finalPDF);
-      const newWindow = window.open(url, '_blank');
-
+    }
+    
+    if (pdfFiles.length === 0) {
+      throw new Error('No valid files could be processed');
+    }
+    
+    console.log(`Processing ${pdfFiles.length} files for PDF generation`);
+    
+    let finalPDF: Blob;
+    if (pdfFiles.length === 1) {
+      finalPDF = pdfFiles[0];
+    } else {
+      finalPDF = await mergePDFs(pdfFiles);
+    }
+    
+    const filename = `${formData.identification.firstName}_${formData.identification.lastName}_Background_Check.pdf`;
+    
+    // Create blob URL and try to open in new window
+    const url = URL.createObjectURL(finalPDF);
+    
+    try {
+      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+      
       if (!newWindow) {
-        // Fallback if popup is blocked
-        alert(
-          'Popup blocked! Please allow popups and try again, or try downloading directly.',
-        );
-        window.location.href = url;
+        // Only show alert if popup truly failed - don't redirect
+        alert('Popup was blocked by your browser. Please allow popups for this site and try again.');
       } else {
         console.log('PDF opened in new window successfully');
       }
-
-      // Cleanup after a longer delay since user might still be viewing/downloading
-      setTimeout(() => URL.revokeObjectURL(url), 30000);
     } catch (error) {
-      console.error('Error generating PDF:', error);
-      alert(
-        'Error generating PDF. Please check that all files are valid and try again.',
-      );
-    } finally {
-      setIsGenerating(false);
+      console.error('Error opening PDF window:', error);
+      alert('Unable to open PDF. Please check your browser settings and try again.');
     }
-  };
+    
+    // Cleanup after delay
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    alert('Error generating PDF. Please check that all files are valid and try again.');
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   return (
     <Card>
