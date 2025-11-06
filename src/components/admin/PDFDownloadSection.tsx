@@ -115,22 +115,11 @@ export function PDFDownloadSection({
     
     const filename = `${formData.identification.firstName}_${formData.identification.lastName}_Background_Check.pdf`;
     
-    // Create blob URL and try to open in new window
+    // Simple and clean - just open the PDF in a new window
     const url = URL.createObjectURL(finalPDF);
+    window.open(url, '_blank', 'noopener,noreferrer');
     
-    try {
-      const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-      
-      if (!newWindow) {
-        // Only show alert if popup truly failed - don't redirect
-        alert('Popup was blocked by your browser. Please allow popups for this site and try again.');
-      } else {
-        console.log('PDF opened in new window successfully');
-      }
-    } catch (error) {
-      console.error('Error opening PDF window:', error);
-      alert('Unable to open PDF. Please check your browser settings and try again.');
-    }
+    console.log('PDF opened in new window');
     
     // Cleanup after delay
     setTimeout(() => URL.revokeObjectURL(url), 30000);
