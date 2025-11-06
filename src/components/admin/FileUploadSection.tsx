@@ -124,7 +124,7 @@ export function FileUploadSection({
       fileItemSetRef.current.clear();
     };
   }, [backgroundCheckFile.fileId]);
-  
+
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -156,7 +156,7 @@ export function FileUploadSection({
   );
 
   const handleFileUpload = useCallback(async (file: File) => {
-    console.log(`FILE!:`, file);
+    // console.log(`FILE!:`, file);
     // Validate file type
     if (file.type !== 'application/pdf') {
       setUploadError('Only PDF files are allowed for background reports');
@@ -185,12 +185,12 @@ export function FileUploadSection({
         });
       }, 200);
 
-      console.log('=== DEBUG: Starting file upload ===');
-      console.log('formData.fileChannelId:', formData.fileChannelId);
-      console.log('folderName:', folderName);
-      console.log('file.name:', file.name);
-      console.log('file type:', file.type);
-      console.log('file size:', file.size);
+      // console.log('=== DEBUG: Starting file upload ===');
+      // console.log('formData.fileChannelId:', formData.fileChannelId);
+      // console.log('folderName:', folderName);
+      // console.log('file.name:', file.name);
+      // console.log('file type:', file.type);
+      // console.log('file size:', file.size);
 
       // Check if required values exist
       if (!formData.fileChannelId) {
@@ -214,13 +214,13 @@ export function FileUploadSection({
 
       const base64String = btoa(binaryString);
 
-      console.log('About to call createFile with base64:', {
-        channelId: formData.fileChannelId,
-        folderName,
-        fileName: file.name,
-        base64Length: base64String.length,
-        token: token
-      });
+      // console.log('About to call createFile with base64:', {
+      //   channelId: formData.fileChannelId,
+      //   folderName,
+      //   fileName: file.name,
+      //   base64Length: base64String.length,
+      //   token: token
+      // });
 
       const uploadFile = await createFile(
         formData.fileChannelId!,
@@ -229,7 +229,7 @@ export function FileUploadSection({
         base64String,
         token
       );
-      console.log('createFile completed', uploadFile);
+      // console.log('createFile completed', uploadFile);
 
       clearInterval(progressInterval);
       setUploadProgress(100);

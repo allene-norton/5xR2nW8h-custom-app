@@ -33,7 +33,7 @@ interface InternalPageProps {
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
   // console.log(`SEARCHPARAMS`, searchParams)
-  console.log(`token`, searchParams.token);
+  // console.log(`token`, searchParams.token);
   const token = searchParams.token;
   // ----------- STATES-------------------------------------------
   // CLIENTS STATES

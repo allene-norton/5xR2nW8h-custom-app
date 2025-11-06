@@ -37,7 +37,7 @@ function ReportsContent() {
     clientId: loggedInUser?.id || undefined,
   });
 
-  console.log(`client formData`, formData)
+  // console.log(`client formData`, formData)
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
 
@@ -45,9 +45,9 @@ function ReportsContent() {
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
-        console.log(`retrieveing client from token`, token)
+        // console.log(`retrieveing client from token`, token)
         const userInfo = await getLoggedInUser(token);
-        console.log(userInfo.client);
+        // console.log(userInfo.client);
         setLoggedInUser(userInfo.client);
       } catch (error) {
         console.error('Error fetching user info:', error);
@@ -71,7 +71,7 @@ function ReportsContent() {
     const fetchReportFiles = async () => {
       if (!shouldFetchFiles) return;
 
-      console.log(`client side channel:`, formData?.fileChannelId);
+      // console.log(`client side channel:`, formData?.fileChannelId);
       console.log('Fetching files...');
 
       try {
@@ -82,7 +82,7 @@ function ReportsContent() {
           token,
         );
 
-        console.log('Files fetched:', files);
+        // console.log('Files fetched:', files);
 
         setReportFiles(files);
       } catch (error) {

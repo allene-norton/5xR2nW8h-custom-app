@@ -136,7 +136,7 @@ export function SubmittedFormsSection({
     setIsLoadingContracts(true);
     setError(null);
     try {
-      console.log(`loading contracts for client`, clientId);
+      // console.log(`loading contracts for client`, clientId);
       const contractsData = await listContracts(clientId, token);
       
       if ('error' in contractsData) {
