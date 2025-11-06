@@ -7,14 +7,14 @@ async function imageToBase64(imagePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    
+
     img.onload = () => {
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-      
+
       canvas.width = img.width;
       canvas.height = img.height;
-      
+
       if (ctx) {
         ctx.drawImage(img, 0, 0);
         const base64 = canvas.toDataURL('image/png');
@@ -23,31 +23,30 @@ async function imageToBase64(imagePath: string): Promise<string> {
         reject(new Error('Could not get canvas context'));
       }
     };
-    
+
     img.onerror = () => {
       reject(new Error('Could not load image'));
     };
-    
+
     img.src = imagePath;
   });
 }
 
-
 export async function generateCoverLetterPDF(
   formData: BackgroundCheckFormData,
 ): Promise<Blob> {
-  
-
   // Convert logo to base64 first
   const logoSrc = `${window.location.origin}/ct-logo.png`;
   let logoBase64 = '';
-  
+
   try {
     logoBase64 = await imageToBase64(logoSrc);
     console.log('Logo converted to base64 successfully');
   } catch (error) {
     console.error('Failed to convert logo to base64:', error);
-    throw new Error('Could not load the required logo image. Please ensure ct-logo.png exists in the public folder.');
+    throw new Error(
+      'Could not load the required logo image. Please ensure ct-logo.png exists in the public folder.',
+    );
   }
 
   // Create a completely isolated iframe for PDF generation
@@ -123,7 +122,7 @@ export async function generateCoverLetterPDF(
     iframeDoc.close();
 
     // Wait for document to be ready
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
     const container = iframeDoc.getElementById('pdf-content');
     if (!container) {
@@ -133,10 +132,10 @@ export async function generateCoverLetterPDF(
     // Generate the content with base64 embedded logo
     const client = formData.client;
     const formTypeInfo = FORM_TYPE_INFO[formData.formType];
-    const currentDate = new Date().toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long", 
-      day: "numeric",
+    const currentDate = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
     });
 
     container.innerHTML = `
@@ -152,6 +151,7 @@ export async function generateCoverLetterPDF(
                   <p style="margin: 0; color: #6b7280;">Background Checks and Security Consulting</p>
                 </div>
               </div>
+              <h2 style="font-size: 20px; font-weight: bold; margin: 0; color: #111827;">A People-Focused Approach to Screening</h2>
               <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">Contact Us: admin@cleartechbackground.com</p>
             </div>
             <div style="background: ${getStatusColor(formData.status)}; padding: 8px 16px; border-radius: 8px; color: white; font-weight: 600; text-transform: uppercase;">
@@ -163,11 +163,13 @@ export async function generateCoverLetterPDF(
         <!-- Date and Reference -->
         <div style="display: flex; justify-content: space-between; font-size: 14px; color: #6b7280; margin-bottom: 24px;">
           <span>Date: ${currentDate}</span>
-          <span>Reference #: BGC-${formData.client.split('-',1)}</span>
+          <span>Reference #: BGC-${formData.client.split('-', 1)}</span>
         </div>
 
         <!-- Applicant Information -->
-        ${client ? `
+        ${
+          client
+            ? `
           <div style="background: #f9fafb; padding: 16px; border-radius: 8px; margin-bottom: 24px;">
             <h3 style="font-weight: 600; color: #111827; margin-bottom: 16px;">Applicant Information</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; font-size: 14px;">
@@ -183,26 +185,32 @@ export async function generateCoverLetterPDF(
               </div>
             </div>
           </div>
-        ` : ''}
+        `
+            : ''
+        }
 
         <!-- Letter Body -->
         <div style="line-height: 1.8;">
-          <p>Dear ${formData.identification.firstName} ${formData.identification.lastName},</p>
+          <!-- <p>Dear ${formData.identification.firstName} ${formData.identification.lastName},</p> -->
           
           <p>We are pleased to provide you with the results of your background screening conducted by ClearTech
           Background Services. This comprehensive screening was performed in accordance with the requirements for
-          <strong>${formTypeInfo.title.toLowerCase()}</strong> and includes the background checks listed below.</p>
+          the State of Illinois and includes the background checks listed below:</p>
 
           <!-- Background Checks -->
           <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 24px 0;">
             <h4 style="font-weight: 600; color: #1e40af; margin-bottom: 12px;">Background Checks Performed</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-              ${formData.backgroundChecks.map(check => `
+              ${formData.backgroundChecks
+                .map(
+                  (check) => `
                 <div style="display: flex; align-items: center; font-size: 14px;">
                   <div style="width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-right: 8px;"></div>
                   <span style="color: #1e40af;">${check}</span>
                 </div>
-              `).join('')}
+              `,
+                )
+                .join('')}
             </div>
           </div>
 
@@ -210,19 +218,23 @@ export async function generateCoverLetterPDF(
           ${getStatusContent(formData.status)}
 
           <!-- Additional Notes -->
-          ${formData.memo ? `
+          ${
+            formData.memo
+              ? `
             <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 24px 0;">
               <h4 style="font-weight: 600; color: #111827; margin-bottom: 8px;">Additional Notes</h4>
               <p style="color: #374151; font-size: 14px; line-height: 1.6;">${formData.memo}</p>
             </div>
-          ` : ''}
+          `
+              : ''
+          }
 
           <br>
           <p>This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
           applicable state and local laws.</p>
           
           <p>If you have any questions about these results or need additional
-          information, please contact our office at admin@cleartechbackground.com</p>
+          information, please contact our office at admin@cleartechbackground.com.</p>
           
           <br>
           <p>Thank you for choosing ClearTech Background Services.</p>
@@ -230,8 +242,8 @@ export async function generateCoverLetterPDF(
           <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
             <p>
               Sincerely,<br><br>
-              <strong>ClearTech Background Services Team</strong><br>
-              <span style="font-size: 14px; color: #6b7280;">Professional Background Screening Division</span>
+              <strong>ClearTech Admin Team</strong><br>
+              <h2 style="font-size: 20px; font-weight: bold; margin: 0; color: #111827;">A People-Focused Approach to Screening</h2>
             </p>
           </div>
         </div>
@@ -247,7 +259,7 @@ export async function generateCoverLetterPDF(
     `;
 
     // Wait for content to render
-    await new Promise(resolve => setTimeout(resolve, 300));
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     // Generate canvas from the clean iframe
     const canvas = await html2canvas(container, {
@@ -256,7 +268,7 @@ export async function generateCoverLetterPDF(
       allowTaint: false, // Not needed since we're using base64
       backgroundColor: '#ffffff',
       logging: false,
-      foreignObjectRendering: true
+      foreignObjectRendering: true,
     });
 
     // Verify canvas
@@ -265,24 +277,28 @@ export async function generateCoverLetterPDF(
     }
 
     const imgData = canvas.toDataURL('image/png', 1.0);
-    
-    if (!imgData || imgData === 'data:,' || !imgData.startsWith('data:image/png;base64,')) {
+
+    if (
+      !imgData ||
+      imgData === 'data:,' ||
+      !imgData.startsWith('data:image/png;base64,')
+    ) {
       throw new Error('Failed to generate valid PNG data from canvas');
     }
 
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = pdf.internal.pageSize.getHeight();
-    
+
     const marginMM = 10;
-    const availableWidth = pdfWidth - (2 * marginMM);
-    const availableHeight = pdfHeight - (2 * marginMM);
-    
+    const availableWidth = pdfWidth - 2 * marginMM;
+    const availableHeight = pdfHeight - 2 * marginMM;
+
     const canvasAspectRatio = canvas.width / canvas.height;
     const availableAspectRatio = availableWidth / availableHeight;
-    
+
     let finalWidth, finalHeight;
-    
+
     if (canvasAspectRatio > availableAspectRatio) {
       finalWidth = availableWidth;
       finalHeight = availableWidth / canvasAspectRatio;
@@ -290,12 +306,12 @@ export async function generateCoverLetterPDF(
       finalHeight = availableHeight;
       finalWidth = availableHeight * canvasAspectRatio;
     }
-    
+
     const xOffset = marginMM + (availableWidth - finalWidth) / 2;
     const yOffset = marginMM + (availableHeight - finalHeight) / 2;
-    
+
     pdf.addImage(imgData, 'PNG', xOffset, yOffset, finalWidth, finalHeight);
-    
+
     return pdf.output('blob');
   } finally {
     // Clean up iframe
@@ -304,7 +320,6 @@ export async function generateCoverLetterPDF(
     }
   }
 }
-
 
 function getStatusColor(status: string): string {
   switch (status) {
@@ -322,9 +337,8 @@ function getStatusColor(status: string): string {
 function getStatusContent(status: string): string {
   switch (status) {
     case 'cleared':
-      return `<p><strong style="color: #059669;">CLEARED:</strong> Your background screening has been completed
-      successfully. All checks have passed the required standards, and no disqualifying information was found.
-      You may proceed with your application process.</p>`;
+      return `<p><strong style="color: #059669;">CLEARED:</strong> The results of this screening <strong>have been successfully completed and cleared</strong>. If you have any questions or would like additional information regarding these results, please contact our office.
+</p>`;
     case 'pending':
       return `<p><strong style="color: #d97706;">PENDING:</strong> Your background screening is currently in
       progress. We are awaiting responses from one or more verification sources. We will notify you as soon as
