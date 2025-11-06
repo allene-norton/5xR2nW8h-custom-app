@@ -37,6 +37,7 @@ import { FORM_TYPE_INFO } from '../../types';
 
 // API/SDK ACTIONS IMPORTS
 import { createFile, retrieveFile } from '@/lib/actions/client-actions';
+import { FileItem } from '@/components/admin/AdminInterface';
 
 interface FileUploadSectionProps {
   backgroundCheckFile: BackgroundCheckFile;
@@ -44,7 +45,8 @@ interface FileUploadSectionProps {
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
   onFileClick?: () => void;
-  token?: string
+  token?: string;
+  setFileItem?: (fileObj: FileItem) => void
 }
 
 export function FileUploadSection({
@@ -53,6 +55,7 @@ export function FileUploadSection({
   onFileCreated,
   updateCheckFileStatus,
   onFileClick,
+  setFileItem,
   token
 }: FileUploadSectionProps) {
   // const searchParams = useSearchParams();
@@ -224,6 +227,18 @@ export function FileUploadSection({
         filename: backgroundCheckFile.fileName!,
         type: fileType,
       });
+
+      if (setFileItem) {
+        const fileItem: FileItem = {
+          id: fileId,
+          name: backgroundCheckFile.fileName || `ClearTech Uploaded File ${backgroundCheckFile.checkName}`,
+          type: 'uploaded',
+          url: getFileForPreview.downloadUrl,
+          data: null
+        };
+        setFileItem(fileItem);
+      }
+
       // onFileClick?.();
     } catch (error) {
       console.error('Error previewing file:', error);

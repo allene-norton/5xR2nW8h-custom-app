@@ -17,6 +17,18 @@ import { StatusSection } from '@/components/admin/StatusSection';
 import { FileUploadSection } from '@/components/admin/FileUploadSection';
 import { SubmittedFormsSection } from '@/components/admin/SubmittedFormsSection';
 import { CreateFolderSection } from '@/components/admin/CreateFolderSection';
+import { PDFDownloadSection } from '@/components/admin/PDFDownloadSection';
+
+import { useState } from 'react';
+
+export interface FileItem {
+  id?: string;
+  name?: string;
+  type: 'cover' | 'submitted' | 'uploaded';
+  url?: string;
+  file?: File;
+  data?: any; // For cover letter data
+}
 
 interface AdminInterfaceProps {
   formData: BackgroundCheckFormData;
@@ -38,6 +50,7 @@ interface AdminInterfaceProps {
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   validationErrors?: Record<string, string>;
   token?: string
+  submittedFiles?: Array<{ id: string; name: string; url: string }>;
 }
 
 export function AdminInterface({
@@ -57,11 +70,18 @@ export function AdminInterface({
   onFolderCreated,
   onFileCreated,
   validationErrors = {},
+  submittedFiles = [],
   token
 }: AdminInterfaceProps) {
 
+  const [fileItems, setFileItems] = useState<FileItem[]>([]);
+
 
   console.log(formData);
+
+  const handleSetFileItem = (fileObj: FileItem) => {
+    setFileItems([...fileItems, fileObj])
+  }
 
 
   return (
@@ -124,6 +144,7 @@ export function AdminInterface({
                 backgroundCheckFile={backgroundCheckFile}
                 onFileCreated={onFileCreated}
                 updateCheckFileStatus={updateCheckFileStatus}
+                setFileItem={handleSetFileItem}
                 token={token}
               />
             ))}
@@ -145,6 +166,13 @@ export function AdminInterface({
       {/* Submitted Documents */}
       <SubmittedFormsSection
         clientId={formData.client}
+        setFileItem={handleSetFileItem}
+      />
+
+      <PDFDownloadSection
+        formData={formData}
+        submittedFiles={submittedFiles}
+        uploadedFiles={formData.backgroundCheckFiles || []}
       />
     </div>
   );

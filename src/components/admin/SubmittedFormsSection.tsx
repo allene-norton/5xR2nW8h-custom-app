@@ -17,23 +17,27 @@ import {
   listForms,
   listFormResponses,
   FormResponse,
+  FormResponseField,
   FormResponseArray,
   ContractArray,
   ContractsResponse,
   Contract,
-  listContracts
+  listContracts,
 } from '@/lib/actions/client-actions';
 // import { Contract } from 'copilot-design-system/dist/icons';
+import { FileItem } from '@/components/admin/AdminInterface';
 
 interface SubmittedFormsSectionProps {
   clientId: string;
   variant?: 'admin' | 'client';
+  setFileItem?: (fileObj: FileItem) => void;
 }
 
 export function SubmittedFormsSection({
-  clientId, variant
+  clientId,
+  variant,
+  setFileItem,
 }: SubmittedFormsSectionProps) {
-
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
 
@@ -49,7 +53,6 @@ export function SubmittedFormsSection({
   const [error, setError] = useState<string | null>(null);
 
   const isLoading = isLoadingForms || isLoadingContracts;
-
 
   // Form Loading
   const loadForms = async () => {
@@ -74,7 +77,8 @@ export function SubmittedFormsSection({
 
       // get responses for all forms
       const allFormResponsesPromises =
-        forms?.map(async (form) => { //error has any type when using sdk but need to keep for api development
+        forms?.map(async (form) => {
+          //error has any type when using sdk but need to keep for api development
           try {
             // In dev mode, only formId is needed. In production need to pass a token
             const responses = await listFormResponses(form.id!, token);
@@ -86,7 +90,7 @@ export function SubmittedFormsSection({
         }) || [];
 
       const allResponsesArrays = await Promise.all(allFormResponsesPromises);
-      
+
       const allResponses = allResponsesArrays
         .flatMap(
           (responseArray) =>
@@ -100,6 +104,30 @@ export function SubmittedFormsSection({
       );
 
       setForms(clientForms as FormResponseArray);
+
+      if (setFileItem) {
+        clientForms.forEach((form: FormResponse) => {
+          if (form.formFields) {
+            // Iterate over each FormResponseField in the Record
+            Object.values(form.formFields).forEach(
+              (field: FormResponseField) => {
+                if (field.attachmentUrls && field.attachmentUrls.length > 0) {
+                  field.attachmentUrls.forEach((url: string, index: number) => {
+                    const fileItem: FileItem = {
+                      id: `${form.id}-attachment-${index}`,
+                      name: `${form.formName || 'Form'} - Attachment ${index + 1}`,
+                      type: 'submitted',
+                      url: url,
+                      data: null,
+                    };
+                    setFileItem(fileItem);
+                  });
+                }
+              },
+            );
+          }
+        });
+      }
     } catch (err) {
       setError('Failed to load client forms');
       console.error('Error loading client forms:', err);
@@ -120,7 +148,7 @@ export function SubmittedFormsSection({
 
     try {
       // get all contracts for client
-      console.log(`loading contracts for client`, clientId)
+      console.log(`loading contracts for client`, clientId);
       const contractsData = await listContracts(clientId, token);
       // console.log(`ContractsData:`, contractsData);
 
@@ -130,15 +158,31 @@ export function SubmittedFormsSection({
       }
 
       const contracts = contractsData.data;
-      console.log(`all found contracts for client`, contracts)
-      const signedContracts = contracts.filter((contract: Contract) => contract.status === "signed");
+      console.log(`all found contracts for client`, contracts);
+      const signedContracts = contracts.filter(
+        (contract: Contract) => contract.status === 'signed',
+      );
 
-
-      console.log(`Signed Contracts:`, signedContracts)
-
-    
+      console.log(`Signed Contracts:`, signedContracts);
 
       setContracts(signedContracts as ContractArray);
+
+      if (setFileItem) {
+        signedContracts.forEach((contract: Contract, index: number) => {
+          if (contract.signedFileUrl) {
+            const fileItem: FileItem = {
+              id: contract.id,
+              name: contract.name || `Signed Contract ${index + 1}`,
+              type: 'submitted',
+              url: contract.signedFileUrl,
+              data: null
+            };
+            setFileItem(fileItem);
+          }
+        });
+      }
+
+
     } catch (err) {
       setError('Failed to load client contracts');
       console.error('Error loading client conracts:', err);
@@ -146,8 +190,6 @@ export function SubmittedFormsSection({
       setIsLoadingContracts(false);
     }
   };
-
-
 
   useEffect(() => {
     loadForms();
@@ -176,8 +218,9 @@ export function SubmittedFormsSection({
           </Button>
         </div>
         <CardDescription>
-          {variant === 'client'? 'Your submitted forms and documents': 'Documents submitted by the client through the portal'}
-          
+          {variant === 'client'
+            ? 'Your submitted forms and documents'
+            : 'Documents submitted by the client through the portal'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -210,13 +253,9 @@ export function SubmittedFormsSection({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {forms.map((form: FormResponse) => (
-              <FormCard
-                key={form.id}
-                formResponse={form}
-                variant={variant}
-              />
+              <FormCard key={form.id} formResponse={form} variant={variant} />
             ))}
-             {contracts.map((contract: Contract) => (
+            {contracts.map((contract: Contract) => (
               <ContractCard
                 key={contract.id}
                 contract={contract}
