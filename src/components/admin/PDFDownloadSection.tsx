@@ -144,7 +144,6 @@ export function PDFDownloadSection({
     
     for (const item of fileItems) {
       if (item.type === 'cover') {
-        // Generate cover letter PDF
         try {
           const coverPDF = await generateCoverLetterPDF(item.data);
           if (coverPDF && coverPDF.type === 'application/pdf') {
@@ -162,7 +161,6 @@ export function PDFDownloadSection({
             throw new Error(`Failed to fetch file: ${response.statusText}`);
           }
           const blob = await response.blob();
-          // Use the utility function to process the file
           const processedPDF = await processFileForPDF(blob, item.name);
           if (processedPDF) {
             pdfFiles.push(processedPDF);
@@ -189,161 +187,211 @@ export function PDFDownloadSection({
     
     const filename = `${formData.identification.firstName}_${formData.identification.lastName}_Background_Check.pdf`;
     
-    // Convert PDF to base64 in chunks to avoid call stack overflow
+    // Convert to base64 for form submission
     const arrayBuffer = await finalPDF.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     
-    // Process in chunks to avoid call stack overflow
     let binaryString = '';
-    const chunkSize = 8192; // 8KB chunks
+    const chunkSize = 8192;
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
       const chunk = uint8Array.slice(i, i + chunkSize);
       binaryString += String.fromCharCode.apply(null, Array.from(chunk));
     }
     
     const base64 = btoa(binaryString);
-    const dataUrl = `data:application/pdf;base64,${base64}`;
-    
     const isInIframe = window !== window.parent;
     
     if (isInIframe) {
-      console.log('Detected iframe environment, using data URL download');
+      console.log('Using form submission method for iframe download');
       
-      // For very large files, use a simpler approach
-      if (finalPDF.size > 5 * 1024 * 1024) { // If larger than 5MB
-        console.log('Large file detected, using blob URL in new window');
-        const blobUrl = URL.createObjectURL(finalPDF);
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Download PDF</title>
-                <style>
-                  body { 
-                    font-family: Arial, sans-serif; 
-                    text-align: center; 
-                    padding: 50px;
-                    background: #f5f5f5;
+      // Create a new window with a form-based download approach
+      const newWindow = window.open('', '_blank', 'width=600,height=400');
+      if (newWindow) {
+        newWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Downloading PDF...</title>
+            <style>
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                background: #f8fafc;
+                margin: 0;
+                padding: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+              }
+              .container {
+                background: white;
+                padding: 40px;
+                border-radius: 12px;
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+                text-align: center;
+                max-width: 400px;
+                width: 100%;
+              }
+              .status {
+                background: #dcfce7;
+                color: #166534;
+                padding: 12px 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                font-weight: 600;
+              }
+              .btn {
+                background: #3b82f6;
+                color: white;
+                border: none;
+                padding: 14px 28px;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                margin: 8px;
+                transition: all 0.2s;
+                text-decoration: none;
+                display: inline-block;
+              }
+              .btn:hover {
+                background: #2563eb;
+                transform: translateY(-1px);
+              }
+              .btn-secondary {
+                background: #6b7280;
+              }
+              .btn-secondary:hover {
+                background: #4b5563;
+              }
+              .file-info {
+                background: #f1f5f9;
+                padding: 16px;
+                border-radius: 8px;
+                margin: 20px 0;
+                font-size: 14px;
+                color: #475569;
+              }
+              .spinner {
+                display: inline-block;
+                width: 20px;
+                height: 20px;
+                border: 3px solid #f3f4f6;
+                border-radius: 50%;
+                border-top-color: #3b82f6;
+                animation: spin 1s ease-in-out infinite;
+                margin-right: 8px;
+              }
+              @keyframes spin {
+                to { transform: rotate(360deg); }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="status">
+                <span class="spinner"></span>
+                Preparing your download...
+              </div>
+              
+              <h2 style="color: #1e293b; margin-bottom: 16px;">Background Check Report</h2>
+              
+              <div class="file-info">
+                <strong>File:</strong> ${filename}<br>
+                <strong>Size:</strong> ${Math.round(finalPDF.size / 1024)} KB
+              </div>
+              
+              <form id="downloadForm" method="post" action="data:application/octet-stream;base64,${base64}" style="display: none;">
+              </form>
+              
+              <button onclick="downloadFile()" class="btn" id="downloadBtn">
+                📥 Download PDF
+              </button>
+              
+              <button onclick="window.close()" class="btn btn-secondary">
+                ✕ Close Window
+              </button>
+            </div>
+            
+            <script>
+              let downloadAttempted = false;
+              
+              function downloadFile() {
+                if (downloadAttempted) return;
+                downloadAttempted = true;
+                
+                console.log('Attempting download...');
+                
+                try {
+                  // Method 1: Create blob and download
+                  const binaryString = atob('${base64}');
+                  const bytes = new Uint8Array(binaryString.length);
+                  for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
                   }
-                  .container {
-                    background: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    max-width: 400px;
-                    margin: 0 auto;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                  }
-                  .btn {
-                    background: #3b82f6;
-                    color: white;
-                    padding: 12px 24px;
-                    border: none;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    display: inline-block;
-                    margin: 10px;
-                    font-size: 16px;
-                  }
-                  .btn:hover { background: #2563eb; }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h2>PDF Ready</h2>
-                  <p>Your background check report is ready for download.</p>
-                  <p><strong>File:</strong> ${filename}</p>
-                  <p><strong>Size:</strong> ${Math.round(finalPDF.size / 1024)} KB</p>
-                  <br>
-                  <button onclick="downloadFile()" class="btn">Download PDF</button>
-                  <br>
-                  <button onclick="window.close()" class="btn" style="background: #6b7280;">Close</button>
-                </div>
-                <script>
-                  function downloadFile() {
-                    const link = document.createElement('a');
-                    link.href = '${blobUrl}';
-                    link.download = '${filename}';
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                  }
+                  const blob = new Blob([bytes], { type: 'application/pdf' });
                   
-                  // Auto-trigger download
-                  setTimeout(downloadFile, 1000);
+                  // Try multiple download methods
+                  const url = URL.createObjectURL(blob);
                   
-                  // Cleanup blob URL after 30 seconds
+                  // Method A: Direct link click
+                  const a = document.createElement('a');
+                  a.style.display = 'none';
+                  a.href = url;
+                  a.download = '${filename}';
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  
+                  // Method B: Window location (fallback)
                   setTimeout(() => {
-                    URL.revokeObjectURL('${blobUrl}');
-                  }, 30000);
-                </script>
-              </body>
-            </html>
-          `);
-          newWindow.document.close();
-        }
+                    if (confirm('Download not started? Try alternative method?')) {
+                      window.location.href = url;
+                    }
+                  }, 2000);
+                  
+                  // Method C: Open in new tab (second fallback)
+                  setTimeout(() => {
+                    const newTab = window.open(url, '_blank');
+                    if (!newTab) {
+                      alert('Please allow popups and try again');
+                    }
+                  }, 4000);
+                  
+                  // Update UI
+                  document.querySelector('.status').innerHTML = '✅ Download started!';
+                  document.getElementById('downloadBtn').textContent = '✅ Downloaded';
+                  document.getElementById('downloadBtn').disabled = true;
+                  
+                  // Cleanup
+                  setTimeout(() => URL.revokeObjectURL(url), 10000);
+                  
+                } catch (error) {
+                  console.error('Download error:', error);
+                  document.querySelector('.status').innerHTML = '❌ Download failed';
+                  alert('Download failed. Please try again or contact support.');
+                }
+              }
+              
+              // Auto-trigger download after page loads
+              setTimeout(() => {
+                if (!downloadAttempted) {
+                  downloadFile();
+                }
+              }, 1500);
+              
+              // Prevent multiple attempts
+              document.getElementById('downloadBtn').addEventListener('click', downloadFile);
+            </script>
+          </body>
+          </html>
+        `);
+        newWindow.document.close();
       } else {
-        // Use data URL for smaller files
-        const newWindow = window.open('', '_blank');
-        if (newWindow) {
-          newWindow.document.write(`
-            <!DOCTYPE html>
-            <html>
-              <head>
-                <title>Download PDF</title>
-                <style>
-                  body { 
-                    font-family: Arial, sans-serif; 
-                    text-align: center; 
-                    padding: 50px;
-                    background: #f5f5f5;
-                  }
-                  .container {
-                    background: white;
-                    padding: 30px;
-                    border-radius: 8px;
-                    max-width: 400px;
-                    margin: 0 auto;
-                    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-                  }
-                  .btn {
-                    background: #3b82f6;
-                    color: white;
-                    padding: 12px 24px;
-                    border: none;
-                    border-radius: 6px;
-                    cursor: pointer;
-                    text-decoration: none;
-                    display: inline-block;
-                    margin: 10px;
-                    font-size: 16px;
-                  }
-                  .btn:hover { background: #2563eb; }
-                </style>
-              </head>
-              <body>
-                <div class="container">
-                  <h2>PDF Ready</h2>
-                  <p>Your background check report is ready for download.</p>
-                  <a href="${dataUrl}" download="${filename}" class="btn" id="downloadBtn">Download PDF</a>
-                  <br>
-                  <button onclick="window.close()" class="btn" style="background: #6b7280;">Close</button>
-                </div>
-                <script>
-                  setTimeout(() => {
-                    document.getElementById('downloadBtn').click();
-                  }, 1000);
-                </script>
-              </body>
-            </html>
-          `);
-          newWindow.document.close();
-        }
+        throw new Error('Could not open download window. Please allow popups and try again.');
       }
     } else {
-      // Normal environment - use blob URL for better performance
+      // Normal environment
       const url = URL.createObjectURL(finalPDF);
       const link = document.createElement('a');
       link.href = url;
@@ -356,13 +404,12 @@ export function PDFDownloadSection({
     
   } catch (error) {
     console.error('Error generating PDF:', error);
-    alert(
-      'Error generating PDF. Please check that all files are valid and try again.',
-    );
+    alert('Error generating PDF. Please check that all files are valid and try again.');
   } finally {
     setIsGenerating(false);
   }
 };
+
   return (
     <Card>
       <CardHeader>
