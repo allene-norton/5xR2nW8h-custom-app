@@ -334,21 +334,43 @@ export async function convertImageToPDF(imageBlob: Blob, fileName?: string): Pro
 export async function processFileForPDF(blob: Blob, fileName?: string): Promise<Blob | null> {
   const mimeType = blob.type;
   
-  if (mimeType === 'application/pdf' || mimeType === 'application/octet-stream') {
-    // Validate PDF files
-    const arrayBuffer = await blob.arrayBuffer();
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const pdfHeader = String.fromCharCode(...uint8Array.slice(0, 4));
-    
-    if (pdfHeader === '%PDF') {
-      return blob;
-    } else {
-      console.warn(`File ${fileName || 'unknown'} does not appear to be a valid PDF`);
+  if (
+    mimeType === 'application/pdf' || 
+    mimeType === 'application/octet-stream' ||
+    mimeType === 'binary/octet-stream' || // Add this line
+    mimeType === '' // Sometimes PDFs have empty MIME type
+  ) {
+    // Validate PDF files by checking the header
+    try {
+      const arrayBuffer = await blob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+      const pdfHeader = String.fromCharCode(...uint8Array.slice(0, 4));
+      
+      if (pdfHeader === '%PDF') {
+        console.log(`Valid PDF file: ${fileName || 'unknown'}`);
+        return blob;
+      } else {
+        // If no PDF header, check first few bytes for common file signatures
+        const fileSignature = String.fromCharCode(...uint8Array.slice(0, 10));
+        console.log(`File signature for ${fileName}:`, fileSignature);
+        
+        // Still try to process as PDF if it might be a valid PDF with different structure
+        if (uint8Array.length > 1000) { // Only try if file has reasonable size
+          console.warn(`File ${fileName || 'unknown'} may be a PDF without standard header, attempting to process...`);
+          return blob;
+        }
+        
+        console.warn(`File ${fileName || 'unknown'} does not appear to be a valid PDF`);
+        return null;
+      }
+    } catch (error) {
+      console.error(`Error validating PDF ${fileName}:`, error);
       return null;
     }
   } else if (mimeType.startsWith('image/')) {
     // Convert images to PDF
     try {
+      console.log(`Converting image ${fileName} to PDF`);
       return await convertImageToPDF(blob, fileName);
     } catch (error) {
       console.error(`Failed to convert image ${fileName || 'unknown'} to PDF:`, error);
