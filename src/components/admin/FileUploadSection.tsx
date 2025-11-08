@@ -61,6 +61,8 @@ export function FileUploadSection({
   // const searchParams = useSearchParams();
   // const token = searchParams.get('token') ?? undefined;
 
+  const checkName = backgroundCheckFile.checkName
+
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -237,7 +239,7 @@ export function FileUploadSection({
       // Create file info object
 
       const fileInfo: BackgroundCheckFile = {
-        checkName: backgroundCheckFile.checkName,
+        checkName: checkName,
         fileUploaded: true,
         fileName: file.name,
         fileId: uploadFile.id,
@@ -256,7 +258,7 @@ export function FileUploadSection({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [formData.fileChannelId, folderName, backgroundCheckFile.checkName, onFileCreated]);
+  }, [formData.fileChannelId, folderName, checkName, onFileCreated]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
