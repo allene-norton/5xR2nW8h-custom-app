@@ -7,7 +7,7 @@ import { fi } from 'date-fns/locale';
 const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
 // const isDev = process.env.NODE_ENV === 'development';
-const isDev = true;
+const isDev = false;
 
 const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
 
@@ -240,6 +240,8 @@ function createSDK(token: string) {
   if (!token) {
     throw new Error('Token is required');
   }
+  process.env.COPILOT_DEBUG = 'true'
+
   return copilotApi({
     apiKey: copilotApiKey,
     token: token,
@@ -250,7 +252,7 @@ function createSDK(token: string) {
 export async function listClients(
   token?: string,
 ): Promise<ListClientsResponse> {
-    console.log(`-----------API KEY`, process.env.COPILOT_API_KEY)
+    console.log(`-----------APP KEY`, process.env.COPILOT_API_KEY)
 
   try {
     if (isDev) {
@@ -411,8 +413,9 @@ export async function listFormResponses(formId: string, token?: string) {
         throw new Error('Token is required in production');
       }
 
-      const sdk = createSDK(token);
+      const sdk = createSDK(token);console.log(`finding form responses for form ${formId}`)
       const data = await sdk.listFormResponses({ id: formId });
+      console.log(`found responses`, data)
       revalidatePath('/internal');
       return data;
     }
