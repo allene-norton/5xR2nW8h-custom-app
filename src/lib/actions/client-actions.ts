@@ -468,6 +468,7 @@ export async function listContracts(clientId: string, token?: string) {
 
 // listFileChannels action
 export async function listFileChannels(token?: string) {
+  console.log(token)
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
