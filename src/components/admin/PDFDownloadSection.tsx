@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, GripVertical, FileText, Image } from 'lucide-react';
+import { Download, GripVertical, FileText, Image, X } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { BackgroundCheckFormData, BackgroundCheckFile } from '@/types';
 import {
@@ -50,6 +50,10 @@ export function PDFDownloadSection({
     items.splice(result.destination.index, 0, reorderedItem);
 
     setFileItems(items);
+  };
+
+  const handleRemoveFile = (fileId: string) => {
+    setFileItems(prev => prev.filter(item => item.id !== fileId));
   };
 
   const getFileIcon = (type: string) => {
@@ -132,6 +136,8 @@ export function PDFDownloadSection({
   }
 };
 
+
+
   return (
     <Card>
       <CardHeader>
@@ -149,8 +155,7 @@ export function PDFDownloadSection({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-gray-600 mb-4">
-          Drag and drop to reorder files. The cover letter will be included at
-          the beginning of the PDF.
+          Drag and drop to reorder files. Click the X to remove files from the PDF. The cover letter will be included at the beginning of the PDF.
         </p>
 
         <DragDropContext onDragEnd={handleDragEnd}>
@@ -192,6 +197,15 @@ export function PDFDownloadSection({
                         <div className="text-xs text-gray-400">
                           #{index + 1}
                         </div>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveFile(item.id)}
+                          className="h-6 w-6 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                        >
+                          <X className="w-4 h-4" />
+                        </Button>
                       </div>
                     )}
                   </Draggable>
