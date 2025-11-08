@@ -116,6 +116,8 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           throw new Error('No file channel data returned from server');
         }
 
+        console.log(`list channels response`, response)
+
         setFileChannelsResponse(response);
       } catch (error) {
         console.error('Failed to fetch file channels:', error);

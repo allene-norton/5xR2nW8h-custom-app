@@ -7,7 +7,7 @@ import { fi } from 'date-fns/locale';
 const copilotApiKey = process.env.COPILOT_API_KEY;
 const assemblyApiKey = process.env.ASSEMBLY_API_KEY;
 // const isDev = process.env.NODE_ENV === 'development';
-const isDev = false;
+const isDev = true;
 
 const ASSEMBLY_BASE_URI = 'https://api.assembly.com/v1';
 
@@ -471,10 +471,10 @@ export async function listContracts(clientId: string, token?: string) {
 
 // listFileChannels action
 export async function listFileChannels(token?: string) {
-  console.log(token)
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
+      console.log(`using dev mode with key:`, process.env.ASSEMBLY_API_KEY)
       if (!assemblyApiKey) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
@@ -832,7 +832,7 @@ export async function listFiles(
 }
 
 // loggedInClient action
-export async function getLoggedInUser(token?: string) {
+export async function getLoggedInUser(clientId?: string, token?: string) {
   try {
     if (isDev) {
       console.log(`IS DEV`, isDev);
@@ -841,7 +841,7 @@ export async function getLoggedInUser(token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const clientId = 'tempClientId'
+      // const clientId = 'tempClientId'
 
       const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
         method: 'GET',

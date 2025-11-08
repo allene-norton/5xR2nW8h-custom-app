@@ -22,10 +22,11 @@ import { Badge } from '../../components/ui/badge';
 function ReportsContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
+  const tempClientId = searchParams.get('clientId')
+  console.log(`params client id`, tempClientId)
 
   
 
-  const tempClientId = '8b891bf8-1827-4574-9290-1e76fa33dc41';
 
   const [loggedInUser, setLoggedInUser] = useState<any>(null);
   const [userLoading, setUserLoading] = useState<any>(true);
@@ -46,7 +47,8 @@ function ReportsContent() {
       try {
         setUserLoading(true);
         // console.log(`retrieveing client from token`, token)
-        const userInfo = await getLoggedInUser(token);
+        // @ts-ignore
+        const userInfo = await getLoggedInUser(tempClientId, token);
         // console.log(userInfo.client);
         setLoggedInUser(userInfo.client);
       } catch (error) {
