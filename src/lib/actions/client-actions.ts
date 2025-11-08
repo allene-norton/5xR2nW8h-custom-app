@@ -302,11 +302,12 @@ export async function updateClient(clientId: string, body: UpdateClientRequest, 
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/clients`, {
-        method: 'GET',
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
+        method: 'PATCH',
         headers: {
           'X-API-KEY': assemblyApiKey,
         },
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) {
