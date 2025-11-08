@@ -52,7 +52,7 @@
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
     "copilot-design-system": "^0.6.23",
-    "copilot-node-sdk": "^3.17.0",
+    "copilot-node-sdk": "^3.16.0",
     "copy-container-react": "^1.0.11",
     "date-fns": "4.1.0",
     "embla-carousel-react": "8.5.1",
