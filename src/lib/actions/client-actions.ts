@@ -250,6 +250,8 @@ function createSDK(token: string) {
 export async function listClients(
   token?: string,
 ): Promise<ListClientsResponse> {
+    console.log(`-----------API KEY`, process.env.COPILOT_API_KEY)
+
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly

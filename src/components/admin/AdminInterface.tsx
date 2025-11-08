@@ -114,6 +114,11 @@ export function AdminInterface({
     });
   };
 
+  // console.log(`TOKEN`,token)
+  // console.log(`APP API key`,process.env.COPILOT_API_KEY)
+  //   console.log(`Reg API key`,process.env.ASSEMBLY_API_KEY)
+
+
   return (
     <div className="space-y-8">
       {/* Configuration Section */}
