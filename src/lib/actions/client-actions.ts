@@ -240,7 +240,7 @@ function createSDK(token: string) {
   if (!token) {
     throw new Error('Token is required');
   }
-  process.env.COPILOT_DEBUG = 'true'
+  // process.env.COPILOT_DEBUG = 'true'
 
   return copilotApi({
     apiKey: copilotApiKey,
@@ -413,9 +413,8 @@ export async function listFormResponses(formId: string, token?: string) {
         throw new Error('Token is required in production');
       }
 
-      const sdk = createSDK(token);console.log(`finding form responses for form ${formId}`)
+      const sdk = createSDK(token);
       const data = await sdk.listFormResponses({ id: formId });
-      console.log(`found responses`, data)
       revalidatePath('/internal');
       return data;
     }

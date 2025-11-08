@@ -177,7 +177,9 @@ export function useFormData({ clientId }: UseFormDataOptions) {
       fileName?: string;
       fileId?: string
     }) => {
+      console.log('updateCheckFileStatus called with:', updatedFileInfo);
       setFormData((prev) => {
+        console.log('Current backgroundCheckFiles:', prev.backgroundCheckFiles);
         const updatedFiles = prev.backgroundCheckFiles.map((file) =>
           file.checkName === updatedFileInfo.checkName
             ? {
@@ -188,6 +190,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
               }
             : file,
         );
+        console.log('Updated backgroundCheckFiles:', updatedFiles);
 
         return { ...prev, backgroundCheckFiles: updatedFiles };
       });

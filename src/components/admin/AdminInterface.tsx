@@ -7,6 +7,7 @@ import type {
   ListFileChannelsResponse,
   Client,
 } from '@/lib/actions/client-actions';
+import { BACKGROUND_CHECK_OPTIONS } from '@/types';
 
 // COMPONENT IMPORTS
 import { ConfigurationSection } from '@/components/admin/ConfigurationSection';
@@ -152,6 +153,29 @@ export function AdminInterface({
         updateFormData={updateFormData}
       />
 
+      {/* File Upload Sections for Standard Checks */}
+      {formData.fileChannelId && formData.folderCreated && !isClientChanging && (
+        <div className="space-y-4">
+          {formData.backgroundCheckFiles
+            ?.filter((backgroundCheckFile) => {
+              // Only show files for checks that are in the standard options
+              const availableChecks = BACKGROUND_CHECK_OPTIONS[formData.formType];
+              return (availableChecks as readonly string[]).includes(backgroundCheckFile.checkName);
+            })
+            .map((backgroundCheckFile) => (
+              <FileUploadSection
+                key={`${selectedClient?.id}-standard-${backgroundCheckFile.checkName}`}
+                formData={formData}
+                backgroundCheckFile={backgroundCheckFile}
+                onFileCreated={onFileCreated}
+                updateCheckFileStatus={updateCheckFileStatus}
+                setFileItem={handleSetFileItem}
+                token={token}
+              />
+            ))}
+        </div>
+      )}
+
       {/* Custom Checks */}
       <CustomChecksSection
         formType={formData.formType}
@@ -162,6 +186,29 @@ export function AdminInterface({
         updateFormData={updateFormData}
       />
 
+      {/* File Upload Sections for Custom Checks */}
+      {formData.fileChannelId && formData.folderCreated && !isClientChanging && (
+        <div className="space-y-4">
+          {formData.backgroundCheckFiles
+            ?.filter((backgroundCheckFile) => {
+              // Only show files for checks that are NOT in the standard options (i.e., custom checks)
+              const availableChecks = BACKGROUND_CHECK_OPTIONS[formData.formType];
+              return !(availableChecks as readonly string[]).includes(backgroundCheckFile.checkName);
+            })
+            .map((backgroundCheckFile) => (
+              <FileUploadSection
+                key={`${selectedClient?.id}-custom-${backgroundCheckFile.checkName}`}
+                formData={formData}
+                backgroundCheckFile={backgroundCheckFile}
+                onFileCreated={onFileCreated}
+                updateCheckFileStatus={updateCheckFileStatus}
+                setFileItem={handleSetFileItem}
+                token={token}
+              />
+            ))}
+        </div>
+      )}
+
       {/* Status and Memo */}
       <StatusSection
         status={formData.status}
@@ -170,30 +217,12 @@ export function AdminInterface({
       />
 
       {formData.fileChannelId ? (
-        formData.folderCreated && !isClientChanging ? ( // Add !isClientChanging
-          <div className="space-y-4">
-            {formData.backgroundCheckFiles?.map(
-              (backgroundCheckFile, index) => (
-                <FileUploadSection
-                  key={`${selectedClient?.id}-${index}`} // Add client ID to key
-                  formData={formData}
-                  backgroundCheckFile={backgroundCheckFile}
-                  onFileCreated={onFileCreated}
-                  updateCheckFileStatus={updateCheckFileStatus}
-                  setFileItem={handleSetFileItem}
-                  token={token}
-                />
-              ),
-            )}
-          </div>
-        ) : (
-          !isClientChanging && ( // Only show when not changing clients
-            <CreateFolderSection
-              onFolderCreated={onFolderCreated}
-              updateFormData={updateFormData}
-              formData={formData}
-            />
-          )
+        !formData.folderCreated && !isClientChanging && (
+          <CreateFolderSection
+            onFolderCreated={onFolderCreated}
+            updateFormData={updateFormData}
+            formData={formData}
+          />
         )
       ) : (
         <div className="text-center py-8 text-gray-600">

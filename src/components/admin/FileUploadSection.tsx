@@ -60,8 +60,7 @@ export function FileUploadSection({
 }: FileUploadSectionProps) {
   // const searchParams = useSearchParams();
   // const token = searchParams.get('token') ?? undefined;
-
-  const checkName = backgroundCheckFile.checkName
+  
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -127,17 +126,17 @@ export function FileUploadSection({
     };
   }, [backgroundCheckFile.fileId]);
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
-  }, []);
+  };
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-  }, []);
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
 
@@ -145,19 +144,20 @@ export function FileUploadSection({
     if (files.length > 0) {
       handleFileUpload(files[0]);
     }
-  }, []);
+  };
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        handleFileUpload(files[0]);
-      }
-    },
-    [],
-  );
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  };
 
-  const handleFileUpload = useCallback(async (file: File) => {
+  const handleFileUpload = async (file: File) => {
+    // Get checkName directly from prop to avoid stale closure
+    const currentCheckName = backgroundCheckFile.checkName;
+    
+    
     // console.log(`FILE!:`, file);
     // Validate file type
     if (file.type !== 'application/pdf') {
@@ -236,17 +236,27 @@ export function FileUploadSection({
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      // Create file info object
-
+      // Create file info object - use currentCheckName from the start of this function
       const fileInfo: BackgroundCheckFile = {
-        checkName: checkName,
+        checkName: currentCheckName,
         fileUploaded: true,
         fileName: file.name,
         fileId: uploadFile.id,
       };
 
-      // update form data and save to db
+      // console.log('FileUploadSection - Creating file info for check:', currentCheckName);
+      // console.log('FileUploadSection - Full fileInfo:', fileInfo);
+      // console.log('FileUploadSection - About to call updateCheckFileStatus with checkName:', currentCheckName);
+
+      // Update the check file status directly
+      updateCheckFileStatus(fileInfo);
+      
+      // console.log('FileUploadSection - After calling updateCheckFileStatus');
+      
+      // Also call onFileCreated for any additional parent logic
       onFileCreated(fileInfo);
+      
+      // console.log('FileUploadSection - After calling onFileCreated');
 
       setTimeout(() => {
         setIsUploading(false);
@@ -258,7 +268,7 @@ export function FileUploadSection({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [formData.fileChannelId, folderName, checkName, onFileCreated]);
+  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -367,10 +377,10 @@ export function FileUploadSection({
               accept=".pdf"
               onChange={handleFileSelect}
               className="hidden"
-              id="file-upload"
+              id={`file-upload-${backgroundCheckFile.checkName}`}
             />
             <Button asChild variant="outline">
-              <label htmlFor="file-upload" className="cursor-pointer">
+              <label htmlFor={`file-upload-${backgroundCheckFile.checkName}`} className="cursor-pointer">
                 Choose File
               </label>
             </Button>
