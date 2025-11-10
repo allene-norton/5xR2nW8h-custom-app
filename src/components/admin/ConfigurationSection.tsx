@@ -113,67 +113,42 @@ export function ConfigurationSection({
 
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
-  // const handleClientChange = (option: any) => {
-  //   if (option) {
-  //     onClientSelect(option.client);
-  //     updateFormData({ client: option.client.id });
-  //     console.log(`updateFormData called from Configuration Section`)
-
-  //     // Only pre-fill if identification is empty
-  //     if (!formData.identification.firstName) {
-  //       const updatedIdentification = {
-  //         firstName: option.client.givenName || '',
-  //         lastName: option.client.familyName || '',
-  //         streetAddress: option.client.customFields?.streetAddress || '',
-  //         streetAddress2: option.client.customFields?.streetAddress2 || '',
-  //         city: option.client.customFields?.city || '',
-  //         state: option.client.customFields?.state || '',
-  //         postalCode: option.client.customFields?.postalCode || '',
-  //         birthdate: option.client.customFields?.birthDate || '',
-  //       };
-
-  //       updateIdentification(updatedIdentification);
-  //     }
-  //   }
-  // };
-
   const handleClientChange = useCallback(
-    (option: any) => {
-      if (option && option.client.id !== selectedClient?.id) {
-        // Only update if we're actually changing clients
-        onClientSelect(option.client);
-
-        // Batch all updates into a single call
-        const updates: Partial<BackgroundCheckFormData> = {
-          client: option.client.id,
+  (option: any) => {
+    if (option && option.client.id !== selectedClient?.id) {
+      // Only update if we're actually changing clients
+      onClientSelect(option.client);
+      
+      // Batch all updates into a single call
+      const updates: Partial<BackgroundCheckFormData> = {
+        client: option.client.id,
+      };
+      
+      // Update identification if client data doesn't match current form data
+      if (formData.identification.firstName !== option.client.givenName) {
+        updates.identification = {
+          firstName: option.client.givenName || '',
+          lastName: option.client.familyName || '',
+          streetAddress: option.client.customFields?.streetAddress || '',
+          streetAddress2: option.client.customFields?.streetAddress2 || '',
+          city: option.client.customFields?.city || '',
+          state: option.client.customFields?.state || '',
+          postalCode: option.client.customFields?.postalCode || '',
+          birthdate: option.client.customFields?.birthDate || '',
         };
-
-        // Only pre-fill identification if it's currently empty
-        if (formData.identification.firstName !== option.client.givenName) {
-          updates.identification = {
-            firstName: option.client.givenName || '',
-            lastName: option.client.familyName || '',
-            streetAddress: option.client.customFields?.streetAddress || '',
-            streetAddress2: option.client.customFields?.streetAddress2 || '',
-            city: option.client.customFields?.city || '',
-            state: option.client.customFields?.state || '',
-            postalCode: option.client.customFields?.postalCode || '',
-            birthdate: option.client.customFields?.birthDate || '',
-          };
-        }
-
-        // Single update call instead of multiple
-        updateFormData(updates);
-        console.log(`updateFormData called from config section`)
       }
-    },
-    [
-      selectedClient?.id,
-      formData.identification.firstName,
-      onClientSelect,
-      updateFormData,
-    ],
-  );
+      
+      // Single update call instead of multiple
+      updateFormData(updates);
+      console.log(`updateFormData called from config section`);
+    }
+  },
+  [
+    selectedClient?.id,
+    onClientSelect,
+    updateFormData,
+  ],
+);
 
   return (
     <Card>
