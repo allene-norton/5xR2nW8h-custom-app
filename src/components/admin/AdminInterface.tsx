@@ -108,6 +108,7 @@ export function AdminInterface({
       updateFormData({
         fileChannelId: selectedClientFileChannel.id,
       });
+      console.log(`updateFormData called from AdminInterface`)
     } else if (!selectedClientFileChannel && formData.fileChannelId) {
       console.log(`did not find client channel`)
       updateFormData({

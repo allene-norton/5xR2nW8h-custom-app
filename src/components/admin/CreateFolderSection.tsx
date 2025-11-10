@@ -12,7 +12,7 @@ import { BackgroundCheckFormData, FORM_TYPE_INFO } from '@/types';
 import { createFolder } from '@/lib/actions/client-actions';
 
 interface CreateFolderSectionProps {
-  updateFormData: (updates: { folderCreated?: boolean }) => void;
+  updateFormData: (updates: Partial<BackgroundCheckFormData>) => void; // Changed this line
   formData: BackgroundCheckFormData;
   onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
 }
@@ -59,6 +59,7 @@ export function CreateFolderSection({
 
       const updateCreateFolder = {folderCreated: true}
       updateFormData(updateCreateFolder);
+      console.log(`updateFormData called from CreateFolder`)
       onFolderCreated?.(updateCreateFolder)
     } catch (error) {
       console.error('Error creating folder:', error);

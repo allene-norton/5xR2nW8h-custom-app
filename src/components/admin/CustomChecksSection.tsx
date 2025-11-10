@@ -19,7 +19,7 @@ interface CustomChecksSectionProps {
   selectedChecks: string[];
   selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
-  updateFormData: (updates: { backgroundChecks: string[] }) => void;
+  updateFormData: (updates: { backgroundChecks: string[], backgroundCheckFiles: BackgroundCheckFiles }) => void;
   onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
 }
@@ -40,25 +40,45 @@ export function CustomChecksSection({
   );
 
   const handleAddCustomCheck = () => {
-    if (!customCheckName.trim()) return;
-
-    const trimmedName = customCheckName.trim();
-
-    // Check if check already exists
-    if (selectedChecks.includes(trimmedName)) {
-      return; // Could show error message here
-    }
-
-    // Add the custom check to selected checks
-    const newChecks = [...selectedChecks, trimmedName];
-    updateFormData({ backgroundChecks: newChecks });
-    setCustomCheckName('');
+  if (!customCheckName.trim()) return;
+  const trimmedName = customCheckName.trim();
+  
+  // Check if check already exists
+  if (selectedChecks.includes(trimmedName)) {
+    return; // Could show error message here
+  }
+  
+  // Add the custom check to selected checks AND create the corresponding file object
+  const newChecks = [...selectedChecks, trimmedName];
+  const newBackgroundCheckFile: BackgroundCheckFile = {
+    checkName: trimmedName,
+    fileUploaded: false,
+    fileName: '',
+    fileId: '',
   };
+  
+  updateFormData({ 
+    backgroundChecks: newChecks,
+    backgroundCheckFiles: [...backgroundCheckFiles, newBackgroundCheckFile]
+  });
+  
+  console.log(`updateFormData called from CustomChecks setChecks`);
+  setCustomCheckName('');
+};
 
-  const handleRemoveCustomCheck = (checkToRemove: string) => {
-    const newChecks = selectedChecks.filter((check) => check !== checkToRemove);
-    updateFormData({ backgroundChecks: newChecks });
-  };
+const handleRemoveCustomCheck = (checkToRemove: string) => {
+  const newChecks = selectedChecks.filter((check) => check !== checkToRemove);
+  const newBackgroundCheckFiles = backgroundCheckFiles.filter(
+    (file) => file.checkName !== checkToRemove
+  );
+  
+  updateFormData({ 
+    backgroundChecks: newChecks,
+    backgroundCheckFiles: newBackgroundCheckFiles
+  });
+  
+  console.log(`updateFormData called from CustomChecks removechecks`);
+};
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
