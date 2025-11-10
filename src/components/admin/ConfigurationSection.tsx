@@ -175,15 +175,16 @@ export function ConfigurationSection({
         updateIdentification(updatedIdentification);
       }
 
+      // console.log(fileChannelsResponse.data)
       // Find and set file channel
-      const selectedClientFileChannel = fileChannelsResponse?.data?.find(
-        (channel) => channel.clientId === option.client.id,
-      );
-      if (selectedClientFileChannel?.id) {
-        updateFormData({
-          fileChannelId: selectedClientFileChannel.id,
-        });
-      }
+      // const selectedClientFileChannel = fileChannelsResponse?.data?.find(
+      //   (channel) => channel.clientId === option.client.id,
+      // );
+      // if (selectedClientFileChannel?.id) {
+      //   updateFormData({
+      //     fileChannelId: selectedClientFileChannel.id,
+      //   });
+      // }
     }
   };
 

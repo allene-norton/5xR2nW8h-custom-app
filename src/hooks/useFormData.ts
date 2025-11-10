@@ -132,6 +132,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
     (updates: Partial<BackgroundCheckFormData>) => {
       setFormData((prev) => {
         const newData = { ...prev, ...updates };
+        console.log(`-----------updating form data with--------`, newData)
 
         // Auto-sync backgroundCheckFiles when backgroundChecks change
         if (updates.backgroundChecks) {

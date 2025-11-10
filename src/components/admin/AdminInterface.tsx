@@ -96,9 +96,32 @@ export function AdminInterface({
         data: formData,
       },
     ]);
+
+    // Handle file channel setting
+  if (selectedClient && fileChannelsResponse?.data) {
+    const selectedClientFileChannel = fileChannelsResponse.data.find(
+      (channel) => channel.clientId === selectedClient.id,
+    );
+    
+    if (selectedClientFileChannel?.id && formData.fileChannelId !== selectedClientFileChannel.id) {
+      console.log(`Found client channel`, selectedClientFileChannel.id)
+      updateFormData({
+        fileChannelId: selectedClientFileChannel.id,
+      });
+    } else if (!selectedClientFileChannel && formData.fileChannelId) {
+      console.log(`did not find client channel`)
+      updateFormData({
+        fileChannelId: undefined,
+      });
+    }
+  }
+
+
     // Reset loading after a short delay
-    setTimeout(() => setIsClientChanging(false), 100);
-  }, [selectedClient?.id]);
+    // setTimeout(() => setIsClientChanging(false), 100);
+
+    setIsClientChanging(false);
+  }, [selectedClient?.id, fileChannelsResponse?.data]);
 
   const handleSetFileItem = (fileObj: FileItem) => {
     if (isClientChanging) return; // Prevent updates during client changes
