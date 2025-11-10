@@ -27,62 +27,88 @@ export function useFormData({ clientId }: UseFormDataOptions) {
 
   // Load data from Upstash on mount
   useEffect(() => {
-    async function loadData() {
-      console.log('Loading data for clientId:', clientId); // Debug log
-      try {
-        const response = await fetch(`/api/form-data?clientId=${clientId}`);
-        console.log('API response status:', response.status); // Debug log
+  async function loadData() {
+    console.log('Loading data for clientId:', clientId); // Debug log
+    try {
+      const response = await fetch(`/api/form-data?clientId=${clientId}`);
+      console.log('API response status:', response.status); // Debug log
 
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Raw API data:', data); // Debug log
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Raw API data:', data); // Debug log
 
-          if (data) {
-            // Client has saved data - use it
-            const validated = FormDataSchema.safeParse(data);
-            console.log('Validation result:', validated); // Debug log
+        if (data) {
+          // Client has saved data - use it
+          const validated = FormDataSchema.safeParse(data);
+          console.log('Validation result:', validated); // Debug log
 
-            if (validated.success) {
-              console.log('Setting form data:', validated.data); // Debug log
-              setFormData(validated.data);
-              setHasUnsavedChanges(false);
-              setLastSaved(new Date()); // Set last saved to now since we just loaded saved data
-            } else {
-              console.error('Schema validation failed:', validated.error);
-            }
-          } else {
-            // No saved data for this client - reset to default
-            console.log('No saved data, resetting to default');
-            setFormData((prev) => ({
-              ...DEFAULT_FORM_DATA,
-              client: clientId, // Preserve the selected client
-            }));
+          if (validated.success) {
+            console.log('Setting form data:', validated.data); // Debug log
+            
+            // Instead of completely replacing formData, merge with existing data
+            // This preserves any client information that was pre-filled
+            setFormData(prev => {
+              // If the saved data has empty identification fields, preserve the pre-filled ones
+              const mergedIdentification = {
+                ...prev.identification,
+                ...validated.data.identification,
+                // Only overwrite if the saved data actually has values
+                firstName: validated.data.identification.firstName || prev.identification.firstName,
+                lastName: validated.data.identification.lastName || prev.identification.lastName,
+                streetAddress: validated.data.identification.streetAddress || prev.identification.streetAddress,
+                streetAddress2: validated.data.identification.streetAddress2 || prev.identification.streetAddress2,
+                city: validated.data.identification.city || prev.identification.city,
+                state: validated.data.identification.state || prev.identification.state,
+                postalCode: validated.data.identification.postalCode || prev.identification.postalCode,
+                birthdate: validated.data.identification.birthdate || prev.identification.birthdate,
+              };
+              
+              return {
+                ...validated.data,
+                identification: mergedIdentification,
+              };
+            });
+            
             setHasUnsavedChanges(false);
-            setLastSaved(null);
+            setLastSaved(new Date()); // Set last saved to now since we just loaded saved data
+          } else {
+            console.error('Schema validation failed:', validated.error);
           }
         } else {
-          console.error('API request failed:', response.statusText);
-          setFormData(DEFAULT_FORM_DATA);
+          // No saved data for this client - reset to default but preserve client
+          console.log('No saved data, resetting to default');
+          setFormData((prev) => ({
+            ...DEFAULT_FORM_DATA,
+            client: clientId, // Preserve the selected client
+            // Also preserve any identification that was pre-filled
+            identification: prev.identification.firstName ? prev.identification : DEFAULT_FORM_DATA.identification,
+          }));
+          setHasUnsavedChanges(false);
+          setLastSaved(null);
         }
-      } catch (error) {
-        console.error('Error loading form data:', error);
+      } else {
+        console.error('API request failed:', response.statusText);
         setFormData(DEFAULT_FORM_DATA);
-      } finally {
-        setIsLoading(false);
       }
-    }
-
-    if (clientId) {
-      setIsLoading(true); // Set loading when switching clients
-      loadData();
-    } else {
-      // No client selected - reset everything
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Error loading form data:', error);
       setFormData(DEFAULT_FORM_DATA);
-      setHasUnsavedChanges(false);
-      setLastSaved(null);
+    } finally {
+      setIsLoading(false);
     }
-  }, [clientId]);
+  }
+
+  if (clientId) {
+    setIsLoading(true); // Set loading when switching clients
+    loadData();
+  } else {
+    // No client selected - reset everything
+    setIsLoading(false);
+    setFormData(DEFAULT_FORM_DATA);
+    setHasUnsavedChanges(false);
+    setLastSaved(null);
+  }
+}, [clientId]);
 
   // Save to Upstash
   const saveToDatabase = useCallback(
