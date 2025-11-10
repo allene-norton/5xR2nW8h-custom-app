@@ -154,37 +154,63 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   );
 
   // Update form data with auto-sync for backgroundCheckFiles
-  const updateFormData = useCallback(
-    (updates: Partial<BackgroundCheckFormData>) => {
-      setFormData((prev) => {
-        const newData = { ...prev, ...updates };
-        console.log(`-----------updating form data with--------`, newData)
+  // const updateFormData = useCallback(
+  //   (updates: Partial<BackgroundCheckFormData>) => {
+  //     setFormData((prev) => {
+  //       const newData = { ...prev, ...updates };
+  //       console.log(`-----------updating form data with--------`, newData)
 
-        // Auto-sync backgroundCheckFiles when backgroundChecks change
-        if (updates.backgroundChecks) {
-          const existingFiles = prev.backgroundCheckFiles;
-          const newChecks = updates.backgroundChecks;
+  //       // Auto-sync backgroundCheckFiles when backgroundChecks change
+  //       if (updates.backgroundChecks) {
+  //         const existingFiles = prev.backgroundCheckFiles;
+  //         const newChecks = updates.backgroundChecks;
 
-          const updatedFiles = newChecks.map((checkName) => {
-            const existing = existingFiles.find(
-              (f) => f.checkName === checkName,
-            );
-            return existing || { checkName, fileUploaded: false };
-          });
+  //         const updatedFiles = newChecks.map((checkName) => {
+  //           const existing = existingFiles.find(
+  //             (f) => f.checkName === checkName,
+  //           );
+  //           return existing || { checkName, fileUploaded: false };
+  //         });
 
-          newData.backgroundCheckFiles = updatedFiles;
-        }
+  //         newData.backgroundCheckFiles = updatedFiles;
+  //       }
 
-        return newData;
-      });
-      setHasUnsavedChanges(true);
-      // Clear validation errors when user makes changes
-      if (Object.keys(validationErrors).length > 0) {
-        setValidationErrors({});
-      }
-    },
-    [validationErrors],
-  );
+  //       return newData;
+  //     });
+  //     setHasUnsavedChanges(true);
+  //     // Clear validation errors when user makes changes
+  //     if (Object.keys(validationErrors).length > 0) {
+  //       setValidationErrors({});
+  //     }
+  //   },
+  //   [validationErrors],
+  // );
+
+  const updateFormData = useCallback((updates: Partial<BackgroundCheckFormData>) => {
+  setFormData((prev) => {
+    // Check if the update would actually change anything
+    const newData = { ...prev, ...updates };
+    
+    // Deep comparison for identification object
+    const identificationChanged = updates.identification && 
+      JSON.stringify(prev.identification) !== JSON.stringify(newData.identification);
+    
+    // Simple comparison for other fields
+    const otherFieldsChanged = Object.keys(updates).some(key => {
+      if (key === 'identification') return false; // Already handled above
+      return prev[key as keyof BackgroundCheckFormData] !== updates[key as keyof BackgroundCheckFormData];
+    });
+    
+    if (!identificationChanged && !otherFieldsChanged) {
+      console.log('No changes detected, skipping update');
+      return prev; // No changes, return previous state
+    }
+    
+    console.log('updating form data with', newData);
+    return newData;
+  });
+  setHasUnsavedChanges(true);
+}, []);
 
   // Update nested identification data
   const updateIdentification = useCallback(
