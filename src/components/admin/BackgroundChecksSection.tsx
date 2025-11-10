@@ -26,7 +26,7 @@ interface BackgroundChecksSectionProps {
   selectedChecks: string[];
   selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
-  updateFormData: (updates: { backgroundChecks: string[] }) => void;
+  updateFormData: (updates: { backgroundChecks: string[], backgroundCheckFiles: BackgroundCheckFiles }) => void;
   onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
 }
@@ -43,20 +43,44 @@ export function BackgroundChecksSection({
 
   const requiredChecks: readonly string[] =
     FORM_TYPE_INFO[formType].requiredChecks;
-
-  const handleCheckChange = (checkName: string, checked: boolean) => {
-    const newChecks = checked
-      ? [...selectedChecks, checkName]
-      : selectedChecks.filter((check) => check !== checkName);
-
-    updateFormData({ backgroundChecks: newChecks });
-    console.log(`updateFormData called from AdminInterface`)
-  };
-
-  const isRequired = (checkName: string) => requiredChecks.includes(checkName);
+  
   const missingRequired = requiredChecks.filter(
     (check) => !selectedChecks.includes(check),
   );
+
+  const handleCheckChange = (checkName: string, checked: boolean) => {
+  const newChecks = checked
+    ? [...selectedChecks, checkName]
+    : selectedChecks.filter((check) => check !== checkName);
+  
+  // Create or remove corresponding backgroundCheckFile entries
+  let newBackgroundCheckFiles = [...(backgroundCheckFiles || [])];
+  
+  if (checked) {
+    // Add new file entry if it doesn't exist
+    const existingFile = newBackgroundCheckFiles.find(f => f.checkName === checkName);
+    if (!existingFile) {
+      const newFile: BackgroundCheckFile = {
+        checkName,
+        fileName: '',
+        fileUploaded: false,
+        fileId: '',
+      };
+      newBackgroundCheckFiles.push(newFile);
+    }
+  } else {
+    // Remove file entry when unchecking
+    newBackgroundCheckFiles = newBackgroundCheckFiles.filter(f => f.checkName !== checkName);
+  }
+  
+  updateFormData({ 
+    backgroundChecks: newChecks,
+    backgroundCheckFiles: newBackgroundCheckFiles
+  });
+  console.log(`updateFormData called from BackgroundChecks`);
+};
+
+const isRequired = (checkName: string) => requiredChecks.includes(checkName);
 
   return (
     <Card>
