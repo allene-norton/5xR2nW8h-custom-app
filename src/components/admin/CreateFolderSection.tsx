@@ -59,6 +59,7 @@ export function CreateFolderSection({
 
       const updateCreateFolder = {folderCreated: true}
       updateFormData(updateCreateFolder);
+      console.log(`updateFormData called from CreateFolder`)
       onFolderCreated?.(updateCreateFolder)
     } catch (error) {
       console.error('Error creating folder:', error);

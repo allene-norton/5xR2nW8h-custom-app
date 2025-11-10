@@ -52,12 +52,14 @@ export function CustomChecksSection({
     // Add the custom check to selected checks
     const newChecks = [...selectedChecks, trimmedName];
     updateFormData({ backgroundChecks: newChecks });
+    console.log(`updateFormData called from CustomChecks setChecks`)
     setCustomCheckName('');
   };
 
   const handleRemoveCustomCheck = (checkToRemove: string) => {
     const newChecks = selectedChecks.filter((check) => check !== checkToRemove);
     updateFormData({ backgroundChecks: newChecks });
+    console.log(`updateFormData called from CustomChecks removechecks`)
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {

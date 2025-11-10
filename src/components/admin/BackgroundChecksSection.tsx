@@ -50,6 +50,7 @@ export function BackgroundChecksSection({
       : selectedChecks.filter((check) => check !== checkName);
 
     updateFormData({ backgroundChecks: newChecks });
+    console.log(`updateFormData called from AdminInterface`)
   };
 
   const isRequired = (checkName: string) => requiredChecks.includes(checkName);

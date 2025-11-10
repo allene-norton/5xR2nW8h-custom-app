@@ -158,6 +158,7 @@ export function ConfigurationSection({
     if (option) {
       onClientSelect(option.client);
       updateFormData({ client: option.client.id });
+      console.log(`updateFormData called from Configuration Section`)
 
       // Only pre-fill if identification is empty
       if (!formData.identification.firstName) {
