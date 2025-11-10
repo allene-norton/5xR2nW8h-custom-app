@@ -39,6 +39,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
                 </div>
               </div>
               <div className="text-sm text-gray-600 space-y-1">
+                <h2 className="text-1xl font-bold text-gray-900">A People-Focused Approach to Screening</h2>
                 <p> Contact Us: admin@cleartechbackground.com</p>
               </div>
             </div>
@@ -99,14 +100,14 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
 
           {/* Letter Body */}
           <div className="prose prose-gray max-w-none">
-            <p className="text-gray-700 leading-relaxed">
+            {/* <p className="text-gray-700 leading-relaxed">
               Dear {formData.identification.firstName} {formData.identification.lastName},
-            </p>
+            </p> */}
 
             <p className="text-gray-700 leading-relaxed">
               We are pleased to provide you with the results of your background screening conducted by ClearTech
               Background Services. This comprehensive screening was performed in accordance with the requirements for{" "}
-              <strong>{formTypeInfo.title.toLowerCase()}</strong> and includes the background checks listed below.
+              the State of Illinois and includes the background checks listed below:
             </p>
 
             {/* Background Checks Performed */}
@@ -128,9 +129,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
             {/* Status-specific content */}
             {formData.status === "cleared" && (
               <p className="text-gray-700 leading-relaxed">
-                <strong className="text-green-700">CLEARED:</strong> Your background screening has been completed
-                successfully. All checks have passed the required standards, and no disqualifying information was found.
-                You may proceed with your application process.
+                <strong className="text-green-700">CLEARED:</strong> The results of this screening <strong>have been successfully completed and cleared</strong>. If you have any questions or would like additional information regarding these results, please contact our office.
               </p>
             )}
 
@@ -165,7 +164,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
               This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
               applicable state and local laws.</p>
               <p className="text-gray-700 leading-relaxed"> If you have any questions about these results or need additional
-              information, please contact our office at admin@cleartechbackground.com
+              information, please contact our office at admin@cleartechbackground.com.
             </p><br/>
 
             <p className="text-gray-700 leading-relaxed">Thank you for choosing ClearTech Background Services.</p>
@@ -175,9 +174,8 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
                 Sincerely,
                 <br />
                 <br />
-                <strong>ClearTech Background Services Team</strong>
-                <br />
-                <span className="text-sm text-gray-600">Professional Background Screening Division</span>
+                <strong>ClearTech Admin Team</strong>
+                <h2 className="text-1xl font-bold text-gray-900">A People-Focused Approach to Screening</h2>
               </p>
             </div>
           </div>

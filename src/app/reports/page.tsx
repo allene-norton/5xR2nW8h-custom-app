@@ -22,10 +22,11 @@ import { Badge } from '../../components/ui/badge';
 function ReportsContent() {
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
+  const tempClientId = searchParams.get('clientId')
+  console.log(`params client id`, tempClientId)
 
   
 
-  const tempClientId = '8b891bf8-1827-4574-9290-1e76fa33dc41';
 
   const [loggedInUser, setLoggedInUser] = useState<any>(null);
   const [userLoading, setUserLoading] = useState<any>(true);
@@ -37,7 +38,7 @@ function ReportsContent() {
     clientId: loggedInUser?.id || undefined,
   });
 
-  console.log(`client formData`, formData)
+  // console.log(`client formData`, formData)
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
 
@@ -45,9 +46,10 @@ function ReportsContent() {
     const fetchUserInfo = async () => {
       try {
         setUserLoading(true);
-        console.log(`retrieveing client from token`, token)
-        const userInfo = await getLoggedInUser(token);
-        console.log(userInfo.client);
+        // console.log(`retrieveing client from token`, token)
+        // @ts-ignore
+        const userInfo = await getLoggedInUser(tempClientId, token);
+        // console.log(userInfo.client);
         setLoggedInUser(userInfo.client);
       } catch (error) {
         console.error('Error fetching user info:', error);
@@ -71,7 +73,7 @@ function ReportsContent() {
     const fetchReportFiles = async () => {
       if (!shouldFetchFiles) return;
 
-      console.log(`client side channel:`, formData?.fileChannelId);
+      // console.log(`client side channel:`, formData?.fileChannelId);
       console.log('Fetching files...');
 
       try {
@@ -82,7 +84,7 @@ function ReportsContent() {
           token,
         );
 
-        console.log('Files fetched:', files);
+        // console.log('Files fetched:', files);
 
         setReportFiles(files);
       } catch (error) {

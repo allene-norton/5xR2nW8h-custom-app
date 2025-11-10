@@ -33,7 +33,7 @@ interface InternalPageProps {
 
 export default function InternalPage({ searchParams }: InternalPageProps) {
   // console.log(`SEARCHPARAMS`, searchParams)
-  console.log(`token`, searchParams.token);
+  // console.log(`token`, searchParams.token);
   const token = searchParams.token;
   // ----------- STATES-------------------------------------------
   // CLIENTS STATES
@@ -115,6 +115,8 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
         if (!response.data) {
           throw new Error('No file channel data returned from server');
         }
+
+        console.log(`list channels response`, response)
 
         setFileChannelsResponse(response);
       } catch (error) {

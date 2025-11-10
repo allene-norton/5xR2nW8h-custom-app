@@ -1,7 +1,7 @@
 'use client';
 
 import type React from 'react';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef} from 'react';
 
 import { useSearchParams } from 'next/navigation';
 
@@ -37,6 +37,7 @@ import { FORM_TYPE_INFO } from '../../types';
 
 // API/SDK ACTIONS IMPORTS
 import { createFile, retrieveFile } from '@/lib/actions/client-actions';
+import { FileItem } from '@/components/admin/AdminInterface';
 
 interface FileUploadSectionProps {
   backgroundCheckFile: BackgroundCheckFile;
@@ -44,7 +45,8 @@ interface FileUploadSectionProps {
   onFileCreated: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
   onFileClick?: () => void;
-  token?: string
+  token?: string;
+  setFileItem?: (fileObj: FileItem) => void
 }
 
 export function FileUploadSection({
@@ -53,10 +55,12 @@ export function FileUploadSection({
   onFileCreated,
   updateCheckFileStatus,
   onFileClick,
+  setFileItem,
   token
 }: FileUploadSectionProps) {
   // const searchParams = useSearchParams();
   // const token = searchParams.get('token') ?? undefined;
+  
 
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
@@ -69,20 +73,70 @@ export function FileUploadSection({
     type: string;
   } | null>(null);
 
+  const fileItemSetRef = useRef(new Set<string>());
+
+
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
   const folderName = `ClearTech Reports - ${formTypeName}`;
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
+
+
+  useEffect(() => {
+    const setUploadedFileItem = async () => {
+      // Only proceed if we have the required data and haven't already set this file item
+      if (
+        backgroundCheckFile.fileUploaded && 
+        backgroundCheckFile.fileId && 
+        setFileItem &&
+        !fileItemSetRef.current.has(backgroundCheckFile.fileId)
+      ) {
+        try {
+          const getFileForPreview = await retrieveFile(backgroundCheckFile.fileId, token);
+          const fileItem: FileItem = {
+            id: backgroundCheckFile.fileId,
+            name: backgroundCheckFile.fileName || `ClearTech Uploaded File ${backgroundCheckFile.checkName}`,
+            type: 'uploaded',
+            url: getFileForPreview.downloadUrl,
+            data: null
+          };
+          
+          setFileItem(fileItem);
+          // Mark this file ID as already processed
+          fileItemSetRef.current.add(backgroundCheckFile.fileId);
+        } catch (error) {
+          console.error('Error setting uploaded file item:', error);
+        }
+      }
+    };
+
+    setUploadedFileItem();
+  }, [
+    backgroundCheckFile.fileUploaded, 
+    backgroundCheckFile.fileId, 
+    backgroundCheckFile.fileName, 
+    backgroundCheckFile.checkName, 
+    token
+    // Remove setFileItem from dependencies to break the loop
+  ]);
+
+  // Clear the tracking when the component unmounts or file changes
+  useEffect(() => {
+    return () => {
+      fileItemSetRef.current.clear();
+    };
+  }, [backgroundCheckFile.fileId]);
+
+  const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
-  }, []);
+  };
 
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
+  const handleDragLeave = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-  }, []);
+  };
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
 
@@ -90,20 +144,21 @@ export function FileUploadSection({
     if (files.length > 0) {
       handleFileUpload(files[0]);
     }
-  }, []);
+  };
 
-  const handleFileSelect = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = e.target.files;
-      if (files && files.length > 0) {
-        handleFileUpload(files[0]);
-      }
-    },
-    [],
-  );
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      handleFileUpload(files[0]);
+    }
+  };
 
-  const handleFileUpload = useCallback(async (file: File) => {
-    console.log(`FILE!:`, file);
+  const handleFileUpload = async (file: File) => {
+    // Get checkName directly from prop to avoid stale closure
+    const currentCheckName = backgroundCheckFile.checkName;
+    
+    
+    // console.log(`FILE!:`, file);
     // Validate file type
     if (file.type !== 'application/pdf') {
       setUploadError('Only PDF files are allowed for background reports');
@@ -132,12 +187,12 @@ export function FileUploadSection({
         });
       }, 200);
 
-      console.log('=== DEBUG: Starting file upload ===');
-      console.log('formData.fileChannelId:', formData.fileChannelId);
-      console.log('folderName:', folderName);
-      console.log('file.name:', file.name);
-      console.log('file type:', file.type);
-      console.log('file size:', file.size);
+      // console.log('=== DEBUG: Starting file upload ===');
+      // console.log('formData.fileChannelId:', formData.fileChannelId);
+      // console.log('folderName:', folderName);
+      // console.log('file.name:', file.name);
+      // console.log('file type:', file.type);
+      // console.log('file size:', file.size);
 
       // Check if required values exist
       if (!formData.fileChannelId) {
@@ -161,13 +216,13 @@ export function FileUploadSection({
 
       const base64String = btoa(binaryString);
 
-      console.log('About to call createFile with base64:', {
-        channelId: formData.fileChannelId,
-        folderName,
-        fileName: file.name,
-        base64Length: base64String.length,
-        token: token
-      });
+      // console.log('About to call createFile with base64:', {
+      //   channelId: formData.fileChannelId,
+      //   folderName,
+      //   fileName: file.name,
+      //   base64Length: base64String.length,
+      //   token: token
+      // });
 
       const uploadFile = await createFile(
         formData.fileChannelId!,
@@ -176,22 +231,32 @@ export function FileUploadSection({
         base64String,
         token
       );
-      console.log('createFile completed', uploadFile);
+      // console.log('createFile completed', uploadFile);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
-      // Create file info object
-
+      // Create file info object - use currentCheckName from the start of this function
       const fileInfo: BackgroundCheckFile = {
-        checkName: backgroundCheckFile.checkName,
+        checkName: currentCheckName,
         fileUploaded: true,
         fileName: file.name,
         fileId: uploadFile.id,
       };
 
-      // update form data and save to db
+      // console.log('FileUploadSection - Creating file info for check:', currentCheckName);
+      // console.log('FileUploadSection - Full fileInfo:', fileInfo);
+      // console.log('FileUploadSection - About to call updateCheckFileStatus with checkName:', currentCheckName);
+
+      // Update the check file status directly
+      updateCheckFileStatus(fileInfo);
+      
+      // console.log('FileUploadSection - After calling updateCheckFileStatus');
+      
+      // Also call onFileCreated for any additional parent logic
       onFileCreated(fileInfo);
+      
+      // console.log('FileUploadSection - After calling onFileCreated');
 
       setTimeout(() => {
         setIsUploading(false);
@@ -203,7 +268,7 @@ export function FileUploadSection({
       setIsUploading(false);
       setUploadProgress(0);
     }
-  }, [formData.fileChannelId, folderName, backgroundCheckFile.checkName, onFileCreated]);
+  };
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -224,6 +289,18 @@ export function FileUploadSection({
         filename: backgroundCheckFile.fileName!,
         type: fileType,
       });
+
+      if (setFileItem) {
+        const fileItem: FileItem = {
+          id: fileId,
+          name: backgroundCheckFile.fileName || `ClearTech Uploaded File ${backgroundCheckFile.checkName}`,
+          type: 'uploaded',
+          url: getFileForPreview.downloadUrl,
+          data: null
+        };
+        setFileItem(fileItem);
+      }
+
       // onFileClick?.();
     } catch (error) {
       console.error('Error previewing file:', error);
@@ -300,10 +377,10 @@ export function FileUploadSection({
               accept=".pdf"
               onChange={handleFileSelect}
               className="hidden"
-              id="file-upload"
+              id={`file-upload-${backgroundCheckFile.checkName}`}
             />
             <Button asChild variant="outline">
-              <label htmlFor="file-upload" className="cursor-pointer">
+              <label htmlFor={`file-upload-${backgroundCheckFile.checkName}`} className="cursor-pointer">
                 Choose File
               </label>
             </Button>

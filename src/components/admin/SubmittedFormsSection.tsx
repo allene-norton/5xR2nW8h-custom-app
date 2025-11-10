@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import {
   Card,
   CardContent,
@@ -17,23 +17,27 @@ import {
   listForms,
   listFormResponses,
   FormResponse,
+  FormResponseField,
   FormResponseArray,
   ContractArray,
   ContractsResponse,
   Contract,
-  listContracts
+  listContracts,
 } from '@/lib/actions/client-actions';
 // import { Contract } from 'copilot-design-system/dist/icons';
+import { FileItem } from '@/components/admin/AdminInterface';
 
 interface SubmittedFormsSectionProps {
   clientId: string;
   variant?: 'admin' | 'client';
+  setFileItem?: (fileObj: FileItem) => void;
 }
 
 export function SubmittedFormsSection({
-  clientId, variant
+  clientId,
+  variant,
+  setFileItem,
 }: SubmittedFormsSectionProps) {
-
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
 
@@ -50,33 +54,27 @@ export function SubmittedFormsSection({
 
   const isLoading = isLoadingForms || isLoadingContracts;
 
-
   // Form Loading
-  const loadForms = async () => {
+  const loadForms = useCallback(async () => {
     if (!clientId) {
       setForms([]);
       return;
     }
-
     setIsLoadingForms(true);
     setError(null);
-
     try {
       // get all workspace forms
       const formsData = await listForms(token);
-
       if ('error' in formsData) {
         console.error('Error fetching forms:', formsData.error);
         return;
       }
-
       const forms = formsData.data;
-
+      
       // get responses for all forms
       const allFormResponsesPromises =
-        forms?.map(async (form) => { //error has any type when using sdk but need to keep for api development
+        forms?.map(async (form) => {
           try {
-            // In dev mode, only formId is needed. In production need to pass a token
             const responses = await listFormResponses(form.id!, token);
             return responses || [];
           } catch (err) {
@@ -84,75 +82,107 @@ export function SubmittedFormsSection({
             return [];
           }
         }) || [];
-
-      const allResponsesArrays = await Promise.all(allFormResponsesPromises);
       
+      const allResponsesArrays = await Promise.all(allFormResponsesPromises);
       const allResponses = allResponsesArrays
         .flatMap(
           (responseArray) =>
             ('data' in responseArray ? responseArray.data : []) || [],
         )
         .filter((response) => response !== null);
-
+      
       // Filter responses where the recipient matches the clientId
       const clientForms = allResponses.filter(
         (response) => response.clientId === clientId,
       );
-
+      
       setForms(clientForms as FormResponseArray);
+      
+      if (setFileItem) {
+        clientForms.forEach((form: FormResponse) => {
+          if (form.formFields) {
+            Object.values(form.formFields).forEach(
+              (field: FormResponseField) => {
+                if (field.attachmentUrls && field.attachmentUrls.length > 0) {
+                  field.attachmentUrls.forEach((url: string, index: number) => {
+                    const fileItem: FileItem = {
+                      id: `${form.id}-attachment-${index}`,
+                      name: `${form.formName || 'Form'} - Attachment ${index + 1}`,
+                      type: 'submitted',
+                      url: url,
+                      data: null,
+                    };
+                    setFileItem(fileItem);
+                  });
+                }
+              },
+            );
+          }
+        });
+      }
     } catch (err) {
       setError('Failed to load client forms');
       console.error('Error loading client forms:', err);
     } finally {
       setIsLoadingForms(false);
     }
-  };
+  }, [clientId, token]);
 
-  // Contract Loading - add function to retrieve contracts for client
-  const loadContracts = async () => {
+  const loadContracts = useCallback(async () => {
     if (!clientId) {
       setContracts([]);
       return;
     }
-
     setIsLoadingContracts(true);
     setError(null);
-
     try {
-      // get all contracts for client
-      console.log(`loading contracts for client`, clientId)
+      // console.log(`loading contracts for client`, clientId);
       const contractsData = await listContracts(clientId, token);
-      // console.log(`ContractsData:`, contractsData);
-
+      
       if ('error' in contractsData) {
         console.error('Error fetching contracts:', contractsData.error);
         return;
       }
-
+      
       const contracts = contractsData.data;
-      console.log(`all found contracts for client`, contracts)
-      const signedContracts = contracts.filter((contract: Contract) => contract.status === "signed");
-
-
-      console.log(`Signed Contracts:`, signedContracts)
-
-    
-
+      const signedContracts = contracts.filter(
+        (contract: Contract) => contract.status === 'signed',
+      );
+      
       setContracts(signedContracts as ContractArray);
+      
+      if (setFileItem) {
+        signedContracts.forEach((contract: Contract, index: number) => {
+          if (contract.signedFileUrl) {
+            const fileItem: FileItem = {
+              id: contract.id,
+              name: contract.name || `Signed Contract ${index + 1}`,
+              type: 'submitted',
+              url: contract.signedFileUrl,
+              data: null
+            };
+            setFileItem(fileItem);
+          }
+        });
+      }
     } catch (err) {
       setError('Failed to load client contracts');
-      console.error('Error loading client conracts:', err);
+      console.error('Error loading client contracts:', err);
     } finally {
       setIsLoadingContracts(false);
     }
-  };
-
-
+  }, [clientId, token]);
 
   useEffect(() => {
     loadForms();
     loadContracts();
-  }, [clientId]);
+  }, [loadForms, loadContracts]); // Now we can safely include them
+
+  // Update the refresh button onClick
+  const handleRefresh = useCallback(() => {
+    loadForms();
+    loadContracts();
+  }, [loadForms, loadContracts]);
 
   return (
     <Card>
@@ -165,7 +195,7 @@ export function SubmittedFormsSection({
           <Button
             variant="outline"
             size="sm"
-            onClick={loadForms}
+            onClick={handleRefresh}
             disabled={isLoading || !clientId}
             className="flex items-center space-x-2 bg-transparent"
           >
@@ -176,8 +206,9 @@ export function SubmittedFormsSection({
           </Button>
         </div>
         <CardDescription>
-          {variant === 'client'? 'Your submitted forms and documents': 'Documents submitted by the client through the portal'}
-          
+          {variant === 'client'
+            ? 'Your submitted forms and documents'
+            : 'Documents submitted by the client through the portal'}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -210,13 +241,9 @@ export function SubmittedFormsSection({
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {forms.map((form: FormResponse) => (
-              <FormCard
-                key={form.id}
-                formResponse={form}
-                variant={variant}
-              />
+              <FormCard key={form.id} formResponse={form} variant={variant} />
             ))}
-             {contracts.map((contract: Contract) => (
+            {contracts.map((contract: Contract) => (
               <ContractCard
                 key={contract.id}
                 contract={contract}

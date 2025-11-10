@@ -15,9 +15,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Missing clientId' }, { status: 400 });
     }
 
-    console.log('Attempting to fetch data for clientId:', clientId);
-    console.log('Upstash URL configured:', !!process.env.UPSTASH_REDIS_REST_URL);
-    console.log('Upstash URL:', process.env.UPSTASH_REDIS_REST_URL);
+    // console.log('Attempting to fetch data for clientId:', clientId);
+    // console.log('Upstash URL configured:', !!process.env.UPSTASH_REDIS_REST_URL);
+    // console.log('Upstash URL:', process.env.UPSTASH_REDIS_REST_URL);
 
     const data = await getFormData(clientId);
     return NextResponse.json(data || null);

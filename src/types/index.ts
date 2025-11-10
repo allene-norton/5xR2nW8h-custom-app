@@ -15,8 +15,7 @@ export const BACKGROUND_CHECK_OPTIONS = {
     'Rental Application Completion',
     'Home Visit Check Completion',
     'Personal Wellness Assessment',
-    'Credit Check Assessment',
-    'Other',
+    'Credit Check Assessment'
   ],
   employment: [
     'Acknowledgement of Background Check',
@@ -25,8 +24,7 @@ export const BACKGROUND_CHECK_OPTIONS = {
     'Reference Check Clearance',
     'Identity Verification',
     'Employment Application Completion',
-    'Personal Wellness Assessment',
-    'Other',
+    'Personal Wellness Assessment'
   ],
   nonprofit: [
     'Acknowledgement of Background Check',
@@ -38,8 +36,7 @@ export const BACKGROUND_CHECK_OPTIONS = {
     'Youth Protection Policy',
     'Illinois State Murderer and Violent Offender Against Youth',
     'Illinois State Police Clearance',
-    'FBI Clearance',
-    'Other',
+    'FBI Clearance'
   ],
 } as const;
 

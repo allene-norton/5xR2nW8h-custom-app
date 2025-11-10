@@ -113,39 +113,80 @@ export function ConfigurationSection({
 
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
-  useEffect(() => {
-    // Only pre-fill if we have a selected client and the form's client matches
-    if (
-      selectedClient &&
-      formData.client === selectedClient.id &&
-      // And only if the identification is still empty (meaning DB had no data)
-      !formData.identification.firstName
-    ) {
-      const updatedIdentification = {
-        firstName: selectedClient.givenName || '',
-        lastName: selectedClient.familyName || '',
-        streetAddress: selectedClient.customFields?.streetAddress || '',
-        streetAddress2: selectedClient.customFields?.streetAddress2 || '',
-        city: selectedClient.customFields?.city || '',
-        state: selectedClient.customFields?.state || '',
-        postalCode: selectedClient.customFields?.postalCode || '',
-        birthdate: selectedClient.customFields?.birthDate || '', //birthDate in CT fields
-      };
+  // useEffect(() => {
+  //   // Only pre-fill if we have a selected client and the form's client matches
+  //   if (
+  //     selectedClient &&
+  //     formData.client === selectedClient.id &&
+  //     // And only if the identification is still empty (meaning DB had no data)
+  //     !formData.identification.firstName
+  //   ) {
+  //     const updatedIdentification = {
+  //       firstName: selectedClient.givenName || '',
+  //       lastName: selectedClient.familyName || '',
+  //       streetAddress: selectedClient.customFields?.streetAddress || '',
+  //       streetAddress2: selectedClient.customFields?.streetAddress2 || '',
+  //       city: selectedClient.customFields?.city || '',
+  //       state: selectedClient.customFields?.state || '',
+  //       postalCode: selectedClient.customFields?.postalCode || '',
+  //       birthdate: selectedClient.customFields?.birthDate || '', //birthDate in CT fields
+  //     };
 
-      updateIdentification(updatedIdentification);
+  //     updateIdentification(updatedIdentification);
 
-      // Find and set file channel
-      const selectedClientFileChannel = fileChannelsResponse?.data?.find(
-        (channel) => channel.clientId === selectedClient.id,
-      );
+  //     // Find and set file channel
+  //     const selectedClientFileChannel = fileChannelsResponse?.data?.find(
+  //       (channel) => channel.clientId === selectedClient.id,
+  //     );
 
-      if (selectedClientFileChannel?.id) {
-        updateFormData({
-          fileChannelId: selectedClientFileChannel.id,
-        });
+  //     if (selectedClientFileChannel?.id) {
+  //       updateFormData({
+  //         fileChannelId: selectedClientFileChannel.id,
+  //       });
+  //     }
+  //   }
+  // }, [
+  //   selectedClient,
+  //   formData.client,
+  //   formData.identification.firstName,
+  //   updateIdentification,
+  //   updateFormData, 
+  //   fileChannelsResponse,
+  // ]);
+
+  const handleClientChange = (option: any) => {
+    if (option) {
+      onClientSelect(option.client);
+      updateFormData({ client: option.client.id });
+
+      // Only pre-fill if identification is empty
+      if (!formData.identification.firstName) {
+        const updatedIdentification = {
+          firstName: option.client.givenName || '',
+          lastName: option.client.familyName || '',
+          streetAddress: option.client.customFields?.streetAddress || '',
+          streetAddress2: option.client.customFields?.streetAddress2 || '',
+          city: option.client.customFields?.city || '',
+          state: option.client.customFields?.state || '',
+          postalCode: option.client.customFields?.postalCode || '',
+          birthdate: option.client.customFields?.birthDate || '',
+        };
+
+        updateIdentification(updatedIdentification);
       }
+
+      // console.log(fileChannelsResponse.data)
+      // Find and set file channel
+      // const selectedClientFileChannel = fileChannelsResponse?.data?.find(
+      //   (channel) => channel.clientId === option.client.id,
+      // );
+      // if (selectedClientFileChannel?.id) {
+      //   updateFormData({
+      //     fileChannelId: selectedClientFileChannel.id,
+      //   });
+      // }
     }
-  }, [selectedClient, formData.client, formData.identification.firstName]);
+  };
 
   return (
     <Card>
@@ -173,12 +214,13 @@ export function ConfigurationSection({
             <ReactSelect
               id="client-select"
               value={selectedOption}
-              onChange={(option) => {
-                if (option) {
-                  onClientSelect(option.client);
-                  updateFormData({ client: option.client.id });
-                }
-              }}
+              // onChange={(option) => {
+              //   if (option) {
+              //     onClientSelect(option.client);
+              //     updateFormData({ client: option.client.id });
+              //   }
+              // }}
+              onChange={handleClientChange}
               options={clientOptions}
               isSearchable
               placeholder="Select a client..."

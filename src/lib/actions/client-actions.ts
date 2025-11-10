@@ -240,6 +240,8 @@ function createSDK(token: string) {
   if (!token) {
     throw new Error('Token is required');
   }
+  // process.env.COPILOT_DEBUG = 'true'
+
   return copilotApi({
     apiKey: copilotApiKey,
     token: token,
@@ -250,6 +252,8 @@ function createSDK(token: string) {
 export async function listClients(
   token?: string,
 ): Promise<ListClientsResponse> {
+    console.log(`-----------APP KEY`, process.env.COPILOT_API_KEY)
+
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
@@ -300,11 +304,12 @@ export async function updateClient(clientId: string, body: UpdateClientRequest, 
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/clients`, {
-        method: 'GET',
+      const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
+        method: 'PATCH',
         headers: {
           'X-API-KEY': assemblyApiKey,
         },
+        body: JSON.stringify(body)
       });
 
       if (!response.ok) {
@@ -471,6 +476,7 @@ export async function listFileChannels(token?: string) {
   try {
     if (isDev) {
       // Dev mode: use Assembly API directly
+      console.log(`using dev mode with key:`, process.env.ASSEMBLY_API_KEY)
       if (!assemblyApiKey) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
@@ -828,7 +834,7 @@ export async function listFiles(
 }
 
 // loggedInClient action
-export async function getLoggedInUser(token?: string) {
+export async function getLoggedInUser(clientId?: string, token?: string) {
   try {
     if (isDev) {
       console.log(`IS DEV`, isDev);
@@ -837,7 +843,7 @@ export async function getLoggedInUser(token?: string) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const clientId = 'tempClientId'
+      // const clientId = 'tempClientId'
 
       const response = await fetch(`${ASSEMBLY_BASE_URI}/clients/${clientId}`, {
         method: 'GET',
