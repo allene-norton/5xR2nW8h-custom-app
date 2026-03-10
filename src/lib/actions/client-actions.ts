@@ -252,7 +252,7 @@ function createSDK(token: string) {
 export async function listClients(
   token?: string,
 ): Promise<ListClientsResponse> {
-    console.log(`-----------APP KEY`, process.env.COPILOT_API_KEY)
+    console.log(`-----------APP KEY`)
 
   try {
     if (isDev) {
