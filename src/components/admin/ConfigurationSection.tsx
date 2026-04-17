@@ -249,9 +249,9 @@ export function ConfigurationSection({
               <SelectContent>
                 <SelectItem value="tenant">Tenant Screening</SelectItem>
                 <SelectItem value="employment">
-                  Employment Verification
+                  Employment Screening
                 </SelectItem>
-                <SelectItem value="nonprofit">Nonprofit Volunteer</SelectItem>
+                <SelectItem value="nonprofit">Nonprofit Screening</SelectItem>
               </SelectContent>
             </Select>
           </div>
