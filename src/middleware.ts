@@ -13,7 +13,7 @@ export function middleware(request: NextRequest) {
     block-all-mixed-content;
     upgrade-insecure-requests;
 `;
-  // Replace newline characters and spaces
+  // Replace newline characters and spaces -
   const contentSecurityPolicyHeaderValue = cspHeader
     .replace(/\s{2,}/g, ' ')
     .trim();
