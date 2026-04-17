@@ -16,6 +16,7 @@ import { useSearchParams } from 'next/navigation';
 import {
   listForms,
   listFormResponses,
+  Form,
   FormResponse,
   FormResponseField,
   FormResponseArray,
@@ -73,7 +74,7 @@ export function SubmittedFormsSection({
       
       // get responses for all forms
       const allFormResponsesPromises =
-        forms?.map(async (form) => {
+        forms?.map(async (form: Form) => {
           try {
             const responses = await listFormResponses(form.id!, token);
             return responses || [];
@@ -101,18 +102,20 @@ export function SubmittedFormsSection({
       if (setFileItem) {
         clientForms.forEach((form: FormResponse) => {
           if (form.formFields) {
+            let attachmentIndex = 0;
             Object.values(form.formFields).forEach(
               (field: FormResponseField) => {
                 if (field.attachmentUrls && field.attachmentUrls.length > 0) {
-                  field.attachmentUrls.forEach((url: string, index: number) => {
+                  field.attachmentUrls.forEach((url: string) => {
                     const fileItem: FileItem = {
-                      id: `${form.id}-attachment-${index}`,
-                      name: `${form.formName || 'Form'} - Attachment ${index + 1}`,
+                      id: `${form.id}-attachment-${attachmentIndex}`,
+                      name: `${form.formName || 'Form'} - Attachment ${attachmentIndex + 1}`,
                       type: 'submitted',
                       url: url,
                       data: null,
                     };
                     setFileItem(fileItem);
+                    attachmentIndex++;
                   });
                 }
               },
