@@ -256,9 +256,9 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   const resetFormData = useCallback(async () => {
     if (!clientId) return;
 
-    setFormData(DEFAULT_FORM_DATA);
     try {
       await fetch(`/api/form-data?clientId=${clientId}`, { method: 'DELETE' });
+      setFormData({ ...DEFAULT_FORM_DATA, client: clientId });
       setHasUnsavedChanges(false);
       setLastSaved(null);
     } catch (error) {
