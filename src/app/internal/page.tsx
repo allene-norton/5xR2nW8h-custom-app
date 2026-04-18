@@ -74,7 +74,6 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     updateFormData,
     updateIdentification,
     updateCheckFileStatus,
-    resetFormData,
     saveFormData,
   } = useFormData({ clientId: selectedClient?.id || '' });
 
@@ -368,7 +367,6 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
           updateFormData={updateFormData}
           updateIdentification={updateIdentification}
           updateCheckFileStatus={updateCheckFileStatus}
-          resetFormData={resetFormData}
           clientsResponse={clientsResponse}
           clientsLoading={clientsLoading}
           clientsError={clientsError}
@@ -394,15 +392,6 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
             <div className="flex items-center space-x-4 text-sm text-gray-500">
               <span>Version 1.0.0</span>
               <span>•</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={resetFormData}
-                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-              >
-                Reset All Data
-              </Button>
             </div>
           </div>
         </div>
