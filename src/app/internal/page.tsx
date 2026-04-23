@@ -347,7 +347,7 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                       {Object.entries(validationErrors).map(
                         ([field, error]) => (
                           <li key={field}>
-                            <strong>{field}:</strong> {error}
+                            <strong>{field.replace(/([A-Z])/g, ' $1').replace(/^./, (s) => s.toUpperCase())}:</strong> {error} 
                           </li>
                         ),
                       )}

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Form Types
-export type FormType = 'tenant' | 'employment' | 'nonprofit';
+export type FormType = 'tenant' | 'employment' | 'nonprofit' | 'consulting';
 export type Status = 'cleared' | 'pending' | 'denied';
 
 // Background Check Options by Form Type
@@ -24,6 +24,7 @@ export const BACKGROUND_CHECK_OPTIONS = {
     'Chicago Police Clearance',
     'FBI Clearance',
   ],
+    consulting: [],
 } as const;
 
 // Zod Schemas
@@ -50,16 +51,25 @@ export const IdentificationSchema = z.object({
 
 export const FormDataSchema = z.object({
   client: z.string().min(1, 'Client selection is required'),
-  formType: z.enum(['tenant', 'employment', 'nonprofit']),
+  formType: z.enum(['tenant', 'employment', 'nonprofit', 'consulting']),
   identification: IdentificationSchema,
-  backgroundChecks: z
-    .array(z.string())
-    .min(1, 'At least one background check must be selected'),
+  backgroundChecks: z.array(z.string()),
   backgroundCheckFiles: BackgroundCheckFilesSchema,
   status: z.enum(['cleared', 'pending', 'denied']),
   memo: z.string().optional(),
   fileChannelId: z.string().optional(),
   folderCreated: z.boolean(),
+}).superRefine((data, ctx) => {
+  if (data.formType !== 'consulting' && data.backgroundChecks.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.too_small,
+      minimum: 1,
+      type: 'array',
+      inclusive: true,
+      message: 'At least one background check must be selected',
+      path: ['backgroundChecks'],
+    });
+  }
 });
 
 export type BackgroundCheckFormData = z.infer<typeof FormDataSchema>;
@@ -95,7 +105,7 @@ export const DEFAULT_FORM_DATA: BackgroundCheckFormData = {
 export const FORM_TYPE_INFO = {
   tenant: {
     title: 'Tenant Screening',
-    description: 'Comprehensive background screening for rental applications',
+    description: 'Comprehensive background screening for rental applications.',
     requiredChecks: [
       'Criminal History Clearance',
       'Credit Check Assessment',
@@ -104,7 +114,7 @@ export const FORM_TYPE_INFO = {
   },
   employment: {
     title: 'Employment Screening',
-    description: 'Professional background verification for employment purposes',
+    description: 'Professional background verification for employment purposes.',
     requiredChecks: [
       'Criminal History Clearance',
       'Personal Wellness Assessment',
@@ -114,12 +124,18 @@ export const FORM_TYPE_INFO = {
   },
   nonprofit: {
     title: 'Nonprofit Screening',
-    description: 'Volunteer screening for nonprofit organizations',
+    description: 'Volunteer screening for nonprofit organizations.',
     requiredChecks: [
       'Crimnal History Clearance',
       'Illinois Sex Offender Clearance',
       'Illinois State Murderer and Violent Offender Against Youth',
       'Chicago Police Clearance'
+    ],
+  },
+  consulting: {
+    title: 'Consulting Screening',
+    description: 'Background screening for independent consultants and contract-based engagements.',
+    requiredChecks: [
     ],
   },
 } as const;

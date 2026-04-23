@@ -114,41 +114,37 @@ export function ConfigurationSection({
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
   const handleClientChange = useCallback(
-  (option: any) => {
-    if (option && option.client.id !== selectedClient?.id) {
-      // Only update if we're actually changing clients
-      onClientSelect(option.client);
-      
-      // Batch all updates into a single call
-      const updates: Partial<BackgroundCheckFormData> = {
-        client: option.client.id,
-      };
-      
-      // Update identification if client data doesn't match current form data
-      if (formData.identification.firstName !== option.client.givenName) {
-        updates.identification = {
-          firstName: option.client.givenName || '',
-          lastName: option.client.familyName || '',
-          streetAddress: option.client.customFields?.streetAddress || '',
-          streetAddress2: option.client.customFields?.streetAddress2 || '',
-          city: option.client.customFields?.city || '',
-          state: option.client.customFields?.state || '',
-          postalCode: option.client.customFields?.postalCode || '',
-          birthdate: option.client.customFields?.birthDate || '',
+    (option: any) => {
+      if (option && option.client.id !== selectedClient?.id) {
+        // Only update if we're actually changing clients
+        onClientSelect(option.client);
+
+        // Batch all updates into a single call
+        const updates: Partial<BackgroundCheckFormData> = {
+          client: option.client.id,
         };
+
+        // Update identification if client data doesn't match current form data
+        if (formData.identification.firstName !== option.client.givenName) {
+          updates.identification = {
+            firstName: option.client.givenName || '',
+            lastName: option.client.familyName || '',
+            streetAddress: option.client.customFields?.streetAddress || '',
+            streetAddress2: option.client.customFields?.streetAddress2 || '',
+            city: option.client.customFields?.city || '',
+            state: option.client.customFields?.state || '',
+            postalCode: option.client.customFields?.postalCode || '',
+            birthdate: option.client.customFields?.birthDate || '',
+          };
+        }
+
+        // Single update call instead of multiple
+        updateFormData(updates);
+        console.log(`updateFormData called from config section`);
       }
-      
-      // Single update call instead of multiple
-      updateFormData(updates);
-      console.log(`updateFormData called from config section`);
-    }
-  },
-  [
-    selectedClient?.id,
-    onClientSelect,
-    updateFormData,
-  ],
-);
+    },
+    [selectedClient?.id, onClientSelect, updateFormData],
+  );
 
   return (
     <Card>
@@ -239,19 +235,18 @@ export function ConfigurationSection({
             </Label>
             <Select
               value={formData.formType}
-              onValueChange={(value: 'tenant' | 'employment' | 'nonprofit') =>
-                updateFormData({ formType: value, backgroundChecks: [] })
-              }
+              onValueChange={(
+                value: 'tenant' | 'employment' | 'nonprofit' | 'consulting',
+              ) => updateFormData({ formType: value, backgroundChecks: [] })}
             >
               <SelectTrigger id="form-type-select">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="tenant">Tenant Screening</SelectItem>
-                <SelectItem value="employment">
-                  Employment Screening
-                </SelectItem>
+                <SelectItem value="employment">Employment Screening</SelectItem>
                 <SelectItem value="nonprofit">Nonprofit Screening</SelectItem>
+                <SelectItem value="consulting">Consulting Screening</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -268,22 +263,24 @@ export function ConfigurationSection({
               <p className="text-sm text-blue-700 mt-1">
                 {formTypeInfo.description}
               </p>
-              <div className="mt-3">
-                <p className="text-sm font-medium text-blue-900 mb-2">
-                  Required Checks:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {formTypeInfo.requiredChecks.map((check) => (
-                    <Badge
-                      key={check}
-                      variant="outline"
-                      className="text-xs bg-blue-100 text-blue-800 border-blue-300"
-                    >
-                      {check}
-                    </Badge>
-                  ))}
+              {formTypeInfo.requiredChecks.length < 1 ? null : (
+                <div className="mt-3">
+                  <p className="text-sm font-medium text-blue-900 mb-2">
+                    Required Checks:
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {formTypeInfo.requiredChecks.map((check) => (
+                      <Badge
+                        key={check}
+                        variant="outline"
+                        className="text-xs bg-blue-100 text-blue-800 border-blue-300"
+                      >
+                        {check}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
