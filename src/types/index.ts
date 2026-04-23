@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // Form Types
-export type FormType = 'tenant' | 'employment' | 'nonprofit';
+export type FormType = 'tenant' | 'employment' | 'nonprofit' | 'consulting';
 export type Status = 'cleared' | 'pending' | 'denied';
 
 // Background Check Options by Form Type
@@ -24,6 +24,7 @@ export const BACKGROUND_CHECK_OPTIONS = {
     'Chicago Police Clearance',
     'FBI Clearance',
   ],
+    consulting: [],
 } as const;
 
 // Zod Schemas
@@ -50,7 +51,7 @@ export const IdentificationSchema = z.object({
 
 export const FormDataSchema = z.object({
   client: z.string().min(1, 'Client selection is required'),
-  formType: z.enum(['tenant', 'employment', 'nonprofit']),
+  formType: z.enum(['tenant', 'employment', 'nonprofit', 'consulting']),
   identification: IdentificationSchema,
   backgroundChecks: z
     .array(z.string())
@@ -120,6 +121,12 @@ export const FORM_TYPE_INFO = {
       'Illinois Sex Offender Clearance',
       'Illinois State Murderer and Violent Offender Against Youth',
       'Chicago Police Clearance'
+    ],
+  },
+  consulting: {
+    title: 'Consulting Screening',
+    description: 'Screening for consultants or special projects',
+    requiredChecks: [
     ],
   },
 } as const;

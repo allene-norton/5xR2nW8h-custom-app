@@ -239,7 +239,7 @@ export function ConfigurationSection({
             </Label>
             <Select
               value={formData.formType}
-              onValueChange={(value: 'tenant' | 'employment' | 'nonprofit') =>
+              onValueChange={(value: 'tenant' | 'employment' | 'nonprofit' | 'consulting') =>
                 updateFormData({ formType: value, backgroundChecks: [] })
               }
             >
@@ -252,6 +252,7 @@ export function ConfigurationSection({
                   Employment Screening
                 </SelectItem>
                 <SelectItem value="nonprofit">Nonprofit Screening</SelectItem>
+                <SelectItem value="consulting">Consulting Screening</SelectItem>
               </SelectContent>
             </Select>
           </div>

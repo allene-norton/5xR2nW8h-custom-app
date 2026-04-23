@@ -98,25 +98,27 @@ export function AdminInterface({
     ]);
 
     // Handle file channel setting
-  if (selectedClient && fileChannelsResponse?.data) {
-    const selectedClientFileChannel = fileChannelsResponse.data.find(
-      (channel) => channel.clientId === selectedClient.id,
-    );
-    
-    if (selectedClientFileChannel?.id && formData.fileChannelId !== selectedClientFileChannel.id) {
-      console.log(`Found client channel`, selectedClientFileChannel.id)
-      updateFormData({
-        fileChannelId: selectedClientFileChannel.id,
-      });
-      console.log(`updateFormData called from AdminInterface`)
-    } else if (!selectedClientFileChannel && formData.fileChannelId) {
-      console.log(`did not find client channel`)
-      updateFormData({
-        fileChannelId: undefined,
-      });
-    }
-  }
+    if (selectedClient && fileChannelsResponse?.data) {
+      const selectedClientFileChannel = fileChannelsResponse.data.find(
+        (channel) => channel.clientId === selectedClient.id,
+      );
 
+      if (
+        selectedClientFileChannel?.id &&
+        formData.fileChannelId !== selectedClientFileChannel.id
+      ) {
+        console.log(`Found client channel`, selectedClientFileChannel.id);
+        updateFormData({
+          fileChannelId: selectedClientFileChannel.id,
+        });
+        console.log(`updateFormData called from AdminInterface`);
+      } else if (!selectedClientFileChannel && formData.fileChannelId) {
+        console.log(`did not find client channel`);
+        updateFormData({
+          fileChannelId: undefined,
+        });
+      }
+    }
 
     // Reset loading after a short delay
     // setTimeout(() => setIsClientChanging(false), 100);
@@ -143,7 +145,6 @@ export function AdminInterface({
   // console.log(`APP API key`,process.env.COPILOT_API_KEY)
   //   console.log(`Reg API key`,process.env.ASSEMBLY_API_KEY)
 
-
   return (
     <div className="space-y-8">
       {/* Configuration Section */}
@@ -168,37 +169,46 @@ export function AdminInterface({
       />
 
       {/* Background Checks */}
-      <BackgroundChecksSection
-        formType={formData.formType}
-        selectedChecks={formData.backgroundChecks}
-        selectedClientId={selectedClient?.id || ''}
-        backgroundCheckFiles={formData.backgroundCheckFiles}
-        updateCheckFileStatus={updateCheckFileStatus}
-        updateFormData={updateFormData}
-      />
+      {formData.formType === 'consulting' ? (
+        null
+      ) : (
+        <BackgroundChecksSection
+          formType={formData.formType}
+          selectedChecks={formData.backgroundChecks}
+          selectedClientId={selectedClient?.id || ''}
+          backgroundCheckFiles={formData.backgroundCheckFiles}
+          updateCheckFileStatus={updateCheckFileStatus}
+          updateFormData={updateFormData}
+        />
+      )}
 
       {/* File Upload Sections for Standard Checks */}
-      {formData.fileChannelId && formData.folderCreated && !isClientChanging && (
-        <div className="space-y-4">
-          {formData.backgroundCheckFiles
-            ?.filter((backgroundCheckFile) => {
-              // Only show files for checks that are in the standard options
-              const availableChecks = BACKGROUND_CHECK_OPTIONS[formData.formType];
-              return (availableChecks as readonly string[]).includes(backgroundCheckFile.checkName);
-            })
-            .map((backgroundCheckFile) => (
-              <FileUploadSection
-                key={`${selectedClient?.id}-standard-${backgroundCheckFile.checkName}`}
-                formData={formData}
-                backgroundCheckFile={backgroundCheckFile}
-                onFileCreated={onFileCreated}
-                updateCheckFileStatus={updateCheckFileStatus}
-                setFileItem={handleSetFileItem}
-                token={token}
-              />
-            ))}
-        </div>
-      )}
+      {formData.fileChannelId &&
+        formData.folderCreated &&
+        !isClientChanging && (
+          <div className="space-y-4">
+            {formData.backgroundCheckFiles
+              ?.filter((backgroundCheckFile) => {
+                // Only show files for checks that are in the standard options
+                const availableChecks =
+                  BACKGROUND_CHECK_OPTIONS[formData.formType];
+                return (availableChecks as readonly string[]).includes(
+                  backgroundCheckFile.checkName,
+                );
+              })
+              .map((backgroundCheckFile) => (
+                <FileUploadSection
+                  key={`${selectedClient?.id}-standard-${backgroundCheckFile.checkName}`}
+                  formData={formData}
+                  backgroundCheckFile={backgroundCheckFile}
+                  onFileCreated={onFileCreated}
+                  updateCheckFileStatus={updateCheckFileStatus}
+                  setFileItem={handleSetFileItem}
+                  token={token}
+                />
+              ))}
+          </div>
+        )}
 
       {/* Custom Checks */}
       <CustomChecksSection
@@ -211,27 +221,32 @@ export function AdminInterface({
       />
 
       {/* File Upload Sections for Custom Checks */}
-      {formData.fileChannelId && formData.folderCreated && !isClientChanging && (
-        <div className="space-y-4">
-          {formData.backgroundCheckFiles
-            ?.filter((backgroundCheckFile) => {
-              // Only show files for checks that are NOT in the standard options (i.e., custom checks)
-              const availableChecks = BACKGROUND_CHECK_OPTIONS[formData.formType];
-              return !(availableChecks as readonly string[]).includes(backgroundCheckFile.checkName);
-            })
-            .map((backgroundCheckFile) => (
-              <FileUploadSection
-                key={`${selectedClient?.id}-custom-${backgroundCheckFile.checkName}`}
-                formData={formData}
-                backgroundCheckFile={backgroundCheckFile}
-                onFileCreated={onFileCreated}
-                updateCheckFileStatus={updateCheckFileStatus}
-                setFileItem={handleSetFileItem}
-                token={token}
-              />
-            ))}
-        </div>
-      )}
+      {formData.fileChannelId &&
+        formData.folderCreated &&
+        !isClientChanging && (
+          <div className="space-y-4">
+            {formData.backgroundCheckFiles
+              ?.filter((backgroundCheckFile) => {
+                // Only show files for checks that are NOT in the standard options (i.e., custom checks)
+                const availableChecks =
+                  BACKGROUND_CHECK_OPTIONS[formData.formType];
+                return !(availableChecks as readonly string[]).includes(
+                  backgroundCheckFile.checkName,
+                );
+              })
+              .map((backgroundCheckFile) => (
+                <FileUploadSection
+                  key={`${selectedClient?.id}-custom-${backgroundCheckFile.checkName}`}
+                  formData={formData}
+                  backgroundCheckFile={backgroundCheckFile}
+                  onFileCreated={onFileCreated}
+                  updateCheckFileStatus={updateCheckFileStatus}
+                  setFileItem={handleSetFileItem}
+                  token={token}
+                />
+              ))}
+          </div>
+        )}
 
       {/* Status and Memo */}
       <StatusSection
@@ -241,7 +256,8 @@ export function AdminInterface({
       />
 
       {formData.fileChannelId ? (
-        !formData.folderCreated && !isClientChanging && (
+        !formData.folderCreated &&
+        !isClientChanging && (
           <CreateFolderSection
             onFolderCreated={onFolderCreated}
             updateFormData={updateFormData}
