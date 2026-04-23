@@ -105,7 +105,7 @@ export const DEFAULT_FORM_DATA: BackgroundCheckFormData = {
 export const FORM_TYPE_INFO = {
   tenant: {
     title: 'Tenant Screening',
-    description: 'Comprehensive background screening for rental applications',
+    description: 'Comprehensive background screening for rental applications.',
     requiredChecks: [
       'Criminal History Clearance',
       'Credit Check Assessment',
@@ -114,7 +114,7 @@ export const FORM_TYPE_INFO = {
   },
   employment: {
     title: 'Employment Screening',
-    description: 'Professional background verification for employment purposes',
+    description: 'Professional background verification for employment purposes.',
     requiredChecks: [
       'Criminal History Clearance',
       'Personal Wellness Assessment',
@@ -124,7 +124,7 @@ export const FORM_TYPE_INFO = {
   },
   nonprofit: {
     title: 'Nonprofit Screening',
-    description: 'Volunteer screening for nonprofit organizations',
+    description: 'Volunteer screening for nonprofit organizations.',
     requiredChecks: [
       'Crimnal History Clearance',
       'Illinois Sex Offender Clearance',
@@ -134,7 +134,7 @@ export const FORM_TYPE_INFO = {
   },
   consulting: {
     title: 'Consulting Screening',
-    description: 'Screening for consultants or special projects',
+    description: 'Background screening for independent consultants and contract-based engagements.',
     requiredChecks: [
     ],
   },
