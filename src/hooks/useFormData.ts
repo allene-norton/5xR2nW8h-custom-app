@@ -252,20 +252,6 @@ export function useFormData({ clientId }: UseFormDataOptions) {
     [],
   );
 
-  // Reset form data
-  const resetFormData = useCallback(async () => {
-    if (!clientId) return;
-
-    setFormData(DEFAULT_FORM_DATA);
-    try {
-      await fetch(`/api/form-data?clientId=${clientId}`, { method: 'DELETE' });
-      setHasUnsavedChanges(false);
-      setLastSaved(null);
-    } catch (error) {
-      console.error('Error resetting form data:', error);
-    }
-  }, [clientId]);
-
   // Manual save
   const saveFormData = useCallback(
     async (overrideData?: Partial<BackgroundCheckFormData>) => {
@@ -310,7 +296,6 @@ export function useFormData({ clientId }: UseFormDataOptions) {
     updateFormData,
     updateIdentification,
     updateCheckFileStatus,
-    resetFormData,
     saveFormData,
   };
 }

@@ -38,7 +38,6 @@ interface AdminInterfaceProps {
     updates: Partial<BackgroundCheckFormData['identification']>,
   ) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
-  resetFormData: () => void;
   clientsResponse: ListClientsResponse;
   clientsLoading: boolean;
   clientsError: string | null;
@@ -59,7 +58,6 @@ export function AdminInterface({
   updateFormData,
   updateIdentification,
   updateCheckFileStatus,
-  resetFormData,
   clientsResponse,
   clientsLoading,
   clientsError,
