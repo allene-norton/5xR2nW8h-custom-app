@@ -53,14 +53,23 @@ export const FormDataSchema = z.object({
   client: z.string().min(1, 'Client selection is required'),
   formType: z.enum(['tenant', 'employment', 'nonprofit', 'consulting']),
   identification: IdentificationSchema,
-  backgroundChecks: z
-    .array(z.string())
-    .min(1, 'At least one background check must be selected'),
+  backgroundChecks: z.array(z.string()),
   backgroundCheckFiles: BackgroundCheckFilesSchema,
   status: z.enum(['cleared', 'pending', 'denied']),
   memo: z.string().optional(),
   fileChannelId: z.string().optional(),
   folderCreated: z.boolean(),
+}).superRefine((data, ctx) => {
+  if (data.formType !== 'consulting' && data.backgroundChecks.length === 0) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.too_small,
+      minimum: 1,
+      type: 'array',
+      inclusive: true,
+      message: 'At least one background check must be selected',
+      path: ['backgroundChecks'],
+    });
+  }
 });
 
 export type BackgroundCheckFormData = z.infer<typeof FormDataSchema>;
