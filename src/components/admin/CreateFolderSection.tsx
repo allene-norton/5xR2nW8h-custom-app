@@ -76,7 +76,8 @@ export function CreateFolderSection({
         <p className="mb-6 text-center text-sm text-muted-foreground">
           Create a folder to start organizing and uploading your files
         </p>
-        <Button onClick={() => handleCreateFolder()} size="lg">
+
+                <Button onClick={() => handleCreateFolder()} size="lg" className="bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:from-blue-700 hover:to-blue-800">
           Create a folder to start uploading files
         </Button>
       </CardContent>
