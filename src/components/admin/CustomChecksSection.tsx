@@ -107,7 +107,7 @@ const handleRemoveCustomCheck = (checkToRemove: string) => {
         <div className="space-y-4">
           <div className="flex space-x-2">
             <Input
-              placeholder="Enter custom background check name"
+              placeholder="To create a custom check, enter the name here first"
               value={customCheckName}
               onChange={(e) => setCustomCheckName(e.target.value)}
               onKeyPress={handleKeyPress}
@@ -120,6 +120,7 @@ const handleRemoveCustomCheck = (checkToRemove: string) => {
                 selectedChecks.includes(customCheckName.trim())
               }
               size="sm"
+              className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
             >
               <Plus className="w-4 h-4 mr-1" />
               Add Check

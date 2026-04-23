@@ -6,7 +6,6 @@ import { FolderPlus } from 'lucide-react';
 
 import { useSearchParams } from 'next/navigation';
 
-
 import { BackgroundCheckFormData, FORM_TYPE_INFO } from '@/types';
 
 import { createFolder } from '@/lib/actions/client-actions';
@@ -14,19 +13,16 @@ import { createFolder } from '@/lib/actions/client-actions';
 interface CreateFolderSectionProps {
   updateFormData: (updates: Partial<BackgroundCheckFormData>) => void; // Changed this line
   formData: BackgroundCheckFormData;
-  onFolderCreated?: (updateCreateFolder: {folderCreated: boolean}) => void
+  onFolderCreated?: (updateCreateFolder: { folderCreated: boolean }) => void;
 }
 
 export function CreateFolderSection({
   updateFormData,
   formData,
-  onFolderCreated
+  onFolderCreated,
 }: CreateFolderSectionProps) {
-
   const searchParams = useSearchParams();
   const token = searchParams.get('token') ?? undefined;
-
-
 
   const formTypeName = FORM_TYPE_INFO[formData.formType].title;
 
@@ -39,28 +35,27 @@ export function CreateFolderSection({
 
     try {
       console.log('Creating folder with params:', {
-      fileChannelId: formData.fileChannelId,
-      formTypeName,
-      token: token ? 'present' : 'missing'
-    });
+        fileChannelId: formData.fileChannelId,
+        formTypeName,
+        token: token ? 'present' : 'missing',
+      });
       const result = await createFolder(
         formData.fileChannelId,
         formTypeName,
         token,
       );
 
-      
-      console.log(result)
+      console.log(result);
 
       if (result.error) {
         console.error('Failed to create folder:', result.error);
         return;
       }
 
-      const updateCreateFolder = {folderCreated: true}
+      const updateCreateFolder = { folderCreated: true };
       updateFormData(updateCreateFolder);
-      console.log(`updateFormData called from CreateFolder`)
-      onFolderCreated?.(updateCreateFolder)
+      console.log(`updateFormData called from CreateFolder`);
+      onFolderCreated?.(updateCreateFolder);
     } catch (error) {
       console.error('Error creating folder:', error);
     }
@@ -76,7 +71,7 @@ export function CreateFolderSection({
         <p className="mb-6 text-center text-sm text-muted-foreground">
           Create a folder to start organizing and uploading your files
         </p>
-        <Button onClick={() => handleCreateFolder()} size="lg">
+        <Button onClick={() => handleCreateFolder()} size="lg" className="bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white">
           Create a folder to start uploading files
         </Button>
       </CardContent>
