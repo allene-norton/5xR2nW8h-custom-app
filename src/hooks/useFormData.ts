@@ -54,6 +54,34 @@ function migrateCheckNames(
   return { ...data, backgroundChecks, backgroundCheckFiles };
 }
 
+/**
+ * Make sure every check with an uploaded file is actually marked as selected.
+ *
+ * A file only ever gets uploaded for a check that's already in
+ * `backgroundCheckFiles`, but nothing has guaranteed that check also stays in
+ * `backgroundChecks` (the "selected" list the checkboxes read from) — a form
+ * type switch before the fix in ConfigurationSection used to clear
+ * `backgroundChecks` while leaving `backgroundCheckFiles` untouched, so a
+ * record saved during that window can have a real uploaded file sitting on a
+ * check that renders as unchecked. This only ever adds names back in, never
+ * removes anything, so it's safe to run on every load.
+ */
+function reconcileSelectedChecksWithFiles(
+  data: BackgroundCheckFormData,
+): BackgroundCheckFormData {
+  const selected = new Set(data.backgroundChecks);
+  const missing = data.backgroundCheckFiles
+    .filter((file) => file.fileUploaded && !selected.has(file.checkName))
+    .map((file) => file.checkName);
+
+  if (missing.length === 0) return data;
+
+  return {
+    ...data,
+    backgroundChecks: [...data.backgroundChecks, ...missing],
+  };
+}
+
 const AUTO_SAVE_DELAY = 1500; // ms of inactivity before autosaving
 
 interface UseFormDataOptions {
@@ -92,7 +120,9 @@ export function useFormData({ clientId }: UseFormDataOptions) {
           if (validated.success) {
             console.log('Setting form data:', validated.data); // Debug log
 
-            const migrated = migrateCheckNames(validated.data);
+            const migrated = reconcileSelectedChecksWithFiles(
+              migrateCheckNames(validated.data),
+            );
 
             // Instead of completely replacing formData, merge with existing data
             // This preserves any client information that was pre-filled
@@ -298,7 +328,16 @@ export function useFormData({ clientId }: UseFormDataOptions) {
         );
         console.log('Updated backgroundCheckFiles:', updatedFiles);
 
-        return { ...prev, backgroundCheckFiles: updatedFiles };
+        // A real uploaded file is unambiguous evidence the check applies to
+        // this report — make sure it's marked as selected, so it can't end
+        // up with a file attached but its checkbox unchecked.
+        const backgroundChecks =
+          updatedFileInfo.fileUploaded &&
+          !prev.backgroundChecks.includes(updatedFileInfo.checkName)
+            ? [...prev.backgroundChecks, updatedFileInfo.checkName]
+            : prev.backgroundChecks;
+
+        return { ...prev, backgroundChecks, backgroundCheckFiles: updatedFiles };
       });
       setHasUnsavedChanges(true);
     },
