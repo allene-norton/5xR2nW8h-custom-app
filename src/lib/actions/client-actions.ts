@@ -248,6 +248,29 @@ function createSDK(token: string) {
   });
 }
 
+// Base URL the SDK itself talks to (mirrors copilot-node-sdk's OpenAPI.BASE).
+const COPILOT_API_BASE =
+  process.env.COPILOT_ENV === '__SECRET_STAGING__'
+    ? 'https://api.copilot-staging.app'
+    : 'https://api.copilot.app';
+
+/**
+ * Build the `X-API-Key` header the SDK sends on every request
+ * (`<workspaceId>/<apiKey>`), for the handful of calls where we bypass the
+ * generated SDK method and hit the REST API directly — currently just
+ * listFormResponses, whose generated SDK method doesn't forward query
+ * params (see below), so it can't be used to paginate.
+ */
+async function buildApiKeyHeader(
+  sdk: ReturnType<typeof createSDK>,
+): Promise<string> {
+  const tokenPayload = await sdk.getTokenPayload?.();
+  if (!tokenPayload?.workspaceId) {
+    throw new Error('Could not resolve workspace ID from token');
+  }
+  return `${tokenPayload.workspaceId}/${copilotApiKey}`;
+}
+
 // listClients action
 export async function listClients(
   token?: string,
@@ -454,15 +477,56 @@ export async function listFormResponses(formId: string, token?: string) {
       revalidatePath('/internal');
       return data;
     } else {
-      // Prod mode: use SDK with token
+      // Prod mode.
+      //
+      // NOT using sdk.listFormResponses here. Its generated implementation
+      // only ever sends `GET /v1/forms/{id}/form-responses` with no query
+      // string at all — confirmed by reading copilot-node-sdk's own
+      // generated client code, not just its types. That's a gap in the
+      // generated client, not a limit of the real API: hitting this same
+      // endpoint directly with a `limit` query param (e.g. via the API
+      // tester) does return everything in one page. So we call the REST
+      // endpoint ourselves here, passing `limit` and following `nextToken`
+      // if the response ever includes one — otherwise, past however many
+      // responses the endpoint's default page returns, later form
+      // submissions (e.g. this quarter's Government ID uploads) would be
+      // silently missing with no error, indistinguishable from the client
+      // never having submitted anything.
       if (!token) {
         throw new Error('Token is required in production');
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFormResponses({ id: formId });
+      const apiKeyHeader = await buildApiKeyHeader(sdk);
+
+      const allResponses: unknown[] = [];
+      let nextToken: string | undefined;
+
+      do {
+        const url = new URL(
+          `${COPILOT_API_BASE}/v1/forms/${formId}/form-responses`,
+        );
+        url.searchParams.set('limit', '3000');
+        if (nextToken) url.searchParams.set('nextToken', nextToken);
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: { 'X-API-Key': apiKeyHeader },
+        });
+
+        if (!response.ok) {
+          throw new Error(
+            `Form responses request failed: ${response.status} ${response.statusText}`,
+          );
+        }
+
+        const page = await response.json();
+        allResponses.push(...(page.data || []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
       revalidatePath('/internal');
-      return data;
+      return { data: allResponses } as FormResponsesApiResponse;
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
