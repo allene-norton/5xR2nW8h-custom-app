@@ -54,7 +54,7 @@ function migrateCheckNames(
   return { ...data, backgroundChecks, backgroundCheckFiles };
 }
 
-// const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
+const AUTO_SAVE_DELAY = 1500; // ms of inactivity before autosaving
 
 interface UseFormDataOptions {
   clientId: string;
@@ -70,6 +70,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
   const [validationErrors, setValidationErrors] = useState<
     Record<string, string>
   >({});
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   // Load data from Upstash on mount
   useEffect(() => {
@@ -165,6 +166,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
 
       setIsSaving(true);
       setValidationErrors({});
+      setSaveError(null);
 
       try {
         const response = await fetch('/api/form-data', {
@@ -193,6 +195,9 @@ export function useFormData({ clientId }: UseFormDataOptions) {
         }
       } catch (error) {
         console.error('Error saving form data:', error);
+        setSaveError(
+          error instanceof Error ? error.message : 'Failed to save form data',
+        );
         throw error;
       } finally {
         setIsSaving(false);
@@ -323,16 +328,23 @@ export function useFormData({ clientId }: UseFormDataOptions) {
     [formData, saveToDatabase, clientId],
   );
 
-  // Auto-save effect
-  // useEffect(() => {
-  //   if (!hasUnsavedChanges || !clientId) return;
+  // Auto-save effect. Debounced: every call to updateFormData/
+  // updateIdentification/updateCheckFileStatus changes `formData` and sets
+  // `hasUnsavedChanges`, which re-runs this effect and cancels the pending
+  // timer via the cleanup function — so this only actually saves once input
+  // has been idle for AUTO_SAVE_DELAY. The manual Save button still works
+  // the same as before, for an explicit/immediate save.
+  useEffect(() => {
+    if (!hasUnsavedChanges || !clientId || isLoading) return;
 
-  //   const timer = setTimeout(() => {
-  //     saveToDatabase(formData);
-  //   }, AUTO_SAVE_INTERVAL);
+    const timer = setTimeout(() => {
+      saveToDatabase(formData).catch(() => {
+        // Already logged and surfaced via saveError inside saveToDatabase.
+      });
+    }, AUTO_SAVE_DELAY);
 
-  //   return () => clearTimeout(timer);
-  // }, [formData, hasUnsavedChanges, saveToDatabase, clientId]);
+    return () => clearTimeout(timer);
+  }, [formData, hasUnsavedChanges, saveToDatabase, clientId, isLoading]);
 
   return {
     formData,
@@ -341,6 +353,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
     lastSaved,
     hasUnsavedChanges,
     validationErrors,
+    saveError,
     updateFormData,
     updateIdentification,
     updateCheckFileStatus,

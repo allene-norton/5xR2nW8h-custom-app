@@ -11,7 +11,7 @@ import {
 import { Button } from '../ui/button';
 import { FormCard } from '@/components/shared/FormCard';
 import { ContractCard } from '@/components/shared/ContractCard';
-import { RefreshCw, FolderOpen } from 'lucide-react';
+import { RefreshCw, FolderOpen, AlertTriangle } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import {
   listForms,
@@ -52,6 +52,9 @@ export function SubmittedFormsSection({
   const [isLoadingForms, setIsLoadingForms] = useState(false);
   const [isLoadingContracts, setIsLoadingContracts] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Non-blocking: some forms' responses failed to load while others
+  // succeeded, so the list below is incomplete rather than empty.
+  const [formLoadWarning, setFormLoadWarning] = useState<string | null>(null);
 
   const isLoading = isLoadingForms || isLoadingContracts;
 
@@ -71,27 +74,48 @@ export function SubmittedFormsSection({
     }
     setIsLoadingForms(true);
     setError(null);
+    setFormLoadWarning(null);
     try {
       // get all workspace forms
       const formsData = await listForms(token);
       if ('error' in formsData) {
         console.error('Error fetching forms:', formsData.error);
+        if (currentClientIdRef.current === clientId) {
+          setError(formsData.error || 'Failed to load forms');
+        }
         return;
       }
       const forms = formsData.data;
-      
-      // get responses for all forms
+
+      // get responses for all forms. listFormResponses (the server action)
+      // catches its own errors and returns { error } rather than throwing,
+      // so a per-form failure has to be detected explicitly here — otherwise
+      // it silently contributes nothing to `allResponses` below and the UI
+      // just looks like that client has no submitted documents, with no
+      // indication anything went wrong.
+      const failedFormNames: string[] = [];
       const allFormResponsesPromises =
         forms?.map(async (form: Form) => {
           try {
             const responses = await listFormResponses(form.id!, token);
+            if (responses && 'error' in responses) {
+              console.error(
+                `Error loading responses for form "${form.name || form.id}":`,
+                responses.error,
+              );
+              failedFormNames.push(form.name || form.id || 'Unknown form');
+            }
             return responses || [];
           } catch (err) {
-            console.error(`Error loading responses for form ${form.id}:`, err);
+            console.error(
+              `Error loading responses for form "${form.name || form.id}":`,
+              err,
+            );
+            failedFormNames.push(form.name || form.id || 'Unknown form');
             return [];
           }
         }) || [];
-      
+
       const allResponsesArrays = await Promise.all(allFormResponsesPromises);
       const allResponses = allResponsesArrays
         .flatMap(
@@ -99,7 +123,7 @@ export function SubmittedFormsSection({
             ('data' in responseArray ? responseArray.data : []) || [],
         )
         .filter((response) => response !== null);
-      
+
       // Filter responses where the recipient matches the clientId
       const clientForms = allResponses.filter(
         (response) => response.clientId === clientId,
@@ -109,6 +133,11 @@ export function SubmittedFormsSection({
       if (currentClientIdRef.current !== clientId) return;
 
       setForms(clientForms as FormResponseArray);
+      setFormLoadWarning(
+        failedFormNames.length > 0
+          ? `Could not load responses for: ${failedFormNames.join(', ')}. Documents from these forms may be missing below — try Refresh.`
+          : null,
+      );
 
       if (setFileItem) {
         clientForms.forEach((form: FormResponse) => {
@@ -152,12 +181,16 @@ export function SubmittedFormsSection({
     try {
       // console.log(`loading contracts for client`, clientId);
       const contractsData = await listContracts(clientId, token);
-      
+
       if ('error' in contractsData) {
         console.error('Error fetching contracts:', contractsData.error);
+        if (currentClientIdRef.current === clientId) {
+          setError(contractsData.error || 'Failed to load contracts');
+        }
         return;
       }
-      
+
+
       const contracts = contractsData.data;
       const signedContracts = contracts.filter(
         (contract: Contract) => contract.status === 'signed',
@@ -227,6 +260,12 @@ export function SubmittedFormsSection({
             ? 'Your submitted forms and documents'
             : 'Documents submitted by the client through the portal'}
         </CardDescription>
+        {formLoadWarning && (
+          <div className="flex items-start space-x-2 rounded-lg border border-yellow-300 bg-yellow-50 p-3 mt-2">
+            <AlertTriangle className="w-4 h-4 text-yellow-600 mt-0.5 flex-shrink-0" />
+            <p className="text-sm text-yellow-800">{formLoadWarning}</p>
+          </div>
+        )}
       </CardHeader>
       <CardContent>
         {!clientId ? (

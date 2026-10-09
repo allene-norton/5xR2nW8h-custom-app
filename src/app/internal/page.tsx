@@ -71,11 +71,16 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
     lastSaved,
     hasUnsavedChanges,
     validationErrors,
+    saveError: autoSaveError,
     updateFormData,
     updateIdentification,
     updateCheckFileStatus,
     saveFormData,
   } = useFormData({ clientId: selectedClient?.id || '' });
+
+  // Reflects a failure from either the manual Save button (which also saves
+  // applicant info, outside the hook) or a background autosave.
+  const displaySaveError = saveError || autoSaveError;
 
   // FETCH CLIENTS AND FILE CHANNELS ON MOUNT
   useEffect(() => {
@@ -254,10 +259,12 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
                     <Clock className="w-4 h-4 text-yellow-500" />
                     <span className="text-yellow-600">Unsaved changes</span>
                   </>
-                ) : saveError ? (
+                ) : displaySaveError ? (
                   <>
                     <AlertTriangle className="w-4 h-4 text-red-500" />
-                    <span className="text-red-600">Save failed</span>
+                    <span className="text-red-600" title={displaySaveError}>
+                      Save failed
+                    </span>
                   </>
                 ) : (
                   <>
