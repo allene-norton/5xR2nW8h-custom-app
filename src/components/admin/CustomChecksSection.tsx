@@ -58,17 +58,29 @@ export function CustomChecksSection({
   
   // Add the custom check to selected checks AND create the corresponding file object
   const newChecks = [...selectedChecks, trimmedName];
-  const newBackgroundCheckFile: BackgroundCheckFile = {
-    checkName: trimmedName,
-    fileUploaded: false,
-    fileName: '',
-    fileId: '',
-    result: DEFAULT_CHECK_RESULT,
-  };
-  
-  updateFormData({ 
+
+  // Reuse an existing file entry for this name if one is already there —
+  // e.g. it was selected under a different form type and is now being
+  // re-added as a custom check. Otherwise a second, blank entry would sit
+  // alongside the one that already has a real upload/result on it.
+  const existingFile = backgroundCheckFiles.find(
+    (f) => f.checkName === trimmedName,
+  );
+
+  updateFormData({
     backgroundChecks: newChecks,
-    backgroundCheckFiles: [...backgroundCheckFiles, newBackgroundCheckFile]
+    backgroundCheckFiles: existingFile
+      ? backgroundCheckFiles
+      : [
+          ...backgroundCheckFiles,
+          {
+            checkName: trimmedName,
+            fileUploaded: false,
+            fileName: '',
+            fileId: '',
+            result: DEFAULT_CHECK_RESULT,
+          } satisfies BackgroundCheckFile,
+        ],
   });
   
   console.log(`updateFormData called from CustomChecks setChecks`);

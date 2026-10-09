@@ -113,6 +113,46 @@ export function ConfigurationSection({
 
   const formTypeInfo = FORM_TYPE_INFO[formData.formType];
 
+  const handleFormTypeChange = useCallback(
+    (value: 'tenant' | 'employment' | 'nonprofit' | 'consulting') => {
+      if (value === formData.formType) return;
+
+      const hasUploadedFile = formData.backgroundCheckFiles.some(
+        (file) => file.fileUploaded,
+      );
+      const hasExistingData =
+        formData.backgroundChecks.length > 0 ||
+        hasUploadedFile ||
+        formData.folderCreated;
+
+      if (hasExistingData) {
+        const confirmed = window.confirm(
+          `This report already has background checks selected${
+            hasUploadedFile ? ' and uploaded files' : ''
+          }. Switching to ${FORM_TYPE_INFO[value].title} will not delete ` +
+            `anything — checks that match the new type stay in Background ` +
+            `Checks, and any others move to Custom Checks instead. Continue?`,
+        );
+        if (!confirmed) return;
+      }
+
+      // Deliberately NOT clearing backgroundChecks or backgroundCheckFiles
+      // here. Checks whose name matches the new type's standard list stay
+      // shown (and checked) in Background Checks; everything else
+      // automatically falls under Custom Checks instead, since that section
+      // filters by "not in this form type's standard options" — so nothing
+      // selected or uploaded gets cleared or orphaned by switching.
+      updateFormData({ formType: value });
+    },
+    [
+      formData.formType,
+      formData.backgroundChecks,
+      formData.backgroundCheckFiles,
+      formData.folderCreated,
+      updateFormData,
+    ],
+  );
+
   const handleClientChange = useCallback(
     (option: any) => {
       if (option && option.client.id !== selectedClient?.id) {
@@ -235,9 +275,7 @@ export function ConfigurationSection({
             </Label>
             <Select
               value={formData.formType}
-              onValueChange={(
-                value: 'tenant' | 'employment' | 'nonprofit' | 'consulting',
-              ) => updateFormData({ formType: value, backgroundChecks: [] })}
+              onValueChange={handleFormTypeChange}
             >
               <SelectTrigger id="form-type-select">
                 <SelectValue />
