@@ -18,7 +18,7 @@ export const BACKGROUND_CHECK_OPTIONS = {
     'FBI Clearance',
   ],
   nonprofit: [
-    'Crimnal History Clearance',
+    'Criminal History Clearance',
     'Illinois Sex Offender Clearance',
     'Illinois State Murderer and Violent Offender Against Youth',
     'Chicago Police Clearance',
@@ -26,6 +26,34 @@ export const BACKGROUND_CHECK_OPTIONS = {
   ],
     consulting: [],
 } as const;
+
+// Per-check result options. Selecting one of these populates the result
+// directly into the report so it never has to be typed in by hand.
+export const CHECK_RESULT_OPTIONS = [
+  'No Records Found',
+  'Cleared',
+  'Records Found',
+  'Under Review',
+  'Pending',
+  'Not Applicable',
+] as const;
+
+export type CheckResult = (typeof CHECK_RESULT_OPTIONS)[number];
+
+export const DEFAULT_CHECK_RESULT: CheckResult = 'Pending';
+
+// Check names that were stored under an earlier spelling. Saved records are
+// normalized through this on load so a renamed check keeps its result and file
+// instead of being treated as a new custom check.
+export const LEGACY_CHECK_NAME_MAP: Record<string, string> = {
+  'Crimnal History Clearance': 'Criminal History Clearance',
+  'Credit Check Assesment': 'Credit Check Assessment',
+  'Personal Wellness Assesment': 'Personal Wellness Assessment',
+};
+
+export function normalizeCheckName(checkName: string): string {
+  return LEGACY_CHECK_NAME_MAP[checkName] ?? checkName;
+}
 
 // Zod Schemas
 
@@ -35,6 +63,8 @@ export const BackgroundCheckFilesSchema = z.array(
     fileUploaded: z.boolean(),
     fileName: z.string().optional(),
     fileId: z.string().optional(),
+    // Optional so records saved before results existed still validate.
+    result: z.enum(CHECK_RESULT_OPTIONS).optional(),
   }),
 );
 
@@ -126,7 +156,7 @@ export const FORM_TYPE_INFO = {
     title: 'Nonprofit Screening',
     description: 'Volunteer screening for nonprofit organizations.',
     requiredChecks: [
-      'Crimnal History Clearance',
+      'Criminal History Clearance',
       'Illinois Sex Offender Clearance',
       'Illinois State Murderer and Violent Offender Against Youth',
       'Chicago Police Clearance'

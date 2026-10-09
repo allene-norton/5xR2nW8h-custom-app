@@ -4,6 +4,7 @@ import { Card, CardContent } from "../ui/card"
 import { StatusBadge } from "../shared/StatusBadge"
 import { Calendar, MapPin, User, Shield, FileText } from "lucide-react"
 import { type BackgroundCheckFormData, FORM_TYPE_INFO } from "../../types"
+import { checkResultTextClass } from "../admin/CheckResultSelect"
 
 interface CoverLetterDisplayProps {
   formData: BackgroundCheckFormData
@@ -116,13 +117,23 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
                 <Shield className="w-4 h-4" />
                 <span>Background Checks Performed</span>
               </h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                {formData.backgroundChecks.map((check) => (
-                  <div key={check} className="flex items-center space-x-2 text-sm">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                    <span className="text-blue-800">{check}</span>
-                  </div>
-                ))}
+              <div className="space-y-1.5">
+                {formData.backgroundChecks.map((check) => {
+                  const result = formData.backgroundCheckFiles?.find(
+                    (file) => file.checkName === check,
+                  )?.result
+                  return (
+                    <div key={check} className="flex items-start gap-2 text-sm">
+                      <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-blue-600"></div>
+                      <span className="flex-1 text-blue-800">{check}</span>
+                      <span
+                        className={`flex-shrink-0 font-semibold ${checkResultTextClass(result)}`}
+                      >
+                        {result || '—'}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             </div>
 

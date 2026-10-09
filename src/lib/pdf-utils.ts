@@ -1,7 +1,35 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { PDFDocument } from 'pdf-lib';
-import { FORM_TYPE_INFO, type BackgroundCheckFormData } from '@/types';
+import {
+  FORM_TYPE_INFO,
+  type BackgroundCheckFormData,
+  type CheckResult,
+} from '@/types';
+import {
+  detectFileType,
+  describeFileType,
+  isImageType,
+  type DetectedFileType,
+} from '@/lib/file-type';
+
+/** Color used for a check result in the report. */
+function getCheckResultColor(result?: CheckResult): string {
+  switch (result) {
+    case 'Cleared':
+    case 'No Records Found':
+      return '#047857';
+    case 'Records Found':
+      return '#b91c1c';
+    case 'Under Review':
+    case 'Pending':
+      return '#b45309';
+    case 'Not Applicable':
+      return '#6b7280';
+    default:
+      return '#1e40af';
+  }
+}
 
 async function imageToBase64(imagePath: string): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -200,18 +228,26 @@ export async function generateCoverLetterPDF(
           <!-- Background Checks -->
           <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 24px 0;">
             <h4 style="font-weight: 600; color: #1e40af; margin-bottom: 12px;">Background Checks Performed</h4>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
               ${formData.backgroundChecks
-                .map(
-                  (check) => `
-                <div style="display: flex; align-items: center; font-size: 14px;">
-                  <div style="width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-right: 8px;"></div>
-                  <span style="color: #1e40af;">${check}</span>
-                </div>
-              `,
-                )
+                .map((check) => {
+                  const result = formData.backgroundCheckFiles?.find(
+                    (file) => file.checkName === check,
+                  )?.result;
+                  return `
+                <tr>
+                  <td style="padding: 4px 8px 4px 0; vertical-align: top; width: 14px;">
+                    <div style="width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-top: 6px;"></div>
+                  </td>
+                  <td style="padding: 4px 8px 4px 0; vertical-align: top; color: #1e40af;">${check}</td>
+                  <td style="padding: 4px 0; vertical-align: top; text-align: right; white-space: nowrap; font-weight: 600; color: ${getCheckResultColor(
+                    result,
+                  )};">${result || '—'}</td>
+                </tr>
+              `;
+                })
                 .join('')}
-            </div>
+            </table>
           </div>
 
           <!-- Status Content -->
@@ -352,126 +388,170 @@ function getStatusContent(status: string): string {
   }
 }
 
-export async function convertImageToPDF(
-  imageBlob: Blob,
-  fileName?: string,
-): Promise<Blob> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(imageBlob);
+// A4 portrait in PDF points, with ~10mm margins, matching the cover letter.
+const A4_WIDTH_PT = 595.28;
+const A4_HEIGHT_PT = 841.89;
+const PAGE_MARGIN_PT = 28.35;
 
-    img.onload = () => {
-      try {
-        const pdf = new jsPDF('p', 'mm', 'a4');
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
+/**
+ * Re-encode an image the browser can decode but pdf-lib cannot embed
+ * (GIF/WebP/BMP, or HEIC on Safari) into PNG bytes.
+ */
+async function reencodeImageToPng(blob: Blob): Promise<Uint8Array> {
+  if (typeof createImageBitmap !== 'function') {
+    throw new Error('This browser cannot decode the image format');
+  }
 
-        // Calculate dimensions to fit the page while maintaining aspect ratio
-        const marginMM = 10; // 10mm margins
-        const availableWidth = pdfWidth - 2 * marginMM;
-        const availableHeight = pdfHeight - 2 * marginMM;
+  const bitmap = await createImageBitmap(blob);
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
 
-        const imgAspectRatio = img.width / img.height;
-        const availableAspectRatio = availableWidth / availableHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not get canvas context');
 
-        let finalWidth, finalHeight;
+    // Flatten transparency onto white so scanned IDs do not come out black.
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(bitmap, 0, 0);
 
-        if (imgAspectRatio > availableAspectRatio) {
-          finalWidth = availableWidth;
-          finalHeight = availableWidth / imgAspectRatio;
-        } else {
-          finalHeight = availableHeight;
-          finalWidth = availableHeight * imgAspectRatio;
-        }
+    const pngBlob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, 'image/png'),
+    );
+    if (!pngBlob) throw new Error('Could not re-encode image as PNG');
 
-        // Center the image
-        const xOffset = marginMM + (availableWidth - finalWidth) / 2;
-        const yOffset = marginMM + (availableHeight - finalHeight) / 2;
-
-        // Determine image format for jsPDF
-        const format = imageBlob.type.includes('png') ? 'PNG' : 'JPEG';
-
-        pdf.addImage(img, format, xOffset, yOffset, finalWidth, finalHeight);
-        const pdfBlob = pdf.output('blob');
-        URL.revokeObjectURL(url);
-        resolve(pdfBlob);
-      } catch (error) {
-        URL.revokeObjectURL(url);
-        reject(error);
-      }
-    };
-
-    img.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error(`Failed to load image: ${fileName || 'unknown'}`));
-    };
-
-    img.src = url;
-  });
+    return new Uint8Array(await pngBlob.arrayBuffer());
+  } finally {
+    bitmap.close?.();
+  }
 }
 
-export async function processFileForPDF(
+/**
+ * Wrap a single image in a one-page A4 PDF, scaled to fit and centered.
+ *
+ * JPEG and PNG are embedded straight from their bytes by pdf-lib, so this does
+ * not depend on the browser being able to render the image into an <img> tag —
+ * that dependency was the reason government ID photos silently went missing.
+ */
+export async function imageToPDF(
+  bytes: Uint8Array,
+  detected: DetectedFileType,
+  sourceBlob: Blob,
+): Promise<Blob> {
+  const pdfDoc = await PDFDocument.create();
+
+  let image;
+  if (detected === 'jpeg') {
+    image = await pdfDoc.embedJpg(bytes);
+  } else if (detected === 'png') {
+    image = await pdfDoc.embedPng(bytes);
+  } else {
+    image = await pdfDoc.embedPng(await reencodeImageToPng(sourceBlob));
+  }
+
+  const page = pdfDoc.addPage([A4_WIDTH_PT, A4_HEIGHT_PT]);
+  const availableWidth = A4_WIDTH_PT - 2 * PAGE_MARGIN_PT;
+  const availableHeight = A4_HEIGHT_PT - 2 * PAGE_MARGIN_PT;
+
+  // Fill as much of the page as the aspect ratio allows, so a photographed ID
+  // is as legible as possible in the printed packet.
+  const scale = Math.min(
+    availableWidth / image.width,
+    availableHeight / image.height,
+  );
+  const drawWidth = image.width * scale;
+  const drawHeight = image.height * scale;
+
+  page.drawImage(image, {
+    x: (A4_WIDTH_PT - drawWidth) / 2,
+    y: (A4_HEIGHT_PT - drawHeight) / 2,
+    width: drawWidth,
+    height: drawHeight,
+  });
+
+  const pdfBytes = await pdfDoc.save();
+  return new Blob([pdfBytes], { type: 'application/pdf' });
+}
+
+export type PreparedFile =
+  | { ok: true; pdf: Blob; detected: DetectedFileType }
+  | { ok: false; reason: string; detected: DetectedFileType };
+
+/**
+ * Turn any submitted document into a PDF ready to merge into the packet.
+ *
+ * The file's type is determined from its own bytes rather than the
+ * Content-Type header, which is unreliable for both form attachments (served
+ * from storage as `application/octet-stream`) and files uploaded through this
+ * app (always PUT as `application/pdf`).
+ *
+ * Returns an explicit failure reason instead of null so the caller can tell
+ * staff which document did not make it into the packet.
+ */
+export async function prepareFileForPDF(
   blob: Blob,
   fileName?: string,
-): Promise<Blob | null> {
-  const mimeType = blob.type;
+): Promise<PreparedFile> {
+  const label = fileName || 'unknown file';
 
-  if (
-    mimeType === 'application/pdf' ||
-    mimeType === 'application/octet-stream' ||
-    mimeType === 'binary/octet-stream' || // Add this line
-    mimeType === '' // Sometimes PDFs have empty MIME type
-  ) {
-    // Validate PDF files by checking the header
-    try {
-      const arrayBuffer = await blob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      const pdfHeader = String.fromCharCode(...uint8Array.slice(0, 4));
-
-      if (pdfHeader === '%PDF') {
-        console.log(`Valid PDF file: ${fileName || 'unknown'}`);
-        return blob;
-      } else {
-        // If no PDF header, check first few bytes for common file signatures
-        const fileSignature = String.fromCharCode(...uint8Array.slice(0, 10));
-        console.log(`File signature for ${fileName}:`, fileSignature);
-
-        // Still try to process as PDF if it might be a valid PDF with different structure
-        if (uint8Array.length > 1000) {
-          // Only try if file has reasonable size
-          console.warn(
-            `File ${fileName || 'unknown'} may be a PDF without standard header, attempting to process...`,
-          );
-          return blob;
-        }
-
-        console.warn(
-          `File ${fileName || 'unknown'} does not appear to be a valid PDF`,
-        );
-        return null;
-      }
-    } catch (error) {
-      console.error(`Error validating PDF ${fileName}:`, error);
-      return null;
-    }
-  } else if (mimeType.startsWith('image/')) {
-    // Convert images to PDF
-    try {
-      console.log(`Converting image ${fileName} to PDF`);
-      return await convertImageToPDF(blob, fileName);
-    } catch (error) {
-      console.error(
-        `Failed to convert image ${fileName || 'unknown'} to PDF:`,
-        error,
-      );
-      return null;
-    }
-  } else {
-    console.warn(
-      `Unsupported file type for ${fileName || 'unknown'}: ${mimeType}`,
-    );
-    return null;
+  let bytes: Uint8Array;
+  try {
+    bytes = new Uint8Array(await blob.arrayBuffer());
+  } catch (error) {
+    return {
+      ok: false,
+      detected: 'unknown',
+      reason: 'Could not read the file contents',
+    };
   }
+
+  if (bytes.length === 0) {
+    return { ok: false, detected: 'unknown', reason: 'File is empty' };
+  }
+
+  const detected = detectFileType(bytes);
+
+  if (detected === 'pdf') {
+    // Load it here so a corrupt PDF fails on its own rather than aborting the
+    // whole merge further down.
+    try {
+      await PDFDocument.load(bytes, { ignoreEncryption: true });
+    } catch (error) {
+      return {
+        ok: false,
+        detected,
+        reason: `PDF could not be read (it may be corrupt or password protected): ${
+          error instanceof Error ? error.message : 'unknown error'
+        }`,
+      };
+    }
+    return { ok: true, pdf: blob, detected };
+  }
+
+  if (isImageType(detected)) {
+    try {
+      const pdf = await imageToPDF(bytes, detected, blob);
+      return { ok: true, pdf, detected };
+    } catch (error) {
+      const base = `${describeFileType(detected)} could not be converted`;
+      const hint =
+        detected === 'heic'
+          ? '. HEIC photos from iPhones are not supported by most browsers — ask the applicant to re-upload as JPEG or PNG, or convert it before adding it to the packet'
+          : detected === 'tiff'
+            ? '. TIFF images are not supported by most browsers — convert it to JPEG or PDF first'
+            : '';
+      console.error(`Failed to convert ${label}:`, error);
+      return { ok: false, detected, reason: `${base}${hint}` };
+    }
+  }
+
+  return {
+    ok: false,
+    detected,
+    reason:
+      'File is not a PDF or a supported image. It may have failed to upload, or be a format this report cannot embed',
+  };
 }
 
 export async function mergePDFs(pdfBlobs: Blob[]): Promise<Blob> {
@@ -479,7 +559,9 @@ export async function mergePDFs(pdfBlobs: Blob[]): Promise<Blob> {
 
   for (const blob of pdfBlobs) {
     const arrayBuffer = await blob.arrayBuffer();
-    const pdf = await PDFDocument.load(arrayBuffer);
+    const pdf = await PDFDocument.load(arrayBuffer, {
+      ignoreEncryption: true,
+    });
     const copiedPages = await mergedPdf.copyPages(pdf, pdf.getPageIndices());
     copiedPages.forEach((page) => mergedPdf.addPage(page));
   }

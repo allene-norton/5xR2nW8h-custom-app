@@ -6,7 +6,53 @@ import {
   type BackgroundCheckFormData,
   DEFAULT_FORM_DATA,
   FormDataSchema,
+  normalizeCheckName,
 } from '../types';
+
+/**
+ * Bring a saved record up to date with the current check names.
+ *
+ * Check names are the key that links `backgroundChecks` to its file and result
+ * in `backgroundCheckFiles`, and to the standard-options list that decides
+ * whether a check renders as standard or custom. When a name is corrected in
+ * the options list, saved records still carry the old spelling, so normalize on
+ * load — otherwise an existing record shows the check as unselected and its
+ * uploaded file jumps into the custom-checks group.
+ */
+function migrateCheckNames(
+  data: BackgroundCheckFormData,
+): BackgroundCheckFormData {
+  const seenChecks = new Set<string>();
+  const backgroundChecks = data.backgroundChecks
+    .map(normalizeCheckName)
+    .filter((checkName) => {
+      if (seenChecks.has(checkName)) return false;
+      seenChecks.add(checkName);
+      return true;
+    });
+
+  // Dedupe by name while preserving order. If a name appears twice (both the
+  // old and new spelling were saved), keep the entry that actually has a file.
+  const fileIndexByName = new Map<string, number>();
+  const backgroundCheckFiles: BackgroundCheckFormData['backgroundCheckFiles'] =
+    [];
+  for (const file of data.backgroundCheckFiles) {
+    const normalized = { ...file, checkName: normalizeCheckName(file.checkName) };
+    const existingIndex = fileIndexByName.get(normalized.checkName);
+
+    if (existingIndex === undefined) {
+      fileIndexByName.set(normalized.checkName, backgroundCheckFiles.length);
+      backgroundCheckFiles.push(normalized);
+    } else if (
+      normalized.fileUploaded &&
+      !backgroundCheckFiles[existingIndex].fileUploaded
+    ) {
+      backgroundCheckFiles[existingIndex] = normalized;
+    }
+  }
+
+  return { ...data, backgroundChecks, backgroundCheckFiles };
+}
 
 // const AUTO_SAVE_INTERVAL = 30000; // 30 seconds
 
@@ -44,7 +90,9 @@ export function useFormData({ clientId }: UseFormDataOptions) {
 
           if (validated.success) {
             console.log('Setting form data:', validated.data); // Debug log
-            
+
+            const migrated = migrateCheckNames(validated.data);
+
             // Instead of completely replacing formData, merge with existing data
             // This preserves any client information that was pre-filled
             setFormData(prev => {
@@ -64,7 +112,7 @@ export function useFormData({ clientId }: UseFormDataOptions) {
               };
               
               return {
-                ...validated.data,
+                ...migrated,
                 identification: mergedIdentification,
               };
             });

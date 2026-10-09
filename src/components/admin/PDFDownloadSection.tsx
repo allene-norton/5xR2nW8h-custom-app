@@ -3,15 +3,27 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, GripVertical, FileText, Image, X } from 'lucide-react';
+import {
+  Download,
+  GripVertical,
+  FileText,
+  Image,
+  X,
+  AlertTriangle,
+} from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import type { BackgroundCheckFormData, BackgroundCheckFile } from '@/types';
 import {
   generateCoverLetterPDF,
   mergePDFs,
-  processFileForPDF,
+  prepareFileForPDF,
 } from '@/lib/pdf-utils';
 import { FileItem } from '@/components/admin/AdminInterface'; // Import from AdminInterface
+
+interface SkippedFile {
+  name: string;
+  reason: string;
+}
 
 // interface FileItem {
 //   id: string;
@@ -37,6 +49,7 @@ export function PDFDownloadSection({
 }: PDFDownloadSectionProps) {
   const [fileItems, setFileItems] = useState<FileItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [skippedFiles, setSkippedFiles] = useState<SkippedFile[]>([]);
 
   useEffect(() => {
     setFileItems(allFileItems);
@@ -52,7 +65,8 @@ export function PDFDownloadSection({
     setFileItems(items);
   };
 
-  const handleRemoveFile = (fileId: string) => {
+  const handleRemoveFile = (fileId: string | undefined) => {
+    if (!fileId) return;
     setFileItems(prev => prev.filter(item => item.id !== fileId));
   };
 
@@ -69,72 +83,133 @@ export function PDFDownloadSection({
     }
   };
 
+  /**
+   * Fetch a document's bytes. Tries the storage URL directly first, then falls
+   * back to the same-origin proxy if the browser blocks it (CORS) or the
+   * request fails outright.
+   */
+  const fetchDocument = async (url: string): Promise<Blob> => {
+    try {
+      const response = await fetch(url);
+      if (response.ok) return await response.blob();
+      console.warn(
+        `Direct fetch returned ${response.status}, retrying through proxy`,
+      );
+    } catch (directError) {
+      console.warn('Direct fetch failed, retrying through proxy', directError);
+    }
+
+    const proxyResponse = await fetch(
+      `/api/pdf-proxy?url=${encodeURIComponent(url)}`,
+    );
+    if (!proxyResponse.ok) {
+      throw new Error(
+        `Could not download the file (${proxyResponse.status} ${proxyResponse.statusText})`,
+      );
+    }
+    return await proxyResponse.blob();
+  };
+
   const handleDownloadPDF = async () => {
-  setIsGenerating(true);
-  try {
-    const pdfFiles: Blob[] = [];
-    
-    for (const item of fileItems) {
-      if (item.type === 'cover') {
-        try {
-          const coverPDF = await generateCoverLetterPDF(item.data);
-          if (coverPDF && coverPDF.type === 'application/pdf') {
-            pdfFiles.push(coverPDF);
-          } else {
-            console.warn('Cover letter PDF generation returned invalid data');
+    setIsGenerating(true);
+    setSkippedFiles([]);
+
+    try {
+      const pdfFiles: Blob[] = [];
+      const skipped: SkippedFile[] = [];
+
+      for (const item of fileItems) {
+        const label = item.name || 'Untitled document';
+
+        if (item.type === 'cover') {
+          try {
+            // Use the live form data, not `item.data`. That snapshot is only
+            // rebuilt when the selected client changes, so anything edited
+            // afterwards (status, notes, check results) was missing from the
+            // generated cover letter.
+            const coverPDF = await generateCoverLetterPDF(formData);
+            if (coverPDF && coverPDF.type === 'application/pdf') {
+              pdfFiles.push(coverPDF);
+            } else {
+              skipped.push({
+                name: label,
+                reason: 'Cover letter generation returned invalid data',
+              });
+            }
+          } catch (coverError) {
+            console.error('Error generating cover letter PDF:', coverError);
+            skipped.push({
+              name: label,
+              reason:
+                coverError instanceof Error
+                  ? coverError.message
+                  : 'Cover letter could not be generated',
+            });
           }
-        } catch (coverError) {
-          console.error('Error generating cover letter PDF:', coverError);
-        }
-      } else if (item.url) {
-        try {
-          const response = await fetch(item.url);
-          if (!response.ok) {
-            throw new Error(`Failed to fetch file: ${response.statusText}`);
+        } else if (item.url) {
+          try {
+            const blob = await fetchDocument(item.url);
+            const prepared = await prepareFileForPDF(blob, label);
+
+            if (prepared.ok) {
+              pdfFiles.push(prepared.pdf);
+              console.log(
+                `Processed ${label} as ${prepared.detected} successfully`,
+              );
+            } else {
+              console.warn(`Skipping ${label}: ${prepared.reason}`);
+              skipped.push({ name: label, reason: prepared.reason });
+            }
+          } catch (fileError) {
+            console.error(`Error processing file ${label}:`, fileError);
+            skipped.push({
+              name: label,
+              reason:
+                fileError instanceof Error
+                  ? fileError.message
+                  : 'Could not be downloaded',
+            });
           }
-          const blob = await response.blob();
-          const processedPDF = await processFileForPDF(blob, item.name);
-          if (processedPDF) {
-            pdfFiles.push(processedPDF);
-            console.log(`Processed file ${item.name} successfully`);
-          }
-        } catch (fileError) {
-          console.error(`Error processing file ${item.name}:`, fileError);
+        } else {
+          skipped.push({
+            name: label,
+            reason: 'No file location available for this document',
+          });
         }
       }
+
+      setSkippedFiles(skipped);
+
+      if (pdfFiles.length === 0) {
+        throw new Error('No valid files could be processed');
+      }
+
+      console.log(`Processing ${pdfFiles.length} files for PDF generation`);
+
+      let finalPDF: Blob;
+      if (pdfFiles.length === 1) {
+        finalPDF = pdfFiles[0];
+      } else {
+        finalPDF = await mergePDFs(pdfFiles);
+      }
+
+      // Simple and clean - just open the PDF in a new window
+      const url = URL.createObjectURL(finalPDF);
+      window.open(url, '_blank', 'noopener,noreferrer');
+
+      console.log('PDF opened in new window');
+
+      // Cleanup after delay
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert(
+        'Error generating PDF. Please check that all files are valid and try again.',
+      );
+    } finally {
+      setIsGenerating(false);
     }
-    
-    if (pdfFiles.length === 0) {
-      throw new Error('No valid files could be processed');
-    }
-    
-    console.log(`Processing ${pdfFiles.length} files for PDF generation`);
-    
-    let finalPDF: Blob;
-    if (pdfFiles.length === 1) {
-      finalPDF = pdfFiles[0];
-    } else {
-      finalPDF = await mergePDFs(pdfFiles);
-    }
-    
-    const filename = `${formData.identification.firstName}_${formData.identification.lastName}_Background_Check.pdf`;
-    
-    // Simple and clean - just open the PDF in a new window
-    const url = URL.createObjectURL(finalPDF);
-    window.open(url, '_blank', 'noopener,noreferrer');
-    
-    console.log('PDF opened in new window');
-    
-    // Cleanup after delay
-    setTimeout(() => URL.revokeObjectURL(url), 30000);
-    
-  } catch (error) {
-    console.error('Error generating PDF:', error);
-    alert('Error generating PDF. Please check that all files are valid and try again.');
-  } finally {
-    setIsGenerating(false);
-  }
-};
+  };
 
 
 
@@ -157,6 +232,34 @@ export function PDFDownloadSection({
         <p className="text-sm text-gray-600 mb-4">
           Drag and drop to reorder files. Click the X to remove files from the PDF. The cover letter will be included at the beginning of the PDF.
         </p>
+
+        {skippedFiles.length > 0 && (
+          <div className="mb-4 rounded-lg border border-yellow-300 bg-yellow-50 p-4">
+            <div className="flex items-start space-x-3">
+              <AlertTriangle className="mt-0.5 h-5 w-5 flex-shrink-0 text-yellow-600" />
+              <div className="flex-1">
+                <h4 className="mb-1 text-sm font-medium text-yellow-900">
+                  {skippedFiles.length === 1
+                    ? '1 document was left out of the report'
+                    : `${skippedFiles.length} documents were left out of the report`}
+                </h4>
+                <p className="mb-2 text-xs text-yellow-800">
+                  The PDF was generated without these. Resolve them and
+                  regenerate before sending the report.
+                </p>
+                <ul className="space-y-1 text-sm text-yellow-800">
+                  {skippedFiles.map((file, index) => (
+                    <li key={`${file.name}-${index}`}>
+                      <span className="font-medium">{file.name}</span>
+                      {' — '}
+                      {file.reason}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        )}
 
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="file-list">

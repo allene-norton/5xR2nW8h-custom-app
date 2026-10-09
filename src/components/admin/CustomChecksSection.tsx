@@ -12,14 +12,22 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '../ui/badge';
 import { Plus, X } from 'lucide-react';
-import { type FormType, BACKGROUND_CHECK_OPTIONS, BackgroundCheckFiles, BackgroundCheckFormData, BackgroundCheckFile } from '../../types';
+import { CheckResultSelect } from '@/components/admin/CheckResultSelect';
+import { type FormType, type CheckResult, BACKGROUND_CHECK_OPTIONS, DEFAULT_CHECK_RESULT, BackgroundCheckFiles, BackgroundCheckFormData, BackgroundCheckFile } from '../../types';
 
 interface CustomChecksSectionProps {
   formType: FormType;
   selectedChecks: string[];
   selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
-  updateFormData: (updates: { backgroundChecks: string[], backgroundCheckFiles: BackgroundCheckFiles }) => void;
+  updateFormData: (
+    updates: Partial<
+      Pick<
+        BackgroundCheckFormData,
+        'backgroundChecks' | 'backgroundCheckFiles'
+      >
+    >,
+  ) => void;
   onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile,) => void
 }
@@ -55,6 +63,7 @@ export function CustomChecksSection({
     fileUploaded: false,
     fileName: '',
     fileId: '',
+    result: DEFAULT_CHECK_RESULT,
   };
   
   updateFormData({ 
@@ -78,6 +87,14 @@ const handleRemoveCustomCheck = (checkToRemove: string) => {
   });
   
   console.log(`updateFormData called from CustomChecks removechecks`);
+};
+
+const handleResultChange = (checkName: string, result: CheckResult) => {
+  const newBackgroundCheckFiles = (backgroundCheckFiles || []).map((file) =>
+    file.checkName === checkName ? { ...file, result } : file,
+  );
+
+  updateFormData({ backgroundCheckFiles: newBackgroundCheckFiles });
 };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -133,34 +150,54 @@ const handleRemoveCustomCheck = (checkToRemove: string) => {
               <h4 className="text-sm font-medium text-gray-900">
                 Added Custom Checks:
               </h4>
-              <div className="flex flex-wrap gap-2">
-                {customChecks.map((checkName) => { 
+              <div className="space-y-2">
+                {customChecks.map((checkName) => {
                   const fileInfo = backgroundCheckFiles.find(
-                  (f) => f.checkName === checkName,
-                );
-                  return(
-                  <Badge
-                    key={checkName}
-                    variant="secondary"
-                    className="flex items-center space-x-1 py-1 px-2 bg-green-50 text-green-800 border-green-200"
-                  >
-                    <span className="text-sm">{checkName}</span>
-                    {fileInfo?.fileUploaded && (
-                            <Badge
-                              variant="outline"
-                              className="ml-2 text-xs bg-green-100 text-green-800 border-green-300"
-                            >
-                              File Uploaded
-                            </Badge>)}
-                    <button
-                      onClick={() => handleRemoveCustomCheck(checkName)}
-                      className="ml-1 hover:bg-green-200 rounded-full p-0.5 transition-colors"
-                      aria-label={`Remove ${checkName}`}
+                    (f) => f.checkName === checkName,
+                  );
+                  return (
+                    <div
+                      key={checkName}
+                      className="flex flex-col gap-2 rounded-lg border border-green-200 bg-green-50 p-3 sm:flex-row sm:items-center sm:gap-3"
                     >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </Badge>
-                )})}
+                      <div className="min-w-0 flex-1">
+                        <span className="text-sm font-medium text-green-900">
+                          {checkName}
+                        </span>
+                        {fileInfo?.fileUploaded && (
+                          <Badge
+                            variant="outline"
+                            className="ml-2 text-xs bg-green-100 text-green-800 border-green-300"
+                          >
+                            File Uploaded
+                          </Badge>
+                        )}
+                        {fileInfo?.fileName && (
+                          <p className="mt-1 text-xs text-green-700">
+                            {fileInfo.fileName}
+                          </p>
+                        )}
+                      </div>
+                      <div className="w-full sm:w-48">
+                        <CheckResultSelect
+                          checkName={checkName}
+                          result={fileInfo?.result}
+                          onChange={(result) =>
+                            handleResultChange(checkName, result)
+                          }
+                          compact
+                        />
+                      </div>
+                      <button
+                        onClick={() => handleRemoveCustomCheck(checkName)}
+                        className="self-start rounded-full p-1 text-green-800 transition-colors hover:bg-green-200 sm:self-center"
+                        aria-label={`Remove ${checkName}`}
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}

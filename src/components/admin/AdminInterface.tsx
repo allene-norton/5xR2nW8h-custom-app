@@ -77,13 +77,19 @@ export function AdminInterface({
       id: 'cover-letter',
       name: 'Cover Letter',
       type: 'cover',
-      data: formData,
+      data: null,
     },
   ]);
   const [isClientChanging, setIsClientChanging] = useState(false);
 
   // console.log(formData);
 
+  // Reset the packet file list only when the selected client actually changes.
+  // This used to also run whenever `fileChannelsResponse.data` changed, which
+  // gave a new array identity on every refetch (each server action calls
+  // revalidatePath). If that landed after the submitted-form attachments had
+  // loaded, it wiped them back out of the list and the government ID silently
+  // went missing from the report.
   useEffect(() => {
     setIsClientChanging(true);
     setFileItems([
@@ -91,10 +97,15 @@ export function AdminInterface({
         id: 'cover-letter',
         name: 'Cover Letter',
         type: 'cover',
-        data: formData,
+        // Placeholder only — the cover letter is rendered from the live
+        // formData prop at generation time, not from this snapshot.
+        data: null,
       },
     ]);
+    setIsClientChanging(false);
+  }, [selectedClient?.id]);
 
+  useEffect(() => {
     // Handle file channel setting
     if (selectedClient && fileChannelsResponse?.data) {
       const selectedClientFileChannel = fileChannelsResponse.data.find(
@@ -117,12 +128,7 @@ export function AdminInterface({
         });
       }
     }
-
-    // Reset loading after a short delay
-    // setTimeout(() => setIsClientChanging(false), 100);
-
-    setIsClientChanging(false);
-  }, [selectedClient?.id, fileChannelsResponse?.data]);
+  }, [selectedClient?.id, fileChannelsResponse?.data, formData.fileChannelId]);
 
   const handleSetFileItem = (fileObj: FileItem) => {
     if (isClientChanging) return; // Prevent updates during client changes

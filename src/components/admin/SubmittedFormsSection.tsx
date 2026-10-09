@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   Card,
   CardContent,
@@ -55,6 +55,14 @@ export function SubmittedFormsSection({
 
   const isLoading = isLoadingForms || isLoadingContracts;
 
+  // Tracks which client the UI is currently showing, so a response that
+  // arrives after the user has switched clients is discarded instead of
+  // attaching the previous applicant's documents to the new one's report.
+  const currentClientIdRef = useRef(clientId);
+  useEffect(() => {
+    currentClientIdRef.current = clientId;
+  }, [clientId]);
+
   // Form Loading
   const loadForms = useCallback(async () => {
     if (!clientId) {
@@ -96,9 +104,12 @@ export function SubmittedFormsSection({
       const clientForms = allResponses.filter(
         (response) => response.clientId === clientId,
       );
-      
+
+      // The user switched clients while this was in flight — drop the result.
+      if (currentClientIdRef.current !== clientId) return;
+
       setForms(clientForms as FormResponseArray);
-      
+
       if (setFileItem) {
         clientForms.forEach((form: FormResponse) => {
           if (form.formFields) {
@@ -151,9 +162,12 @@ export function SubmittedFormsSection({
       const signedContracts = contracts.filter(
         (contract: Contract) => contract.status === 'signed',
       );
-      
+
+      // The user switched clients while this was in flight — drop the result.
+      if (currentClientIdRef.current !== clientId) return;
+
       setContracts(signedContracts as ContractArray);
-      
+
       if (setFileItem) {
         signedContracts.forEach((contract: Contract, index: number) => {
           if (contract.signedFileUrl) {

@@ -12,10 +12,13 @@ import {
 import { Checkbox } from '../ui/checkbox';
 import { Badge } from '../ui/badge';
 import { Shield, AlertTriangle } from 'lucide-react';
+import { CheckResultSelect } from '@/components/admin/CheckResultSelect';
 import {
   type FormType,
+  type CheckResult,
   BACKGROUND_CHECK_OPTIONS,
   FORM_TYPE_INFO,
+  DEFAULT_CHECK_RESULT,
   BackgroundCheckFiles,
   BackgroundCheckFile,
   BackgroundCheckFormData,
@@ -26,7 +29,14 @@ interface BackgroundChecksSectionProps {
   selectedChecks: string[];
   selectedClientId: string;
   backgroundCheckFiles: BackgroundCheckFiles;
-  updateFormData: (updates: { backgroundChecks: string[], backgroundCheckFiles: BackgroundCheckFiles }) => void;
+  updateFormData: (
+    updates: Partial<
+      Pick<
+        BackgroundCheckFormData,
+        'backgroundChecks' | 'backgroundCheckFiles'
+      >
+    >,
+  ) => void;
   onFileCreated?: (updateBackgroundCheckFile: BackgroundCheckFile) => void;
   updateCheckFileStatus: (updatedFileInfo: BackgroundCheckFile) => void;
 }
@@ -65,6 +75,7 @@ export function BackgroundChecksSection({
         fileName: '',
         fileUploaded: false,
         fileId: '',
+        result: DEFAULT_CHECK_RESULT,
       };
       newBackgroundCheckFiles.push(newFile);
     }
@@ -78,6 +89,14 @@ export function BackgroundChecksSection({
     backgroundCheckFiles: newBackgroundCheckFiles
   });
   console.log(`updateFormData called from BackgroundChecks`);
+};
+
+const handleResultChange = (checkName: string, result: CheckResult) => {
+  const newBackgroundCheckFiles = (backgroundCheckFiles || []).map((file) =>
+    file.checkName === checkName ? { ...file, result } : file,
+  );
+
+  updateFormData({ backgroundCheckFiles: newBackgroundCheckFiles });
 };
 
 const isRequired = (checkName: string) => requiredChecks.includes(checkName);
@@ -163,6 +182,17 @@ const isRequired = (checkName: string) => requiredChecks.includes(checkName);
                     <p className="text-xs text-gray-500 mt-1">
                       {fileInfo.fileName}
                     </p>
+                  )}
+                  {isChecked && (
+                    <div className="mt-3">
+                      <CheckResultSelect
+                        checkName={checkName}
+                        result={fileInfo?.result}
+                        onChange={(result) =>
+                          handleResultChange(checkName, result)
+                        }
+                      />
+                    </div>
                   )}
                 </div>
               </div>
