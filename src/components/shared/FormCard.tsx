@@ -42,15 +42,21 @@ export function FormCard({
 
   const attachmentUrls = useMemo(() => {
     const allAttachmentUrls: string[] = [];
-    
+
     if (formResponse.formFields) {
       Object.values(formResponse.formFields).forEach((field) => {
-        if (field.type === 'fileUpload' && field.attachmentUrls) {
+        // Key off attachmentUrls actually being present, not field.type.
+        // The API's `type` label for a field has been unreliable (it doesn't
+        // always come back as 'fileUpload' for an upload field), which was
+        // silently dropping attachments — including images — that the API
+        // had already returned in attachmentUrls. If the URLs are there,
+        // show them, regardless of what type says.
+        if (field.attachmentUrls && field.attachmentUrls.length > 0) {
           allAttachmentUrls.push(...field.attachmentUrls);
         }
       });
     }
-    
+
     return allAttachmentUrls;
   }, [formResponse.formFields]);
 
