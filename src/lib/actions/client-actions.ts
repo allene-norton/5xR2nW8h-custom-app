@@ -277,15 +277,30 @@ export async function listClients(
       revalidatePath('/internal');
       return { success: true, data };
     } else {
-      // Prod mode: use Copilot SDK with token
+      // Prod mode: use Copilot SDK with token.
+      // listClients is paginated (nextToken) — follow it instead of trusting
+      // a single limit:2000 page, same reasoning as listForms below.
       if (!token) {
         throw new Error('Token is required in production');
       }
 
       const sdk = createSDK(token);
-      const clients = await sdk.listClients({ limit: 2000 });
+      const allClients: NonNullable<
+        Awaited<ReturnType<typeof sdk.listClients>>['data']
+      > = [];
+      let nextToken: string | undefined;
+
+      do {
+        const page = await sdk.listClients({ limit: 100, nextToken });
+        allClients.push(...(page.data || []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
       revalidatePath('/internal');
-      return { success: true, data: clients as ClientsData };
+      return {
+        success: true,
+        data: { data: allClients } as ClientsData,
+      };
     }
   } catch (error) {
     console.error('Error fetching clients:', error);
@@ -344,35 +359,65 @@ export async function updateClient(clientId: string, body: UpdateClientRequest, 
 export async function listForms(token?: string) {
   try {
     if (isDev) {
-      // Dev mode: use Assembly API directly
+      // Dev mode: use Assembly API directly. The REST endpoint paginates the
+      // same way the SDK does (nextToken), so follow it here too rather than
+      // trusting a single page to contain every form.
       if (!assemblyApiKey) {
         throw new Error('ASSEMBLY_API_KEY is required for dev mode');
       }
 
-      const response = await fetch(`${ASSEMBLY_BASE_URI}/forms`, {
-        method: 'GET',
-        headers: {
-          'X-API-KEY': assemblyApiKey,
-        },
-      });
+      const allForms: any[] = [];
+      let nextToken: string | undefined;
 
-      if (!response.ok) {
-        throw new Error(`API request failed: ${response.statusText}`);
-      }
+      do {
+        const url = new URL(`${ASSEMBLY_BASE_URI}/forms`);
+        url.searchParams.set('limit', '100');
+        if (nextToken) url.searchParams.set('nextToken', nextToken);
 
-      const data = await response.json();
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: {
+            'X-API-KEY': assemblyApiKey,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error(`API request failed: ${response.statusText}`);
+        }
+
+        const page = await response.json();
+        allForms.push(...(page.data || []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
       revalidatePath('/internal');
-      return data;
+      return { data: allForms };
     } else {
-      // Prod mode: use Copilot SDK with token
+      // Prod mode: use Copilot SDK with token.
+      //
+      // listForms is paginated (it returns a nextToken when there are more
+      // results) but was previously fetched as a single page of up to 2000 —
+      // if the API caps each page below that, or the workspace ever grows
+      // past it, forms beyond the first page (and therefore all of their
+      // responses/attachments, e.g. Government ID submissions) would be
+      // silently missing from every screen that lists forms.
       if (!token) {
         throw new Error('Token is required in production');
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listForms({ limit: 2000 });
+      const allForms: NonNullable<Awaited<ReturnType<typeof sdk.listForms>>['data']> =
+        [];
+      let nextToken: string | undefined;
+
+      do {
+        const page = await sdk.listForms({ limit: 100, nextToken });
+        allForms.push(...(page.data || []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
       revalidatePath('/internal');
-      return data;
+      return { data: allForms };
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
@@ -497,15 +542,27 @@ export async function listFileChannels(token?: string) {
       revalidatePath('/internal');
       return data;
     } else {
-      // Prod mode: use Copilot SDK with token
+      // Prod mode: use Copilot SDK with token.
+      // listFileChannels is paginated (nextToken) — follow it instead of
+      // trusting a single limit:2000 page, same reasoning as listForms.
       if (!token) {
         throw new Error('Token is required in production');
       }
 
       const sdk = createSDK(token);
-      const data = await sdk.listFileChannels({ limit: 2000 });
+      const allChannels: NonNullable<
+        Awaited<ReturnType<typeof sdk.listFileChannels>>['data']
+      > = [];
+      let nextToken: string | undefined;
+
+      do {
+        const page = await sdk.listFileChannels({ limit: 100, nextToken });
+        allChannels.push(...(page.data || []));
+        nextToken = page.nextToken;
+      } while (nextToken);
+
       revalidatePath('/internal');
-      return data;
+      return { data: allChannels };
     }
   } catch (error) {
     console.error('Error fetching forms:', error);
