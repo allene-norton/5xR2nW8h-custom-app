@@ -18,6 +18,7 @@ import {
   mergePDFs,
   prepareFileForPDF,
 } from '@/lib/pdf-utils';
+import { useCoverLetterTemplate } from '@/hooks/useCoverLetterTemplate';
 import { FileItem } from '@/components/admin/AdminInterface'; // Import from AdminInterface
 
 interface SkippedFile {
@@ -50,6 +51,7 @@ export function PDFDownloadSection({
   const [fileItems, setFileItems] = useState<FileItem[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [skippedFiles, setSkippedFiles] = useState<SkippedFile[]>([]);
+  const { template: coverLetterTemplate } = useCoverLetterTemplate();
 
   useEffect(() => {
     setFileItems(allFileItems);
@@ -127,7 +129,10 @@ export function PDFDownloadSection({
             // rebuilt when the selected client changes, so anything edited
             // afterwards (status, notes, check results) was missing from the
             // generated cover letter.
-            const coverPDF = await generateCoverLetterPDF(formData);
+            const coverPDF = await generateCoverLetterPDF(
+              formData,
+              coverLetterTemplate,
+            );
             if (coverPDF && coverPDF.type === 'application/pdf') {
               pdfFiles.push(coverPDF);
             } else {

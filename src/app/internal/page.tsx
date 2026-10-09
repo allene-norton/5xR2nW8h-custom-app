@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 // HOOKS IMPORTS
 import { useFormData } from '@/hooks/useFormData';
@@ -24,7 +25,7 @@ import { AdminInterface } from '@/components/admin/AdminInterface';
 // UI IMPORTS
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Save, Clock, CheckCircle, AlertTriangle } from 'lucide-react';
+import { Save, Clock, CheckCircle, AlertTriangle, Settings } from 'lucide-react';
 import { se } from 'date-fns/locale';
 
 interface InternalPageProps {
@@ -252,6 +253,15 @@ export default function InternalPage({ searchParams }: InternalPageProps) {
 
             {/* Controls */}
             <div className="flex items-center space-x-6">
+              {/* Cover Letter Settings */}
+              <Link
+                href={token ? `/internal/cover-letter-settings?token=${token}` : '/internal/cover-letter-settings'}
+                className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Cover Letter Settings</span>
+              </Link>
+
               {/* Save Status */}
               <div className="flex items-center space-x-2 text-sm">
                 {hasUnsavedChanges ? (

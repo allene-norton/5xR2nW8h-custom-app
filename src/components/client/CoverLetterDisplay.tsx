@@ -1,16 +1,34 @@
 "use client"
 
+import parse from "html-react-parser"
 import { Card, CardContent } from "../ui/card"
 import { StatusBadge } from "../shared/StatusBadge"
 import { Calendar, MapPin, User, Shield, FileText } from "lucide-react"
-import { type BackgroundCheckFormData, FORM_TYPE_INFO } from "../../types"
+import { type BackgroundCheckFormData, FORM_TYPE_INFO, type Status } from "../../types"
 import { checkResultTextClass } from "../admin/CheckResultSelect"
+import { useCoverLetterTemplate } from "@/hooks/useCoverLetterTemplate"
+import { STATUS_LABELS, type CoverLetterTemplate } from "@/types/cover-letter"
 
 interface CoverLetterDisplayProps {
   formData: BackgroundCheckFormData
+  /**
+   * Pass a template explicitly to preview draft (unsaved) edits — used by the
+   * cover letter settings page. Every other caller omits this and the
+   * component loads the saved template itself.
+   */
+  templateOverride?: CoverLetterTemplate
 }
 
-export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
+const STATUS_STYLES: Record<Status, { text: string; bg: string; border: string }> = {
+  cleared: { text: "text-green-700", bg: "bg-green-50", border: "border-green-200" },
+  pending: { text: "text-yellow-700", bg: "bg-yellow-50", border: "border-yellow-200" },
+  denied: { text: "text-red-700", bg: "bg-red-50", border: "border-red-200" },
+}
+
+export function CoverLetterDisplay({ formData, templateOverride }: CoverLetterDisplayProps) {
+  const { template: loadedTemplate } = useCoverLetterTemplate()
+  const template = templateOverride ?? loadedTemplate
+
   const client = formData.client
   const formTypeInfo = FORM_TYPE_INFO[formData.formType]
   const currentDate = new Date().toLocaleDateString("en-US", {
@@ -18,6 +36,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
     month: "long",
     day: "numeric",
   })
+  const statusStyle = STATUS_STYLES[formData.status]
 
   return (
     <Card className="bg-white shadow-lg">
@@ -28,20 +47,20 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
             <div>
               <div className="flex items-center space-x-3 mb-2">
                 <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-                  <img 
-                  src="/ct-logo.png" 
-                  alt="CT Logo" 
+                  <img
+                  src="/ct-logo.png"
+                  alt="CT Logo"
                   className="w-12 h-12 rounded-lg object-contain"
                 />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">ClearTech</h1>
-                  <p className="text-gray-600">Background Checks and Security Consulting</p>
+                  <h1 className="text-2xl font-bold text-gray-900">{template.companyName}</h1>
+                  <p className="text-gray-600">{template.companyTagline}</p>
                 </div>
               </div>
               <div className="text-sm text-gray-600 space-y-1">
-                <h2 className="text-1xl font-bold text-gray-900">A People-Focused Approach to Screening</h2>
-                <p> Contact Us: admin@cleartechbackground.com</p>
+                <h2 className="text-1xl font-bold text-gray-900">{template.heroTagline}</h2>
+                <p> Contact Us: {template.contactEmail}</p>
               </div>
             </div>
             <div className="text-right">
@@ -101,15 +120,7 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
 
           {/* Letter Body */}
           <div className="prose prose-gray max-w-none">
-            {/* <p className="text-gray-700 leading-relaxed">
-              Dear {formData.identification.firstName} {formData.identification.lastName},
-            </p> */}
-
-            <p className="text-gray-700 leading-relaxed">
-              We are pleased to provide you with the results of your background screening conducted by ClearTech
-              Background Services. This comprehensive screening was performed in accordance with the requirements for{" "}
-              the State of Illinois and includes the background checks listed below:
-            </p>
+            <div className="text-gray-700 leading-relaxed">{parse(template.introParagraphHtml)}</div>
 
             {/* Background Checks Performed */}
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 my-6">
@@ -137,28 +148,17 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
               </div>
             </div>
 
-            {/* Status-specific content */}
-            {formData.status === "cleared" && (
-              <p className="text-gray-700 leading-relaxed">
-                <strong className="text-green-700">CLEARED:</strong> The results of this screening <strong>have been successfully completed and cleared</strong>. If you have any questions or would like additional information regarding these results, please contact our office.
-              </p>
-            )}
-
-            {formData.status === "pending" && (
-              <p className="text-gray-700 leading-relaxed">
-                <strong className="text-yellow-700">PENDING:</strong> Your background screening is currently in
-                progress. We are awaiting responses from one or more verification sources. We will notify you as soon as
-                the screening is complete.
-              </p>
-            )}
-
-            {formData.status === "denied" && (
-              <p className="text-gray-700 leading-relaxed">
-                <strong className="text-red-700">DENIED:</strong> Your background screening has revealed information
-                that does not meet the required standards for this application. If you believe this information is
-                incorrect, please contact us immediately to discuss the dispute process.
-              </p>
-            )}
+            {/* Status-specific content. The label and its color are applied
+                here, not stored as part of the editable text — rich text
+                edited through the settings page can't carry inline color
+                styling reliably, so keeping it structural guarantees the
+                color coding can't be broken by an edit. */}
+            <div className={`rounded-lg border p-4 my-6 ${statusStyle.bg} ${statusStyle.border}`}>
+              <p className={`font-semibold mb-1 ${statusStyle.text}`}>{STATUS_LABELS[formData.status]}</p>
+              <div className="text-gray-700 leading-relaxed">
+                {parse(template.statusParagraphs[formData.status])}
+              </div>
+            </div>
 
             {/* Additional Notes */}
             {formData.memo && (
@@ -171,37 +171,22 @@ export function CoverLetterDisplay({ formData }: CoverLetterDisplayProps) {
               </div>
             )}
             <br/>
-            <p className="text-gray-700 leading-relaxed">
-              This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
-              applicable state and local laws.</p>
-              <p className="text-gray-700 leading-relaxed"> If you have any questions about these results or need additional
-              information, please contact our office at admin@cleartechbackground.com.
-            </p><br/>
+            <div className="text-gray-700 leading-relaxed">{parse(template.complianceParagraphHtml)}</div>
+            <div className="text-gray-700 leading-relaxed">{parse(template.contactParagraphHtml)}</div>
+            <br/>
 
-            <p className="text-gray-700 leading-relaxed">Thank you for choosing ClearTech Background Services.</p>
+            <div className="text-gray-700 leading-relaxed">{parse(template.closingParagraphHtml)}</div>
 
             <div className="mt-8 pt-4 border-t border-gray-200">
-              <p className="text-gray-700">
-                Sincerely,
-                <br />
-                <br />
-                <strong>ClearTech Admin Team</strong>
-                <h2 className="text-1xl font-bold text-gray-900">A People-Focused Approach to Screening</h2>
-              </p>
+              <div className="text-gray-700">{parse(template.signatureBlockHtml)}</div>
+              <h2 className="text-1xl font-bold text-gray-900">{template.heroTagline}</h2>
             </div>
           </div>
         </div>
 
         {/* Footer */}
         <div className="mt-8 pt-6 border-t border-gray-200 text-xs text-gray-500">
-          <p className="mb-2">
-            <strong>Confidentiality Notice:</strong> This document contains confidential and privileged information. If
-            you are not the intended recipient, please notify the sender immediately and destroy this document.
-          </p>
-          {/* <p>
-            <strong>Dispute Process:</strong> If you believe any information in this report is inaccurate, you have the
-            right to dispute it. Please contact us within 30 days of receiving this report.
-          </p> */}
+          <div className="mb-2">{parse(template.confidentialityNoticeHtml)}</div>
         </div>
       </CardContent>
     </Card>

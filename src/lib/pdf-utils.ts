@@ -12,6 +12,21 @@ import {
   isImageType,
   type DetectedFileType,
 } from '@/lib/file-type';
+import {
+  DEFAULT_COVER_LETTER_TEMPLATE,
+  STATUS_LABELS,
+  type CoverLetterTemplate,
+} from '@/types/cover-letter';
+
+/** Escape plain text before interpolating it into the raw PDF HTML string. */
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
 
 /** Color used for a check result in the report. */
 function getCheckResultColor(result?: CheckResult): string {
@@ -62,6 +77,7 @@ async function imageToBase64(imagePath: string): Promise<string> {
 
 export async function generateCoverLetterPDF(
   formData: BackgroundCheckFormData,
+  template: CoverLetterTemplate = DEFAULT_COVER_LETTER_TEMPLATE,
 ): Promise<Blob> {
   // Convert logo to base64 first
   const logoSrc = `${window.location.origin}/ct-logo.png`;
@@ -175,12 +191,12 @@ export async function generateCoverLetterPDF(
               <div style="display: flex; align-items: center; margin-bottom: 8px;">
                 <img src="${logoBase64}" alt="CT Logo" class="logo-img">
                 <div>
-                  <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #111827;">ClearTech</h1>
-                  <p style="margin: 0; color: #6b7280;">Background Checks and Security Consulting</p>
+                  <h1 style="font-size: 24px; font-weight: bold; margin: 0; color: #111827;">${escapeHtml(template.companyName)}</h1>
+                  <p style="margin: 0; color: #6b7280;">${escapeHtml(template.companyTagline)}</p>
                 </div>
               </div>
-              <h2 style="font-size: 20px; font-weight: bold; margin: 0; color: #111827;">A People-Focused Approach to Screening</h2>
-              <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">Contact Us: admin@cleartechbackground.com</p>
+              <h2 style="font-size: 20px; font-weight: bold; margin: 0; color: #111827;">${escapeHtml(template.heroTagline)}</h2>
+              <p style="font-size: 14px; color: #6b7280; margin: 4px 0;">Contact Us: ${escapeHtml(template.contactEmail)}</p>
             </div>
             <div style="background: ${getStatusColor(formData.status)}; padding: 8px 16px; border-radius: 8px; color: white; font-weight: 600; text-transform: uppercase;">
               ${formData.status}
@@ -220,10 +236,8 @@ export async function generateCoverLetterPDF(
         <!-- Letter Body -->
         <div style="line-height: 1.8;">
           <!-- <p>Dear ${formData.identification.firstName} ${formData.identification.lastName},</p> -->
-          
-          <p>We are pleased to provide you with the results of your background screening conducted by ClearTech
-          Background Services. This comprehensive screening was performed in accordance with the requirements for
-          the State of Illinois and includes the background checks listed below:</p>
+
+          ${template.introParagraphHtml}
 
           <!-- Background Checks -->
           <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 16px; margin: 24px 0;">
@@ -250,8 +264,13 @@ export async function generateCoverLetterPDF(
             </table>
           </div>
 
-          <!-- Status Content -->
-          ${getStatusContent(formData.status)}
+          <!-- Status Content. The label and its color are applied here,
+               structurally, rather than stored as part of the editable text
+               — see the note on STATUS_LABELS/CoverLetterTemplate. -->
+          <div style="background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; margin: 24px 0;">
+            <p style="font-weight: 600; margin: 0 0 8px 0; color: ${getStatusColor(formData.status)};">${STATUS_LABELS[formData.status]}</p>
+            ${template.statusParagraphs[formData.status]}
+          </div>
 
           <!-- Additional Notes -->
           ${
@@ -266,30 +285,22 @@ export async function generateCoverLetterPDF(
           }
 
           <br>
-          <p>This background screening was conducted in compliance with the Fair Credit Reporting Act (FCRA) and all
-          applicable state and local laws.</p>
-          
-          <p>If you have any questions about these results or need additional
-          information, please contact our office at admin@cleartechbackground.com.</p>
-          
+          ${template.complianceParagraphHtml}
+
+          ${template.contactParagraphHtml}
+
           <br>
-          <p>Thank you for choosing ClearTech Background Services.</p>
+          ${template.closingParagraphHtml}
 
           <div style="margin-top: 32px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-            <p>
-              Sincerely,<br><br>
-              <strong>ClearTech Admin Team</strong><br>
-              <h2 style="font-size: 20px; font-weight: bold; margin: 0; color: #111827;">A People-Focused Approach to Screening</h2>
-            </p>
+            ${template.signatureBlockHtml}
+            <h2 style="font-size: 20px; font-weight: bold; margin: 0; color: #111827;">${escapeHtml(template.heroTagline)}</h2>
           </div>
         </div>
 
         <!-- Footer -->
         <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb; font-size: 12px; color: #9ca3af;">
-          <p style="margin-bottom: 8px;">
-            <strong>Confidentiality Notice:</strong> This document contains confidential and privileged information. If
-            you are not the intended recipient, please notify the sender immediately and destroy this document.
-          </p>
+          ${template.confidentialityNoticeHtml}
         </div>
       </div>
     `;
@@ -367,24 +378,6 @@ function getStatusColor(status: string): string {
       return '#dc2626';
     default:
       return '#6b7280';
-  }
-}
-
-function getStatusContent(status: string): string {
-  switch (status) {
-    case 'cleared':
-      return `<p><strong style="color: #059669;">CLEARED:</strong> The results of this screening <strong>have been successfully completed and cleared</strong>. If you have any questions or would like additional information regarding these results, please contact our office.
-</p>`;
-    case 'pending':
-      return `<p><strong style="color: #d97706;">PENDING:</strong> Your background screening is currently in
-      progress. We are awaiting responses from one or more verification sources. We will notify you as soon as
-      the screening is complete.</p>`;
-    case 'denied':
-      return `<p><strong style="color: #dc2626;">DENIED:</strong> Your background screening has revealed information
-      that does not meet the required standards for this application. If you believe this information is
-      incorrect, please contact us immediately to discuss the dispute process.</p>`;
-    default:
-      return '';
   }
 }
 
